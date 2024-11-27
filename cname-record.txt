@@ -1,0 +1,2 @@
+CNAME Label/Host: dosbd3a6rmx7.alexander-spangher.com.
+CNAME Destination/Target: gv-g452k4y5ss6pzx.dv.googlehosted.com

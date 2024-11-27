@@ -1,0 +1,118 @@
+@charset "utf-8";
+
+:root {
+  --column-width: 700px;
+  --picture-rescale: .6;
+  --iframe-rescale: 1;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    color: #333;
+	font-family: "Times New Roman", Georgia, Serif;
+    margin: 0.5em;
+    padding: 0;
+    font-size: 16px;
+    background-color: 'white';
+}
+
+a, a:visited {
+    color: purple;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.main {
+    width: 98%;
+    max-width: var(--column-width);
+    margin: 0 auto;
+    padding: 0 1%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0.5em 0;
+}
+
+.main h2, .main h3 {
+    border-top: 4px solid #333;
+    border-bottom: .5px dashed #333;
+    margin-top: 70px;
+}
+
+.main p {
+    font-size: 1.25em; 
+    line-height: 1.5;
+}
+
+img {
+    width: calc(var(--column-width) * var(--picture-rescale));
+    height: calc((var(--column-width) * var(--picture-rescale) ) * 0.665625px);
+    display: block;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#library {
+    width:800;
+    height:600;
+    margin-top:-20px;
+    margin-bottom: -40px;
+}
+
+.hour.label {
+    font: 500 130px "Helvetica Neue";
+    fill: #ddd;
+}
+
+.generic-iframe {
+    width: calc(var(--column-width) * var(--iframe-rescale));
+    height: calc((var(--column-width) * var(--iframe-rescale) ) * .48);
+    display: block;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#bangladesh-1 {
+  -moz-transform: scale(0.65, 0.65); 
+  -webkit-transform: scale(0.65, 0.65); 
+  -o-transform: scale(0.65, 0.65);
+  -ms-transform: scale(0.65, 0.65);
+  transform: scale(0.65, 0.65); 
+  -moz-transform-origin: top left;
+  -webkit-transform-origin: top left;
+  -o-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  margin-bottom: -10em;
+}
+
+#pulitzer {
+  -moz-transform: scale(0.75, 0.75); 
+  -webkit-transform: scale(0.75, 0.75); 
+  -o-transform: scale(0.75, 0.75);
+  -ms-transform: scale(0.75, 0.75);
+  transform: scale(0.75, 0.75); 
+  -moz-transform-origin: top left;
+  -webkit-transform-origin: top left;
+  -o-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  margin-bottom: -10em;
+  margin-left: -100px;
+}
+
+p + p {
+    margin-top: 1em;
+}
+
+hr {
+    border: 0;    
+    padding: 0.5em 0;
+}

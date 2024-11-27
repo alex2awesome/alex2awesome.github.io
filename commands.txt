@@ -1,0 +1,7 @@
+
+## deploy
+ gcloud auth login alex2awesome@gmail.com
+ gcloud config set project data-vis-projects
+ gcloud app deploy
+
+ 
