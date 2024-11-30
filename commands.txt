@@ -5,3 +5,10 @@
  gcloud app deploy
 
  
+## update: 2024-11-26
+## --------------------------------------------
+## this site is now hosted in on github pages 
+## for information about syncing the github pages domain with the custom website, see these pages:
+## https://github.com/orgs/community/discussions/78573
+## https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
+## 

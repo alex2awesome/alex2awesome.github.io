@@ -116,3 +116,55 @@ hr {
     border: 0;    
     padding: 0.5em 0;
 }
+
+
+/* General Styles */
+.news-section {
+    margin: 20px auto;
+    max-width: 800px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  /* Bullet-point List */
+  .news-list {
+    list-style-type: none; /* Removes default bullets */
+    padding: 0; /* Removes default padding */
+    margin: 0; /* Removes default margin */
+  }
+  
+  /* Individual News Items */
+  .news-item {
+    display: flex;
+    align-items: flex-start; /* Aligns items at the start */
+    margin-bottom: 15px; /* Spacing between news rows */
+    padding-left: 20px; /* Space for custom bullet */
+    position: relative; /* To position the bullet */
+  }
+  
+  /* Custom Bullet */
+  .news-item::before {
+    content: '•'; /* Unicode bullet character */
+    font-size: 24px;
+    color: #007bff; /* Blue bullet color */
+    position: absolute;
+    left: 0; /* Position bullet to the left of text */
+    top: 0;
+  }
+  
+  /* Bolded Date */
+  .news-date {
+    font-weight: bold;
+    text-decoration: underline;
+    color: #444; /* Slightly darker color for the date */
+    margin-right: 20px; /* Space between date and text */
+    /* flex: 1.5; */
+    /* white-space: nowrap; */
+  }
+  
+  /* News Text */
+  .news-text {
+    line-height: 1.5; /* Improves readability */
+    color: #555; /* Neutral text color */
+  }
+  

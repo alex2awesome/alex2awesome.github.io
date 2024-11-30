@@ -1,43 +1,135 @@
-
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-	<meta name="description" content="Alexander Spangher is a data scientist, pianist and student based in New York City. He works at the New York Times." />
-	<meta name="keywords" content="alexander spangher, the new york times, data visualization, piano" />
-	<meta name="author" content="Alexander Spangher" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="Alexander Spangher is a data scientist, pianist and student based in New York City. He works at the New York Times." />
+    <meta name="keywords" content="alexander spangher, the new york times, data visualization, piano" />
+    <meta name="author" content="Alexander Spangher" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Always force latest IE rendering engine or request Chrome Frame -->
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     
     <!-- Use title if it's in the page YAML frontmatter -->
     <title>Alexander Spangher</title>
     
+    <!-- Bootstrap CSS -->
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Your custom CSS -->
     <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
   </head>
   
   <body class="index">
-    <img src="assets/img/lapa.jpg" alt="Lapa" id="lapa" >
-    <div class="main"><h2 id="alex-spangher">Alexander Spangher</h2>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Left column (1/3 width) -->
+        <div class="col-md-4">
+          <div class="sticky-top">
+            <h2 id="alex-spangher" class="text-center">Alexander Spangher</h2>
+            <div class="text-center">
+              <img src="assets/img/profile-pic.jpeg" alt="Lapa" id="profile-pic" class="img-fluid" style="width: 70%;">
+              <div class="tagline">PhD Candidate in Computer Science</div>
+              <div>University of Southern California</div>
+              <a href="mailto:spangher@usc.edu">spangher@usc.edu</a>
+              <p>
+                <a href="https://github.com/alex2awesome">GitHub</a> | 
+                <a href="https://twitter.com/AlexanderSpangh">Twitter</a> | 
+                <a href="https://bsky.app/profile/alex2awesome.bsky.social">Bluesky</a>
+              </p>
+              <p>
+                <a href="research.html">Research</a> | 
+                <a href="data-vis.html">Data Journalism</a> | 
+                <a href="music.html">Music</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Right column (2/3 width) -->
+        <div class="col-md-8">
+          <div class="main">
+            <h2 id="alex-spangher">About Me</h2>
+            <p>I'm a final year PhD student at the University of Southern California's (USC) Information Sciences Institute (ISI), co-advised by <a href="https://www.isi.edu/directory/jonmay/">Jonathan May</a> and <a href="https://emilio.ferrara.name/">Emilio Ferrara</a>. 
+              My research lies in the intersection of <b>natural language processing</b>, <b>planning</b>, and <b>computational journalism</b>. Specifically, I'm interested in modeling how humans execute complicated tasks, like writing news stories,
+               in order to build AI systems that align better with our goals. <a href="research.html">[Research]</a>
+              <!-- I imagine a society where professional journalists can produce more higher-quality information at lower costs, improving our information ecosystem, better informing the public and improving our democracy. -->
+            </p>
 
-<p>I am a data scientist, pianist and student based in New York City. I work at The New York Times.</a></p>
+            <p>Previously, I worked at Microsoft Research <a href="https://erichorvitz.com/Multisystem_disinformation.pdf">studying misinformation</a> with Eric Horvitz. 
+              Before that, I was a data scientist and journalist at <i>the New York Times</i> where I worked with Dr. Chris Wiggins. <a href="/data-vis.html">[Fun data journalism pieces].</a></p>
+            <p>Before <i>that</i>, I attended Juilliard School of Music and worked as a professional musician in off-Broadway productions including <a href="https://myny.ccnmtl.columbia.edu/content/leibowitzs-2011-production-dybbuk">The Dybbuk</a> and <a href="http://newsfeed.time.com/2013/11/04/the-gospel-according-to-brit-brit-musical-tells-the-story-of-christ-through-britney-spears-songs/">Spears: The Gospel According to Brittney.</a>
+            In my PhD, I organized charity concerts, including <a href="https://www.sfchronicle.com/bayarea/article/They-ve-been-through-hell-Bay-Area-16999199.php">raising money for humanitarian aid</a> for Ukraine. <a href="/music.html">[Music Videos]</a>
+            </p>
+            <!-- <hr /> -->
+            <h2 id="news">News:</h2>
+              <p>I'm on the faculty job market! If you're a hiring chair, please <a href="mailto:spangher@usc.edu">reach out</a>.</p>
+              <p></p>
 
-<p>My work at the Times has involved business-side statistical modeling and launching data science products, where I have been involved in relaunching the <a href="https://open.blogs.nytimes.com/2015/08/11/building-the-next-new-york-times-recommendation-engine/?_r=0">article recommendation engine</a>, building tools to help journalists, and modeling <a href="https://digiday.com/media/get-10m-subscribers-new-york-times-focusing-churn/">subscriber risk profiles</a>.
-  </p>
-  <p>I am also interested in data journalism and visualization. <a href="/data-vis.html">Check out my work, here.</a></p>
-  <p>For fun, I have worked as a professional bassist and pianist in off-Broadway productions in the city, with plays including <a href="https://myny.ccnmtl.columbia.edu/content/leibowitzs-2011-production-dybbuk">The Dybbuk</a> and <a href="http://newsfeed.time.com/2013/11/04/the-gospel-according-to-brit-brit-musical-tells-the-story-of-christ-through-britney-spears-songs/">Spears: The Gospel According to Brittney.</a></p>
-<hr />
+              <div class="news-section">
+                <ul class="news-list">
+                  <li class="news-item">
+                    <span class="news-date col-md-2" >Nov 14, 2024</span>
+                    <span class="news-text col-md-10">🎉🎉 I am so honored to have won <b><u>two (2) Outstanding Paper Awards</u></b> at EMNLP 2024.
+                    This recognizes the works:
+                    <ul>
+                      <li><a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">Do LLM's Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs</a> with Mark Dredze, Sebastian Gehrmann, and Nanyun Peng</li>
+                      <li><a href="https://arxiv.org/pdf/2407.13248">Are Large Language Models Capable of Generating Human-Level Narratives?</a> with Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, Muhao Chen, Jonathan May, Nanyun Peng.</li>
+                    </ul>
+                    </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">July 23, 2024</span>
+                    <span class="news-text col-md-10">🎉 I am so honored to have won a <b><u>Spotlight Award</u></b> at ICML 2024. This is a huge honor and I am so grateful to my coauthors at EleutherAI.
+                    This recognizes the work:
+                    <ul>
+                      <li><a href="https://openreview.net/pdf?id=RiM3cl9MdK">Stay on Topic with Classifier-Free Guidance</a> with Guillaume Sanchez, Honglu Fan, Elad Levi and Stella Biderman.</li>
+                    </ul>
+                    </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">Feb 22, 2024</span>
+                    <span class="news-text col-md-10">🗣️ I will be speaking at the Stanford NLP Seminar. The title of my talk is <a href="https://nlp.stanford.edu/seminar/details/alexspangher_2024.shtml">NLP Approaches in Computational Journalism: Newsfinding, Sourcing and Updating Stories</a>. </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">April 1, 2023</span>
+                    <span class="news-text col-md-10">🎉 I am honored to have my Bloomberg PhD Fellowship extended for a 4th year in acknowledgement of our work together.</span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">July 13, 2022</span>
+                    <span class="news-text col-md-10">🎉 I am so honored to have won an <b><u>Outstanding Paper Award</u></b> at NAACL 2022.
+                    This recognizes the work:
+                    <ul>
+                      <li><a href="https://aclanthology.org/2022.naacl-main.10.pdf"><i>NewsEdits:</i> A News Article Revision Dataset and a Document-Level Reasoning Challenge</a> with Xiang Reg, Nanyun Peng, and Jonathan May.</li>
+                    </ul>
+                    </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">March 15, 2022</span>
+                    <span class="news-text col-md-10">🎶 We are humbled for the support for our <a href="https://www.sfchronicle.com/bayarea/article/They-ve-been-through-hell-Bay-Area-16999199.php">Ukraine Benefit Concert.</a> State Senator Scott Weiner and the Ukrainian ambassador gave inspiring speeches, and we raised $60,000. I, personally, got the chance to play with the most inspiring musicians I have ever had the chance to play with.
+                    <img src="assets/img/ukraine-concert.png" alt="Lapa" id="lapa" class="img-fluid" style="width: 60%;"></span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">April 4, 2020</span>
+                    <span class="news-text col-md-10">🎉 I am over the moon to have been awarded a 3 year Bloomberg PhD Fellowship. I am so grateful to the Bloomberg family for their support. This will allow me to formulate a multi-year research plan and focus on research in my PhD that I care about.</span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date col-md-2">Sept 1, 2019</span>
+                    <span class="news-text col-md-10"> 👨‍🎓 I'm excited to start my PhD at USC!</span>
+                  </li>
+                </ul>
+              </div>
 
-<h2 id="how-to-contact-me">Contact Information:</h2>
 
-<p>My personal email address is <a href="">alex2awesome@gmail.com</a>. <p>If you'd like a bit of a quicker reply, try <a href="">aas2230@columbia.edu</a>.
-
-<hr />
-
-<h2 id="other-places-you-can-find-me">Other places you can find me</h2>
-
-<p><a href="https://github.com/alex2awesome">GitHub</a> | <a href="https://twitter.com/AlexanderSpangh">Twitter</a> | <a href="https://www.facebook.com/spangher1">Facebook</a></p>
-</div>
+            <!--  -->
+            <h2 id="how-to-contact-me">Contact Information:</h2>
+            <p>The best place to reach me is: <a href="mailto:spangher@usc.edu">spangher@usc.edu</a>. 
+              My personal email address is <a href="mailto:alexander.spangher@gmail.com">alexander.spangher@gmail.com</a>.
+              <img src="assets/img/lapa.jpg" alt="Lapa" id="lapa" class="img-fluid">
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Bootstrap JS and dependencies (if needed) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
