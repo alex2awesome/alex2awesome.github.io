@@ -168,3 +168,16 @@ hr {
     color: #555; /* Neutral text color */
   }
   
+
+  .paper_title {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+  }
+  .paper_rest {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+  .paper_bottom_space {
+    height: 20px;
+  }
+  
