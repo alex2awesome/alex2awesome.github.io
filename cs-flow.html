@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+  body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .section-label {
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .node-circle {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 1px;
+    cursor: pointer;
+    transition: fill 0.2s;
+  }
+
+  .word-circle {
+    fill: #afafaf;
+    stroke: #555;
+    stroke-width: 1px;
+    cursor: pointer;
+    transition: fill 0.2s;
+  }
+
+  .hover-highlight:hover {
+    fill: #ffeb3b; /* highlight color on hover */
+  }
+
+  .diagram-text {
+    font-size: 12px;
+    text-anchor: middle;
+  }
+
+  .small-text {
+    font-size: 12px;
+    text-anchor: middle;
+  }
+
+  svg text {
+    pointer-events: none; /* So text doesn't block circle hover */
+  }
+
+  /* Arrow marker for lines */
+  marker#arrow {
+    markerWidth: 10;
+    markerHeight: 10;
+    refX: 6;
+    refY: 3;
+    orient: auto;
+    markerUnits: strokeWidth;
+  }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 800 200" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define arrow marker -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#000" />
+    </marker>
+  </defs>
+
+  <!-- Section Labels on the left -->
+  <text x="50" y="63" class="section-label">Actions:</text>
+  <text x="50" y="126" class="section-label">Discourse Elements:</text>
+  <text x="50" y="174" class="section-label">Words:</text>
+
+  <!-- Actions Row -->
+  <!-- a1 circle -->
+  <circle id="a1" class="node-circle hover-highlight" cx="200" cy="60" r="20">
+    <title>a1: Call a source</title>
+  </circle>
+  <text x="200" y="63" class="small-text">a1</text>
+  <text x="200" y="30" font-size="12px" font-style="italic" text-anchor="middle">Call a source</text>
+
+  <!-- a2 circle -->
+  <circle id="a2" class="node-circle hover-highlight" cx="350" cy="60" r="20">
+    <title>a2: Call opposing source</title>
+  </circle>
+  <text x="350" y="63" class="small-text">a2</text>
+  <text x="350" y="30" font-size="12px" font-style="italic" text-anchor="middle">Call opposing source</text>
+
+  <!-- a3 circle -->
+  <circle id="a3" class="node-circle hover-highlight" cx="500" cy="60" r="20">
+    <title>a3: Introduce background</title>
+  </circle>
+  <text x="500" y="63" class="small-text">a3</text>
+  <text x="500" y="30" font-size="12px" font-style="italic" text-anchor="middle">Introduce background</text>
+
+  <!-- Arrows between actions -->
+  <line x1="220" y1="60" x2="330" y2="60" stroke="#000" stroke-width="1" marker-end="url(#arrow)" />
+  <line x1="370" y1="60" x2="480" y2="60" stroke="#000" stroke-width="1" marker-end="url(#arrow)" />
+  <line x1="520" y1="60" x2="605" y2="60" stroke="#000" stroke-width="1" marker-end="url(#arrow)" />
+
+  <!-- Discourse Elements Row -->
+  <!-- d1 circle -->
+  <circle id="d1" class="node-circle hover-highlight" cx="270" cy="120" r="20">
+    <title>d1</title>
+  </circle>
+  <text x="270" y="125" class="small-text">d1</text>
+  <text x="320" y="125" font-size="12px" text-anchor="middle">Speech</text>
+
+  <!-- d2 circle -->
+  <circle id="d2" class="node-circle hover-highlight" cx="425" cy="120" r="20">
+    <title>d2</title>
+  </circle>
+  <text x="425" y="125" class="small-text">d2</text>
+  <text x="470" y="125" font-size="12px" text-anchor="middle">Context</text>
+
+  <!-- Lines from actions to discourse elements -->
+  <line x1="200" y1="80" x2="270" y2="100" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="500" y1="80" x2="430" y2="100" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Words Row -->
+  <!-- w1, w2, w3 under d1 -->
+  <circle id="w1" class="word-circle hover-highlight" cx="220" cy="170" r="15">
+    <title>w1: "Opinions"</title>
+  </circle>
+  <text x="220" y="175" class="small-text">w1</text>
+  <text x="220" y="195" font-size="12px" text-anchor="middle">"Opinions"</text>
+
+  <circle id="w2" class="word-circle hover-highlight" cx="270" cy="170" r="15">
+    <title>w2: "were"</title>
+  </circle>
+  <text x="270" y="175" class="small-text">w2</text>
+  <text x="270" y="195" font-size="12px" text-anchor="middle">"were"</text>
+
+  <circle id="w3" class="word-circle hover-highlight" cx="320" cy="170" r="15">
+    <title>w3: "mixed."</title>
+  </circle>
+  <text x="320" y="175" class="small-text">w3</text>
+  <text x="320" y="195" font-size="12px" text-anchor="middle">"mixed."</text>
+
+  <!-- w4, w5 in between d1 and d2 -->
+  <circle id="w4" class="word-circle hover-highlight" cx="370" cy="170" r="15">
+    <title>w4: "The"</title>
+  </circle>
+  <text x="370" y="175" class="small-text">w4</text>
+  <text x="370" y="195" font-size="12px" text-anchor="middle">"The"</text>
+
+  <circle id="w5" class="word-circle hover-highlight" cx="420" cy="170" r="15">
+    <title>w5: "attacks"</title>
+  </circle>
+  <text x="420" y="175" class="small-text">w5</text>
+  <text x="420" y="195" font-size="12px" text-anchor="middle">"attacks"</text>
+
+
+  <!-- w6, w7, w8 under d2 -->
+  <circle id="w6" class="word-circle hover-highlight" cx="470" cy="170" r="15">
+    <title>w6: "were"</title>
+  </circle>
+  <text x="470" y="175" class="small-text">w6</text>
+  <text x="470" y="195" font-size="12px" text-anchor="middle">"were"</text>
+
+  <circle id="w7" class="word-circle hover-highlight" cx="520" cy="170" r="15">
+    <title>w7: "preceded"</title>
+  </circle>
+  <text x="520" y="175" class="small-text">w7</text>
+  <text x="520" y="195" font-size="12px" text-anchor="middle">"preceded"</text>
+
+  <circle id="w8" class="word-circle hover-highlight" cx="570" cy="170" r="15">
+    <title>w8: "by"</title>
+  </circle>
+  <text x="570" y="175" class="small-text">w8</text>
+  <text x="570" y="195" font-size="12px" text-anchor="middle">"by"</text>
+
+  <!-- Lines connecting discourse elements to words -->
+  <line x1="270" y1="140" x2="220" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="270" y1="140" x2="270" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="270" y1="140" x2="320" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <line x1="425" y1="140" x2="470" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="425" y1="140" x2="520" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="425" y1="140" x2="570" y2="155" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Lines connecting words to each other -->
+  <line x1="235" y1="170" x2="255" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="285" y1="170" x2="305" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="335" y1="170" x2="355" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="385" y1="170" x2="405" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="435" y1="170" x2="455" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="485" y1="170" x2="505" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="535" y1="170" x2="555" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="585" y1="170" x2="605" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
+
+  
+</svg>
+
+</body>
+</html>

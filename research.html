@@ -3,354 +3,442 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Music Videos</title>
+    <title>Research</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
+  <style>
+    iframe {
+        border: none;
+        width: 100%;
+        height: 200px; /* Adjust height based on content */
+        overflow: hidden;
+    }
+    object {
+        width: 110%;
+        height: 240px;
+        overflow: hidden; /* Ensure overflow is hidden */
+    }
+    canvas {
+        width: 110%;
+        height: 240px;
+        overflow: hidden; /* Ensure overflow is hidden */
+    }
+    #top-header {
+        margin-top: 20px;
+    }
+  </style>
+
+<script>
+    $(document).ready(function() {
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        var lens = getUrlParameter('lens');
+        if (lens == 'cs') {
+            $('#lens').text('Computer Science Lens');
+            $('#computer-science-lens').show();
+            $('#comp-journalism-lens').hide();
+        } else {
+            $('#lens').text('Computational Journalism Lens');
+            $('#computer-science-lens').hide();
+            $('#comp-journalism-lens').show();
+        }
+    });
+</script>
 
   <div class="main">    
-    <h2>Publications</h2>
-    <div valign="top">
-    <div class="paper_title">
-      🏆🎤 Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze.<br>
-      <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-      Acceptance rate 20.8%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Explaining Mixtures of Sources in News Articles
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May.<br>
-      <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-      Acceptance rate 20.8%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🏆 Stay on Topic with Classifier-Free Guidance
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman.<br>
-      <strong>Forty-first International Conference on Machine Learning</strong> 2024.<br>
-      Acceptance rate 27.5%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Tracking the Newsworthiness of Public Documents
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May.<br>
-      <strong>Association of Computational Linguistics</strong> 2024.<br>
-      Acceptance rate 23.5%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 LegalDiscourse: Interpreting When Laws Apply and To Whom
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May.<br>
-      <strong>North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2024.<br>
-      [ <a href="https://aclanthology.org/2024.naacl-long.472.pdf">paper</a> ]<br>
-      Acceptance rate 23%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Identifying Informational Sources in News Articles
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May.<br>
-      <strong>2023 Conference on Empirical Methods in Natural Language Processing</strong> 2023.<br>
-      Acceptance rate 23.3%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🏆🎤 First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng.<br>
-      <strong>Computation + Journalism</strong> 2023.
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🏆🎤 NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng.<br>
-      <strong>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2022.<br>
-      [ <a href="https://aclanthology.org/2022.naacl-main.10.pdf">paper</a> ]<br>
-      Acceptance rate 26%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng.<br>
-      <strong>2021 Conference on Empirical Methods in Natural Language Processing</strong> 2021.<br>
-      [ <a href="https://arxiv.org/abs/2101.00389">paper</a> ]<br>
-      Acceptance rate 25.6%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong> and Jonathan May.<br>
-      <strong>Computation + Journalism</strong> 2022.<br>
-      [ <a href="https://arxiv.org/abs/2104.10263">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 News Discourse Patterns: A Roadmap for Computational Journalism
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong> and Jonathan May.<br>
-      <strong>Computation + Journalism</strong> March 2021.<br>
-      [ <a href="https://cj2021.northeastern.edu/schedule-and-program/">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-      <strong>1st Workshop on NLP for COVID-19 at ACL 2020</strong> 2020.
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 Don't quote me on that: Finding Mixtures of Sources in News Articles
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-      <strong>Computation + Journalism</strong> 2020.<br>
-      [ <a href="https://arxiv.org/abs/2104.09656">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 Modeling Newsworthiness for Lead-Generation Across Corpora
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-      <strong>Computation + Journalism</strong> 2020.<br>
-      <strong>Southern California Natural Language Processing Conference</strong> 2019.<br>
-      [ <a href="https://arxiv.org/abs/2104.09653">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      🎤 Characterizing Search Engine Traffic to Internet Research Agency Web Properties
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz.<br>
-      <strong>The Web Conference 2020</strong> Taipei, Taiwan. 2020.<br>
-      [ <a href="https://bit.ly/3aCGlkT">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher.<br>
-      <strong>IEEE Transactions on Cognitive Communications and Networking</strong> 2019.<br>
-      Acceptance rate 19.4%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Actionable Recourse in Linear Classification
-    </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Berk Ustun.<br>
-      <strong>5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML</strong> 2018.<br>
-      <strong>Also presented in:</strong> <strong>Workshop on Ethical, Social and Governance Issues in AI, NIPS</strong> 2018.<br>
-      [ <a href="https://bit.ly/2FEj9pf">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <h2>Publications (Middle Author)</h2>
-  <div valign="top">
-    <div class="paper_title">
-      🏆 Are Large Language Models Capable of Generating Human-Level Narratives?
-    </div>
-    <div class="paper_rest">
-      Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng.<br>
-      <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-      [ <a href="https://arxiv.org/pdf/2407.13248">paper</a> ]<br>
-      Acceptance rate 20.8%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction
-    </div>
-    <div class="paper_rest">
-      Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea.<br>
-      <strong>Journal of Fusion Energy</strong> 2024.<br>
-      [ <a href="https://www.researchsquare.com/article/rs-4245117/latest">paper</a> ]<br>
-      Acceptance rate 20%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas
-    </div>
-    <div class="paper_rest">
-      Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea.<br>
-      <strong>NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences</strong> 2023.<br>
-      [ <a href="https://neurips.cc/virtual/2023/76249">paper</a> ]<br>
-      Acceptance rate 75.6%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals
-    </div>
-    <div class="paper_rest">
-      Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng.<br>
-      <strong>61st Annual Meeting of the Association for Computational Linguistics</strong> 2023.<br>
-      [ <a href="https://arxiv.org/pdf/2110.08486">paper</a> ]<br>
-      Acceptance rate 24.1%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Actionable Recourse in Linear Classification. (Expanded Version)
-    </div>
-    <div class="paper_rest">
-      Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu.<br>
-      <strong>Conference on Fairness, Accountability and Transparency (FAT*), ACM</strong> 2019.<br>
-      [ <a href="https://arxiv.org/pdf/1809.06514.pdf">paper</a> ]<br>
-      Acceptance rate 27%
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses
-    </div>
-    <div class="paper_rest">
-      Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz.<br>
-      <strong>Whitepaper</strong> 2019.<br>
-      [ <a href="https://bit.ly/2SczIKt">paper</a> ]
-    </div>
-    <div class="paper_bottom_space"></div>
-  </div>
+    <h1 id="alex-spangher"><a href="index.html">Alexander Spangher</a></h1>
+    <h2 id="top-header">Research</h2>
+    <!-- Broadly, I'm interested in modeling how humans execute complicated tasks, like writing news stories, in order to build AI systems that align better with our goals. -->
 
-  <h2>Publications (In Submission)</h2>
-  <div valign="top">
-    <div class="paper_title">
-      NewsEdits 2.0: Learning the Intentions Behind Updating News
+    <div id="lens-description" style="background-color: #f0f0f0; padding: 10px; font-size: 0.9em;">
+        My research breaks down into two lenses: <a href="research.html?lens=cs">[Computer Science]</a> | <a href="research.html?lens=cj">[Computational Journalism]</a>.
+        <br>
+        You are currently viewing the <b id="lens">Computer Science Lens</b>. Click on the other lens to view it.
     </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.<br>
-      <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+    <p></p>
+
+    <div id="computer-science-lens">
+        <p>
+            For AI to play a more integrated role in human tasks, it must align with human values and decision-making processes. Doing
+            so, I believe, requires a radically different approach to conceptualizing and training AI; it requires an AI that understands, on a
+            fundamental level, why humans make the decisions we do. 
+            Much of my work has focused on illuminating this process through simply observing the creative outputs humans produce. Our generative model for documents:
+
+            <object type="image/svg+xml" data="cs-flow.html" scrolling="no"></object>
+
+            states that human actions can be observed through the discourse elements produced in the final document.
+            <!-- Previously, I worked at Microsoft Research <a href="https://erichorvitz.com/Multisystem_disinformation.pdf">studying misinformation</a> with Eric Horvitz.  -->
+            <!-- I have focused primarily on <b>computational journalism</b> as a domain, but I'm broadening my focus to include domains such as music, video and legal writing.  -->
+            <!-- The core of my vision is to realize this approach by: 
+            <ul>
+                <li><b>Modeling Human Planning:</b> I have developed computational methods to infer and predict human decision-making at scale, even in scenarios
+                    where they are unobservable.</li>
+                <li><b>Plan-Aware Generation:</b> I have improved AI's ability to adhere to plans and better follow human intention </li>
+                <li><b>Understanding AI's societal impact:</b> I have detected when content deviates from human values and decisions (e.g. misinformation) and developed methods to address this.</li>
+            </ul> -->
+        </p>
     </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      A Novel Multi-Document Retrieval Benchmark Grounded on Journalist Source-Selection in Newswriting
+    <div id="comp-journalism-lens">
+        <p>
+            I imagine a society where professional journalists can produce more higher-quality information at lower costs, improving our information ecosystem, better informing the public and improving our democracy. 
+            Much of my work has focused on this vision, and has targeted different steps in the news gathering process. Our workflow for journalism is:
+            <object type="image/svg+xml" data="journalism-flow.html" scrolling="no"></object>
+            I have focused on each of these steps, and have developed computational methods to improve each step.
+        </p>
+        <!-- Click on the diagram to filter articles by each area. -->
     </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Liheng Lai, Lucas Spangher, Sewon Min, Mark Dredze.<br>
-      <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+
+    <h2>Publications</h2>
+    <div id="cs-papers">
+        <div valign="top">
+            <div class="paper_title">
+            🏆🎤 Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs
+            </div>
+            <div class="paper_rest">
+            <strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze.<br>
+            <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
+            Acceptance rate 20.8%
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+        
+        <div valign="top">
+            <div class="paper_title">
+            Explaining Mixtures of Sources in News Articles
+            </div>
+            <div class="paper_rest">
+            <strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May.<br>
+            <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
+            Acceptance rate 20.8%
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🏆 Stay on Topic with Classifier-Free Guidance
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman.<br>
+        <strong>Forty-first International Conference on Machine Learning</strong> 2024.<br>
+        Acceptance rate 27.5%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      NewsInterview: a Dataset and a Playground to Evaluate LLMs' Ground Gap via Informational Interviews
+    
+    <div valign="top">
+        <div class="paper_title">
+        Tracking the Newsworthiness of Public Documents
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May.<br>
+        <strong>Association of Computational Linguistics</strong> 2024.<br>
+        Acceptance rate 23.5%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_rest">
-      <strong>Alexander Spangher</strong>, Michael Lu, Hyundong Justin Cho, Weiyan Shi, Jonathan May.<br>
-      <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 LegalDiscourse: Interpreting When Laws Apply and To Whom
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May.<br>
+        <strong>North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2024.<br>
+        [ <a href="https://aclanthology.org/2024.naacl-long.472.pdf">paper</a> ]<br>
+        Acceptance rate 23%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      NewsHomepages: Homepage Layouts Capture Information Prioritization Decisions
+    
+    <div valign="top">
+        <div class="paper_title">
+        Identifying Informational Sources in News Articles
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May.<br>
+        <strong>2023 Conference on Empirical Methods in Natural Language Processing</strong> 2023.<br>
+        Acceptance rate 23.3%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_rest">
-      Ben Welsh, Naitian Zhou, Arda Kaz, Michael Vu, <strong>Alexander Spangher</strong>.<br>
-      <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+    
+    <div valign="top">
+        <div class="paper_title">
+        🏆🎤 First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng.<br>
+        <strong>Computation + Journalism</strong> 2023.
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_bottom_space"></div>
-  </div>
-  
-  <div valign="top">
-    <div class="paper_title">
-      PatentEdits: Framing Patent Novelty as Textual Entailment
+    
+    <div valign="top">
+        <div class="paper_title">
+        🏆🎤 NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng.<br>
+        <strong>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2022.<br>
+        [ <a href="https://aclanthology.org/2022.naacl-main.10.pdf">paper</a> ]<br>
+        Acceptance rate 26%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_rest">
-      Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma.<br>
-      <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+    
+    <div valign="top">
+        <div class="paper_title">
+        Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng.<br>
+        <strong>2021 Conference on Empirical Methods in Natural Language Processing</strong> 2021.<br>
+        [ <a href="https://arxiv.org/abs/2101.00389">paper</a> ]<br>
+        Acceptance rate 25.6%
+        </div>
+        <div class="paper_bottom_space"></div>
     </div>
-    <div class="paper_bottom_space"></div>
-  </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong> and Jonathan May.<br>
+        <strong>Computation + Journalism</strong> 2022.<br>
+        [ <a href="https://arxiv.org/abs/2104.10263">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 News Discourse Patterns: A Roadmap for Computational Journalism
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong> and Jonathan May.<br>
+        <strong>Computation + Journalism</strong> March 2021.<br>
+        [ <a href="https://cj2021.northeastern.edu/schedule-and-program/">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
+        <strong>1st Workshop on NLP for COVID-19 at ACL 2020</strong> 2020.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 Don't quote me on that: Finding Mixtures of Sources in News Articles
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
+        <strong>Computation + Journalism</strong> 2020.<br>
+        [ <a href="https://arxiv.org/abs/2104.09656">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 Modeling Newsworthiness for Lead-Generation Across Corpora
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
+        <strong>Computation + Journalism</strong> 2020.<br>
+        <strong>Southern California Natural Language Processing Conference</strong> 2019.<br>
+        [ <a href="https://arxiv.org/abs/2104.09653">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        🎤 Characterizing Search Engine Traffic to Internet Research Agency Web Properties
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz.<br>
+        <strong>The Web Conference 2020</strong> Taipei, Taiwan. 2020.<br>
+        [ <a href="https://bit.ly/3aCGlkT">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher.<br>
+        <strong>IEEE Transactions on Cognitive Communications and Networking</strong> 2019.<br>
+        Acceptance rate 19.4%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Actionable Recourse in Linear Classification
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Berk Ustun.<br>
+        <strong>5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML</strong> 2018.<br>
+        <strong>Also presented in:</strong> <strong>Workshop on Ethical, Social and Governance Issues in AI, NIPS</strong> 2018.<br>
+        [ <a href="https://bit.ly/2FEj9pf">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <h2>Publications (Middle Author)</h2>
+    <div valign="top">
+        <div class="paper_title">
+        🏆 Are Large Language Models Capable of Generating Human-Level Narratives?
+        </div>
+        <div class="paper_rest">
+        Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng.<br>
+        <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
+        [ <a href="https://arxiv.org/pdf/2407.13248">paper</a> ]<br>
+        Acceptance rate 20.8%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction
+        </div>
+        <div class="paper_rest">
+        Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea.<br>
+        <strong>Journal of Fusion Energy</strong> 2024.<br>
+        [ <a href="https://www.researchsquare.com/article/rs-4245117/latest">paper</a> ]<br>
+        Acceptance rate 20%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas
+        </div>
+        <div class="paper_rest">
+        Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea.<br>
+        <strong>NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences</strong> 2023.<br>
+        [ <a href="https://neurips.cc/virtual/2023/76249">paper</a> ]<br>
+        Acceptance rate 75.6%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals
+        </div>
+        <div class="paper_rest">
+        Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng.<br>
+        <strong>61st Annual Meeting of the Association for Computational Linguistics</strong> 2023.<br>
+        [ <a href="https://arxiv.org/pdf/2110.08486">paper</a> ]<br>
+        Acceptance rate 24.1%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Actionable Recourse in Linear Classification. (Expanded Version)
+        </div>
+        <div class="paper_rest">
+        Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu.<br>
+        <strong>Conference on Fairness, Accountability and Transparency (FAT*), ACM</strong> 2019.<br>
+        [ <a href="https://arxiv.org/pdf/1809.06514.pdf">paper</a> ]<br>
+        Acceptance rate 27%
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses
+        </div>
+        <div class="paper_rest">
+        Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz.<br>
+        <strong>Whitepaper</strong> 2019.<br>
+        [ <a href="https://bit.ly/2SczIKt">paper</a> ]
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+
+    <h2>Publications (In Submission)</h2>
+    <div valign="top">
+        <div class="paper_title">
+        NewsEdits 2.0: Learning the Intentions Behind Updating News
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.<br>
+        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        A Novel Multi-Document Retrieval Benchmark Grounded on Journalist Source-Selection in Newswriting
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Liheng Lai, Lucas Spangher, Sewon Min, Mark Dredze.<br>
+        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        NewsInterview: a Dataset and a Playground to Evaluate LLMs' Ground Gap via Informational Interviews
+        </div>
+        <div class="paper_rest">
+        <strong>Alexander Spangher</strong>, Michael Lu, Hyundong Justin Cho, Weiyan Shi, Jonathan May.<br>
+        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        NewsHomepages: Homepage Layouts Capture Information Prioritization Decisions
+        </div>
+        <div class="paper_rest">
+        Ben Welsh, Naitian Zhou, Arda Kaz, Michael Vu, <strong>Alexander Spangher</strong>.<br>
+        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
+        PatentEdits: Framing Patent Novelty as Textual Entailment
+        </div>
+        <div class="paper_rest">
+        Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma.<br>
+        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
 </div>
+
 </body>
 </html>
