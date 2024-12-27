@@ -184,3 +184,9 @@ hr {
     height: 20px;
   }
   
+
+  .icon-row i {
+    font-size: 2rem; /* or 24px, 32px, etc. */
+  }
+  
+
