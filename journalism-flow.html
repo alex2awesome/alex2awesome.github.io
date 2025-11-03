@@ -13,6 +13,7 @@
         width: 100%;
         height: auto;
         display: block;
+        cursor: pointer;
       }
     </style>
 </head>
@@ -80,7 +81,10 @@
     };
 
     // Utility functions
-    function drawRoundedRect(x, y, width, height, radius, color, text) {
+    function drawRoundedRect(x, y, width, height, radius, color, text, isActive = false) {
+        const previousFillStyle = ctx.fillStyle;
+        const previousStrokeStyle = ctx.strokeStyle;
+        const previousLineWidth = ctx.lineWidth;
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
         ctx.lineTo(x + width - radius, y);
@@ -92,10 +96,14 @@
         ctx.lineTo(x, y + radius);
         ctx.quadraticCurveTo(x, y, x + radius, y);
         ctx.closePath();
-        ctx.fillStyle = color;
+        ctx.fillStyle = isActive ? '#ffe082' : color;
         ctx.fill();
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = isActive ? "#b8860b" : "black";
+        ctx.lineWidth = isActive ? 3 : 1;
         ctx.stroke();
+        ctx.fillStyle = previousFillStyle;
+        ctx.strokeStyle = previousStrokeStyle;
+        ctx.lineWidth = previousLineWidth;
 
         // Add text inside the box
         ctx.fillStyle = "black";
@@ -152,6 +160,16 @@
         }
     }
 
+    const stages = [
+        { key: "story-idea", box: storyIdea },
+        { key: "article-in-progress", box: articleInProgress },
+        { key: "finished-story", box: finishedStory },
+        { key: "structured-story", box: structuredStory },
+        { key: "sourced-story", box: sourcedStory }
+    ];
+
+    let activeStage = null;
+
     function draw() {
         // Adjust canvas size based on current container size
         // We'll take the clientWidth as reference
@@ -169,11 +187,18 @@
         ctx.clearRect(0, 0, originalWidth, originalHeight);
 
         // Draw boxes
-        drawRoundedRect(storyIdea.x, storyIdea.y, storyIdea.width, storyIdea.height, 10, storyIdea.color, storyIdea.text);
-        drawRoundedRect(articleInProgress.x, articleInProgress.y, articleInProgress.width, articleInProgress.height, 10, articleInProgress.color, articleInProgress.text);
-        drawRoundedRect(finishedStory.x, finishedStory.y, finishedStory.width, finishedStory.height, 10, finishedStory.color, finishedStory.text);
-        drawRoundedRect(structuredStory.x, structuredStory.y, structuredStory.width, structuredStory.height, 10, structuredStory.color, structuredStory.text);
-        drawRoundedRect(sourcedStory.x, sourcedStory.y, sourcedStory.width, sourcedStory.height, 10, sourcedStory.color, sourcedStory.text);
+        stages.forEach(({ key, box }) => {
+            drawRoundedRect(
+                box.x,
+                box.y,
+                box.width,
+                box.height,
+                10,
+                box.color,
+                box.text,
+                activeStage === key
+            );
+        });
 
         // Arrows and labels
         // Arrow from Story Idea to Article-in-progress
@@ -249,6 +274,49 @@
 
     window.addEventListener('resize', draw);
     window.addEventListener('load', draw);
+
+    function pointInBox(x, y, box) {
+        return (
+            x >= box.x &&
+            x <= box.x + box.width &&
+            y >= box.y &&
+            y <= box.y + box.height
+        );
+    }
+
+    function postSelection() {
+        window.parent.postMessage(
+            {
+                type: "cj-filter",
+                value: activeStage
+            },
+            "*"
+        );
+    }
+
+    canvas.addEventListener("click", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const relativeX = (event.clientX - rect.left) * dpr;
+        const relativeY = (event.clientY - rect.top) * dpr;
+        const scaleX = canvas.width / originalWidth;
+        const scaleY = canvas.height / originalHeight;
+        const diagramX = relativeX / scaleX;
+        const diagramY = relativeY / scaleY;
+
+        let clickedStage = null;
+        for (const { key, box } of stages) {
+            if (pointInBox(diagramX, diagramY, box)) {
+                clickedStage = key;
+                break;
+            }
+        }
+
+        if (clickedStage) {
+            activeStage = activeStage === clickedStage ? null : clickedStage;
+            draw();
+            postSelection();
+        }
+    });
 </script>
 </body>
 </html>

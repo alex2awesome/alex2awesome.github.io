@@ -30,6 +30,88 @@
     <!-- <link href="/assets/fontawesome-free-6.7.2-web/css/duotone-thin.css" rel="stylesheet" /> -->
     <!-- <link href="/assets/fontawesome-free-6.7.2-web/css/sharp-duotone-thin.css" rel="stylesheet" /> -->
 
+    <style>
+      .news-section {
+        max-height: 420px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #fafafa 0%, #fdfdfd 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .news-section::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      .news-section::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .news-section::-webkit-scrollbar-thumb {
+        background-color: rgba(160, 160, 160, 0.5);
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+
+      .news-section:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(120, 120, 120, 0.7);
+      }
+
+      .news-list {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+      }
+
+      .news-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #ececec;
+      }
+
+      .news-item:last-child {
+        border-bottom: none;
+      }
+
+      .news-date {
+        font-weight: 600;
+        color: #555;
+        display: inline-block;
+      }
+
+      .news-text {
+        display: inline-block;
+      }
+
+      .news-works {
+        margin-top: 6px;
+        font-size: 0.92em;
+        color: #666;
+        padding-left: 12px;
+        border-left: 2px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .news-works a {
+        color: inherit;
+        text-decoration: underline;
+      }
+
+      .news-item ul {
+        list-style: none !important;
+        padding-left: 0;
+        margin: 8px 0 0;
+      }
+
+      .news-item ul li {
+        margin-bottom: 4px;
+      }
+
+      .news-item ul li::marker {
+        content: '';
+      }
+    </style>
   </head>
   
   <body class="index">
@@ -105,61 +187,74 @@
               <div class="news-section">
                 <ul class="news-list">
                   <li class="news-item">
-                    <span class="news-date col-md-2" >Dec 6, 2024</span>
-                    <span class="news-text col-md-10">🧑‍🏫 We're so excited to have our tutorial accepted at NAACL 2025. This is a tutorial on <b><u>Creative Planning in Large Language Models</u></b>. I'll update with more details as we get closer to the conference.
-                    <ul>
-                      <li><a href="docs/naacl_2025_tutorial_proposal.pdf">Creative Planning with Language Models: Practice, Evaluation and Applications</a> with Tenghao Huang, Philippe Laban, and Nanyun Peng.</li>
-                    </ul>
+                    <span class="news-date">Oct 23, 2025</span>
+                    <span class="news-text">🎶 I gave a talk at the Stanford NLP Lunch. The topic was Music + Linguistics, and summarized our ongoing work on music modeling with EleutherAI. <a href="https://docs.google.com/presentation/d/1Cc_oD9zN4Aq6vs603TSWFn1u4LhPGiHpRarRi0NVkn0/edit?usp=sharing">Slides</a>.</span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date">Oct 10, 2025</span>
+                    <span class="news-text">🎙️ I delivered a keynote at the NLP4Democracy workshop at COLM 2025. <a href="https://sites.google.com/andrew.cmu.edu/nlp4democracy/home">Event link</a>.</span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date">Sept 15, 2025</span>
+                    <span class="news-text">🎉 I began my post-doc, jointly funded by Stanford SAIL and HAI and advised by Diyi Yang, Sanmi Koyejo, and Daniel Ho. <a href="https://x.com/AlexanderSpangh/status/1982585958265671989">Announcement</a>.</span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date">Aug 8, 2025</span>
+                    <span class="news-text">🎓 I defended my thesis!!
+                      <div class="news-works">
+                        <a href="https://www.alexander-spangher.com/assets/docs/aspangher-thesis.pdf"><i>Emulation Learning: A Roadmap to Achieving Human-Like Planning in Creative Tasks</i></a>.
+                      </div>
                     </span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2" >Nov 14, 2024</span>
-                    <span class="news-text col-md-10">🎉🎉 I am so honored to have won <b><u>two (2) Outstanding Paper Awards</u></b> at EMNLP 2024.
-                    This recognizes the works:
-                    <ul>
-                      <li><a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">Do LLM's Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs</a> with Mark Dredze, Sebastian Gehrmann, and Nanyun Peng</li>
-                      <li><a href="https://arxiv.org/pdf/2407.13248">Are Large Language Models Capable of Generating Human-Level Narratives?</a> with Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, Muhao Chen, Jonathan May, Nanyun Peng.</li>
-                    </ul>
+                    <span class="news-date">May 3, 2025</span>
+                    <span class="news-text">🧑‍🏫 We gave a tutorial at NAACL 2025, called <b><u>Creative Planning in Large Language Models</u></b>. <a href="https://sites.google.com/view/naacl2025-creative-planning/home">Event link</a>.
+                      <div class="news-works">
+                        <a href="docs/naacl_2025_tutorial_proposal.pdf">Creative Planning with Language Models: Practice, Evaluation and Applications</a> with Tenghao Huang, Philippe Laban, and Nanyun Peng
+                      </div>
                     </span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2">July 23, 2024</span>
-                    <span class="news-text col-md-10">🎉 I am so honored to have won a <b><u>Spotlight Award</u></b> at ICML 2024. This is a huge honor and I am so grateful to my coauthors at EleutherAI.
-                    This recognizes the work:
-                    <ul>
-                      <li><a href="https://openreview.net/pdf?id=RiM3cl9MdK">Stay on Topic with Classifier-Free Guidance</a> with Guillaume Sanchez, Honglu Fan, Elad Levi and Stella Biderman.</li>
-                    </ul>
+                    <span class="news-date">Nov 14, 2024</span>
+                    <span class="news-text">🎉🎉 I am so honored to have won <b><u>two (2) Outstanding Paper Awards</u></b> at EMNLP 2024.
+                      <div class="news-works">
+                        <div><a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">Do LLM's Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs</a> with Mark Dredze, Sebastian Gehrmann, and Nanyun Peng</div>
+                        <div><a href="https://arxiv.org/pdf/2407.13248">Are Large Language Models Capable of Generating Human-Level Narratives?</a> with Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, Muhao Chen, Jonathan May, Nanyun Peng</div>
+                      </div>
                     </span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2">Feb 22, 2024</span>
-                    <span class="news-text col-md-10">🗣️ I will be speaking at the Stanford NLP Seminar. The title of my talk is <a href="https://nlp.stanford.edu/seminar/details/alexspangher_2024.shtml">NLP Approaches in Computational Journalism: Newsfinding, Sourcing and Updating Stories</a>. </span>
-                  </li>
-                  <li class="news-item">
-                    <span class="news-date col-md-2">April 1, 2023</span>
-                    <span class="news-text col-md-10">🎉 I am honored to have my Bloomberg PhD Fellowship extended for a 4th year in acknowledgement of our work together.</span>
-                  </li>
-                  <li class="news-item">
-                    <span class="news-date col-md-2">July 13, 2022</span>
-                    <span class="news-text col-md-10">🎉 I am so honored to have won an <b><u>Outstanding Paper Award</u></b> at NAACL 2022.
-                    This recognizes the work:
-                    <ul>
-                      <li><a href="https://aclanthology.org/2022.naacl-main.10.pdf"><i>NewsEdits:</i> A News Article Revision Dataset and a Document-Level Reasoning Challenge</a> with Xiang Reg, Nanyun Peng, and Jonathan May.</li>
-                    </ul>
+                    <span class="news-date">July 23, 2024</span>
+                    <span class="news-text">🎉 I am so honored to have won a <b><u>Spotlight Award</u></b> at ICML 2024.
+                      <div class="news-works">
+                        <a href="https://openreview.net/pdf?id=RiM3cl9MdK">Stay on Topic with Classifier-Free Guidance</a> with Guillaume Sanchez, Honglu Fan, Elad Levi and Stella Biderman
+                      </div>
                     </span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2">March 15, 2022</span>
-                    <span class="news-text col-md-10">🎶 We are humbled for the support for our <a href="https://www.sfchronicle.com/bayarea/article/They-ve-been-through-hell-Bay-Area-16999199.php">Ukraine Benefit Concert.</a> State Senator Scott Weiner and the Ukrainian ambassador gave inspiring speeches, and we raised $60,000. I, personally, got the chance to play with the most inspiring musicians I have ever had the chance to play with.
+                    <span class="news-date">Feb 22, 2024</span>
+                    <span class="news-text">🗣️ I spoke at the Stanford NLP Seminar. The title of my talk is <a href="https://nlp.stanford.edu/seminar/details/alexspangher_2024.shtml">NLP Approaches in Computational Journalism: Newsfinding, Sourcing and Updating Stories</a>. </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date">July 13, 2022</span>
+                    <span class="news-text">🎉 I am so honored to have won an <b><u>Outstanding Paper Award</u></b> at NAACL 2022.
+                      <div class="news-works">
+                        <a href="https://aclanthology.org/2022.naacl-main.10.pdf"><i>NewsEdits:</i> A News Article Revision Dataset and a Document-Level Reasoning Challenge</a> with Xiang Reg, Nanyun Peng, and Jonathan May
+                      </div>
+                    </span>
+                  </li>
+                  <li class="news-item">
+                    <span class="news-date">March 15, 2022</span>
+                    <span class="news-text">🎶 We are humbled for the support for our <a href="https://www.sfchronicle.com/bayarea/article/They-ve-been-through-hell-Bay-Area-16999199.php">Ukraine Benefit Concert.</a> State Senator Scott Weiner and the Ukrainian ambassador gave inspiring speeches, and we raised $60,000.
                     <img src="assets/img/ukraine-concert.png" alt="Lapa" id="lapa" class="img-fluid" style="width: 60%;"></span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2">April 4, 2020</span>
-                    <span class="news-text col-md-10">🎉 I am over the moon to have been awarded a 3 year Bloomberg PhD Fellowship. I am so grateful to the Bloomberg family for their support. This will allow me to formulate a multi-year research plan and focus on research in my PhD that I care about.</span>
+                    <span class="news-date">April 4, 2020</span>
+                    <span class="news-text">🎉 I am over the moon to have been awarded a 3 year Bloomberg PhD Fellowship. This will allow me to formulate a multi-year research plan and focus on research in my PhD that I care about.</span>
                   </li>
                   <li class="news-item">
-                    <span class="news-date col-md-2">Sept 1, 2019</span>
-                    <span class="news-text col-md-10"> 👨‍🎓 I'm excited to start my PhD at USC!</span>
+                    <span class="news-date">Sept 1, 2019</span>
+                    <span class="news-text"> 👨‍🎓 I'm excited to start my PhD at USC!</span>
                   </li>
                 </ul>
               </div>

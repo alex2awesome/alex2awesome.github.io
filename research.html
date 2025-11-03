@@ -26,13 +26,16 @@
         height: 240px;
         overflow: hidden; /* Ensure overflow is hidden */
     }
+    .paper-hidden {
+        display: none !important;
+    }
     #top-header {
         margin-top: 20px;
     }
   </style>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -40,8 +43,10 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
-        var lens = getUrlParameter('lens');
-        if (lens == 'cs') {
+        var lensParam = getUrlParameter('lens');
+        var activeLens = lensParam === 'cs' ? 'cs' : 'cj';
+
+        if (activeLens === 'cs') {
             $('#lens').text('Computer Science Lens');
             $('#computer-science-lens').show();
             $('#comp-journalism-lens').hide();
@@ -50,6 +55,189 @@
             $('#computer-science-lens').hide();
             $('#comp-journalism-lens').show();
         }
+
+        var activeCsFilter = null;
+        var activeCjFilter = null;
+        var $publicationsHeader = $('#publications-header');
+        var basePublicationsHeader = $publicationsHeader.text();
+
+        var csFilterLabels = {
+            actions: 'Actions',
+            discourse: 'Discourse Elements',
+            words: 'Words'
+        };
+
+        var cjFilterLabels = {
+            'story-idea': 'Story Idea',
+            'article-in-progress': 'Article-in-progress',
+            'finished-story': 'Finished Story',
+            'sourced-story': 'Sourced Story',
+            'structured-story': 'Structured Story'
+        };
+
+        var csGroups = {
+            actions: [
+                'Do LLMs Plan Like Human Writers?',
+                'Tracking the Newsworthiness of Public Documents',
+                'Explaining Mixtures of Sources in News Articles',
+                'First Steps Towards a Source Recommendation Engine',
+                'A Novel Multi-Document Retrieval Benchmark',
+                'NewsInterview: a Dataset and a Playground to Evaluate LLMs',
+                'Identifying Informational Sources in News Articles',
+                "Don't quote me on that: Finding Mixtures of Sources in News Articles",
+                'Modeling Newsworthiness for Lead-Generation Across Corpora'
+            ],
+            discourse: [
+                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
+                'Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification',
+                'News Discourse Patterns: A Roadmap for Computational Journalism',
+                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning',
+                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
+                'PatentEdits: Framing Patent Novelty as Textual Entailment'
+            ],
+            words: [
+                'Stay on Topic with Classifier-Free Guidance',
+                'NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge',
+                'NewsEdits 2.0: Learning the Intentions Behind Updating News',
+                'Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training',
+                'Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses',
+                'Actionable Recourse in Linear Classification. (Expanded Version)',
+                'Actionable Recourse in Linear Classification'
+            ]
+        };
+
+        var cjGroups = {
+            'story-idea': [
+                'Tracking the Newsworthiness of Public Documents',
+                'Modeling Newsworthiness for Lead-Generation Across Corpora',
+                'A Novel Multi-Document Retrieval Benchmark',
+                'Spatial Layouts in News Homepages Capture Human Preferences',
+                'Characterizing Search Engine Traffic to Internet Research Agency Web Properties'
+            ],
+            'article-in-progress': [
+                'Do LLMs Plan Like Human Writers?',
+                'NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge',
+                'NewsEdits 2.0: Learning the Intentions Behind Updating News',
+                'Stay on Topic with Classifier-Free Guidance',
+                'Are Large Language Models Capable of Generating Human-Level Narratives?',
+                'PatentEdits: Framing Patent Novelty as Textual Entailment'
+            ],
+            'finished-story': [
+                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
+                'News Discourse Patterns: A Roadmap for Computational Journalism',
+                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
+                'Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses',
+                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning'
+            ],
+            'sourced-story': [
+                'Explaining Mixtures of Sources in News Articles',
+                'Identifying Informational Sources in News Articles',
+                'First Steps Towards a Source Recommendation Engine',
+                "Don't quote me on that: Finding Mixtures of Sources in News Articles",
+                'NewsInterview: a Dataset and a Playground to Evaluate LLMs',
+                'A Novel Multi-Document Retrieval Benchmark'
+            ],
+            'structured-story': [
+                'Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification',
+                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
+                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning',
+                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
+                'PatentEdits: Framing Patent Novelty as Textual Entailment',
+                'News Discourse Patterns: A Roadmap for Computational Journalism',
+                'Spatial Layouts in News Homepages Capture Human Preferences'
+            ]
+        };
+
+        var $paperEntries = $('#cs-papers > div[valign="top"]').addClass('paper-entry');
+
+        function findPaper(titleFragment) {
+            return $('.paper_title')
+                .filter(function () {
+                    return $(this).text().indexOf(titleFragment) !== -1;
+                })
+                .closest('div[valign]');
+        }
+
+        function assignGroups(groupMap, lensKey) {
+            $.each(groupMap, function (group, titles) {
+                titles.forEach(function (titleFragment) {
+                    var $matches = findPaper(titleFragment);
+                    if (!$matches.length) {
+                        return;
+                    }
+                    var attributeName = lensKey === 'cs' ? 'data-cs' : 'data-cj';
+                    $matches.each(function () {
+                        var $entry = $(this);
+                        var existing = ($entry.attr(attributeName) || '').split(/\s+/).filter(function (token) {
+                            return token.length > 0;
+                        });
+                        if (existing.indexOf(group) === -1) {
+                            existing.push(group);
+                        }
+                        $entry.attr(attributeName, existing.join(' '));
+                    });
+                });
+            });
+        }
+
+        assignGroups(csGroups, 'cs');
+        assignGroups(cjGroups, 'cj');
+
+        function updateHeaderForFilter(lensKey, filterValue) {
+            if (lensKey !== activeLens) {
+                return;
+            }
+            if (!filterValue) {
+                $publicationsHeader.text(basePublicationsHeader);
+                return;
+            }
+            var labelMap = lensKey === 'cs' ? csFilterLabels : cjFilterLabels;
+            var label = labelMap[filterValue] || filterValue;
+            $publicationsHeader.text(basePublicationsHeader + ' (' + label + ')');
+        }
+
+        function applyFilter(lensKey, filterValue) {
+            $paperEntries.removeClass('paper-hidden');
+            if (filterValue) {
+                var attributeName = lensKey === 'cs' ? 'data-cs' : 'data-cj';
+                $paperEntries.each(function () {
+                    var groups = ($(this).attr(attributeName) || '').split(/\s+/).filter(function (token) {
+                        return token.length > 0;
+                    });
+                    if (groups.indexOf(filterValue) === -1) {
+                        $(this).addClass('paper-hidden');
+                    }
+                });
+            }
+            updateHeaderForFilter(lensKey, filterValue);
+        }
+
+        function handleFilterMessage(lensKey, value) {
+            if (lensKey === 'cs') {
+                activeCsFilter = value || null;
+                if (activeLens === 'cs') {
+                    applyFilter('cs', activeCsFilter);
+                }
+            } else {
+                activeCjFilter = value || null;
+                if (activeLens === 'cj') {
+                    applyFilter('cj', activeCjFilter);
+                }
+            }
+        }
+
+        applyFilter(activeLens, activeLens === 'cs' ? activeCsFilter : activeCjFilter);
+
+        window.addEventListener('message', function (event) {
+            if (!event || typeof event.data !== 'object' || event.data === null) {
+                return;
+            }
+            if (event.data.type === 'cs-filter') {
+                handleFilterMessage('cs', event.data.value);
+            } else if (event.data.type === 'cj-filter') {
+                handleFilterMessage('cj', event.data.value);
+            }
+        });
     });
 </script>
 
@@ -69,29 +257,74 @@
         <p>
             For AI to play a more integrated role in human tasks, it must align with human values and decision-making processes. Doing
             so, I believe, requires a radically different approach to conceptualizing and training AI; it requires an AI that understands, on a
-            fundamental level, why humans make the decisions we do. Much of my work has focused on illuminating this process through simply observing the creative outputs humans produce. 
-            This is the generative model we assume for documents:
+            fundamental level, why humans make the decisions we do. My work illuminates this process through simply observing the creative outputs humans produce. 
 
             <object type="image/svg+xml" data="cs-flow.html" scrolling="no"></object>
 
-            This says that a <i>document</i> is generated by a sequence of human <i>actions</i>, which can be inferred by anaylzing the macrostructure of that document (also known as the "discourse structure"). 
-            Click on "Actions", "Discourse Elements" or "Words" to see specific research articles targeted at each of those frames of analysis. 
-            Where is this work going? I would like to take the next step: use <i>inferred actions</i> as a guide for learning the <i>reward functions</i> that drive human writing behavior. 
-            I believe that only with these rewards can we train creative AI systems that understand human decision-making processes and are aligned with human values.
+            This generative model says that a <i>document</i> is generated by a sequence of human <i>actions</i>, which can be inferred by anaylzing the macrostructure of that document (also known as the "discourse structure"). 
+            <i><u>Click on the diagram to filter articles by each area.</u></i>
+            <!-- Where is this work going? I would like to take the next step: use <i>inferred actions</i> as a guide for learning the <i>reward functions</i> that drive human writing behavior.  -->
+            <!-- I believe that only with these rewards can we train creative AI systems that understand human decision-making processes and are aligned with human values. -->
         </p>
     </div>
     <div id="comp-journalism-lens">
         <p>
             I imagine a society where professional journalists can produce more higher-quality information at lower costs, improving our information ecosystem, better informing the public and improving our democracy. 
-            Much of my work has focused on this vision, and has targeted different steps in the news gathering process. Our workflow for journalism is:
+            My work has targeted different steps in the news gathering process. The workflow for journalism is:
             <object type="image/svg+xml" data="journalism-flow.html" scrolling="no"></object>
-            I have focused on each of these steps, and have developed computational methods to improve each step.
+            I develop computational methods to improve each step. <i><u>Click on the diagram to filter articles by each area.</u></i>
         </p>
         <!-- Click on the diagram to filter articles by each area. -->
     </div>
 
-    <h2>Publications</h2>
+    <h2 id="publications-header">Publications</h2>
     <div id="cs-papers">
+        <div valign="top">
+            <div class="paper_title">
+            A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting
+            </div>
+            <div class="paper_rest">
+            <strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Lucas Spangher, Sewon Min, Mark Dredze.<br>
+            <strong>Proceedings of the 4th International Workshop on Knowledge-Augmented Methods for Natural Language Processing</strong> 2025.<br>
+            Association for Computational Linguistics.
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+
+        <div valign="top">
+            <div class="paper_title">
+            🎤 NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews
+            </div>
+            <div class="paper_rest">
+            <strong>Alexander Spangher</strong>, Michael Lu, Sriya Kalyan, Hyundong Justin Cho, Tenghao Huang, Weiyan Shi, Jonathan May.<br>
+            <strong>Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)</strong> 2025.<br>
+            Association for Computational Linguistics.
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+
+        <div valign="top">
+            <div class="paper_title">
+            Spatial Layouts in News Homepages Capture Human Preferences
+            </div>
+            <div class="paper_rest">
+            <strong>Alexander Spangher</strong>, Michael Vu, Arda Kaz, Naitian Zhou, Ben Welsh.<br>
+            <strong>Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing</strong> 2025.<br>
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+
+        <div valign="top">
+            <div class="paper_title">
+            The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity
+            </div>
+            <div class="paper_rest">
+            Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.<br>
+            <strong>NeurIPS 2025 Creative AI Track</strong> 2025.
+            </div>
+            <div class="paper_bottom_space"></div>
+        </div>
+
         <div valign="top">
             <div class="paper_title">
             🏆🎤 Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs
@@ -302,6 +535,17 @@
     <h2>Publications (Middle Author)</h2>
     <div valign="top">
         <div class="paper_title">
+        Scaling Self-Supervised Representation Learning for Symbolic Piano Performance
+        </div>
+        <div class="paper_rest">
+        Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.<br>
+        <strong>International Society for Music Information Retrieval Conference (ISMIR)</strong> 2025.
+        </div>
+        <div class="paper_bottom_space"></div>
+    </div>
+    
+    <div valign="top">
+        <div class="paper_title">
         🏆 Are Large Language Models Capable of Generating Human-Level Narratives?
         </div>
         <div class="paper_rest">
@@ -384,39 +628,6 @@
         </div>
         <div class="paper_rest">
         <strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.<br>
-        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        A Novel Multi-Document Retrieval Benchmark Grounded on Journalist Source-Selection in Newswriting
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Liheng Lai, Lucas Spangher, Sewon Min, Mark Dredze.<br>
-        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        NewsInterview: a Dataset and a Playground to Evaluate LLMs' Ground Gap via Informational Interviews
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Michael Lu, Hyundong Justin Cho, Weiyan Shi, Jonathan May.<br>
-        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        NewsHomepages: Homepage Layouts Capture Information Prioritization Decisions
-        </div>
-        <div class="paper_rest">
-        Ben Welsh, Naitian Zhou, Arda Kaz, Michael Vu, <strong>Alexander Spangher</strong>.<br>
         <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
         </div>
         <div class="paper_bottom_space"></div>

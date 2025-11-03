@@ -13,6 +13,8 @@
   .section-label {
     font-weight: bold;
     font-size: 14px;
+    cursor: pointer;
+    transition: fill 0.2s, color 0.2s;
   }
 
   .node-circle {
@@ -49,6 +51,19 @@
     pointer-events: none; /* So text doesn't block circle hover */
   }
 
+  .section-label {
+    pointer-events: auto;
+  }
+
+  .node-circle.active,
+  .word-circle.active {
+    fill: #ffe082;
+  }
+
+  .section-label.active {
+    fill: #d35400;
+  }
+
   /* Arrow marker for lines */
   marker#arrow {
     markerWidth: 10;
@@ -70,27 +85,27 @@
   </defs>
 
   <!-- Section Labels on the left -->
-  <text x="50" y="63" class="section-label">Actions:</text>
-  <text x="50" y="126" class="section-label">Discourse Elements:</text>
-  <text x="50" y="174" class="section-label">Words:</text>
+  <text x="50" y="63" class="section-label" data-filter-trigger="actions">Actions:</text>
+  <text x="50" y="126" class="section-label" data-filter-trigger="discourse">Discourse Elements:</text>
+  <text x="50" y="174" class="section-label" data-filter-trigger="words">Words:</text>
 
   <!-- Actions Row -->
   <!-- a1 circle -->
-  <circle id="a1" class="node-circle hover-highlight" cx="200" cy="60" r="20">
+  <circle id="a1" class="node-circle hover-highlight" cx="200" cy="60" r="20" data-filter-trigger="actions">
     <title>a1: Call a source</title>
   </circle>
   <text x="200" y="63" class="small-text">a1</text>
   <text x="200" y="30" font-size="12px" font-style="italic" text-anchor="middle">Call a source</text>
 
   <!-- a2 circle -->
-  <circle id="a2" class="node-circle hover-highlight" cx="350" cy="60" r="20">
+  <circle id="a2" class="node-circle hover-highlight" cx="350" cy="60" r="20" data-filter-trigger="actions">
     <title>a2: Call opposing source</title>
   </circle>
   <text x="350" y="63" class="small-text">a2</text>
   <text x="350" y="30" font-size="12px" font-style="italic" text-anchor="middle">Call opposing source</text>
 
   <!-- a3 circle -->
-  <circle id="a3" class="node-circle hover-highlight" cx="500" cy="60" r="20">
+  <circle id="a3" class="node-circle hover-highlight" cx="500" cy="60" r="20" data-filter-trigger="actions">
     <title>a3: Introduce background</title>
   </circle>
   <text x="500" y="63" class="small-text">a3</text>
@@ -103,14 +118,14 @@
 
   <!-- Discourse Elements Row -->
   <!-- d1 circle -->
-  <circle id="d1" class="node-circle hover-highlight" cx="270" cy="120" r="20">
+  <circle id="d1" class="node-circle hover-highlight" cx="270" cy="120" r="20" data-filter-trigger="discourse">
     <title>d1</title>
   </circle>
   <text x="270" y="125" class="small-text">d1</text>
   <text x="320" y="125" font-size="12px" text-anchor="middle">Speech</text>
 
   <!-- d2 circle -->
-  <circle id="d2" class="node-circle hover-highlight" cx="425" cy="120" r="20">
+  <circle id="d2" class="node-circle hover-highlight" cx="425" cy="120" r="20" data-filter-trigger="discourse">
     <title>d2</title>
   </circle>
   <text x="425" y="125" class="small-text">d2</text>
@@ -122,32 +137,32 @@
 
   <!-- Words Row -->
   <!-- w1, w2, w3 under d1 -->
-  <circle id="w1" class="word-circle hover-highlight" cx="220" cy="170" r="15">
+  <circle id="w1" class="word-circle hover-highlight" cx="220" cy="170" r="15" data-filter-trigger="words">
     <title>w1: "Opinions"</title>
   </circle>
   <text x="220" y="175" class="small-text">w1</text>
   <text x="220" y="195" font-size="12px" text-anchor="middle">"Opinions"</text>
 
-  <circle id="w2" class="word-circle hover-highlight" cx="270" cy="170" r="15">
+  <circle id="w2" class="word-circle hover-highlight" cx="270" cy="170" r="15" data-filter-trigger="words">
     <title>w2: "were"</title>
   </circle>
   <text x="270" y="175" class="small-text">w2</text>
   <text x="270" y="195" font-size="12px" text-anchor="middle">"were"</text>
 
-  <circle id="w3" class="word-circle hover-highlight" cx="320" cy="170" r="15">
+  <circle id="w3" class="word-circle hover-highlight" cx="320" cy="170" r="15" data-filter-trigger="words">
     <title>w3: "mixed."</title>
   </circle>
   <text x="320" y="175" class="small-text">w3</text>
   <text x="320" y="195" font-size="12px" text-anchor="middle">"mixed."</text>
 
   <!-- w4, w5 in between d1 and d2 -->
-  <circle id="w4" class="word-circle hover-highlight" cx="370" cy="170" r="15">
+  <circle id="w4" class="word-circle hover-highlight" cx="370" cy="170" r="15" data-filter-trigger="words">
     <title>w4: "The"</title>
   </circle>
   <text x="370" y="175" class="small-text">w4</text>
   <text x="370" y="195" font-size="12px" text-anchor="middle">"The"</text>
 
-  <circle id="w5" class="word-circle hover-highlight" cx="420" cy="170" r="15">
+  <circle id="w5" class="word-circle hover-highlight" cx="420" cy="170" r="15" data-filter-trigger="words">
     <title>w5: "attacks"</title>
   </circle>
   <text x="420" y="175" class="small-text">w5</text>
@@ -155,19 +170,19 @@
 
 
   <!-- w6, w7, w8 under d2 -->
-  <circle id="w6" class="word-circle hover-highlight" cx="470" cy="170" r="15">
+  <circle id="w6" class="word-circle hover-highlight" cx="470" cy="170" r="15" data-filter-trigger="words">
     <title>w6: "were"</title>
   </circle>
   <text x="470" y="175" class="small-text">w6</text>
   <text x="470" y="195" font-size="12px" text-anchor="middle">"were"</text>
 
-  <circle id="w7" class="word-circle hover-highlight" cx="520" cy="170" r="15">
+  <circle id="w7" class="word-circle hover-highlight" cx="520" cy="170" r="15" data-filter-trigger="words">
     <title>w7: "preceded"</title>
   </circle>
   <text x="520" y="175" class="small-text">w7</text>
   <text x="520" y="195" font-size="12px" text-anchor="middle">"preceded"</text>
 
-  <circle id="w8" class="word-circle hover-highlight" cx="570" cy="170" r="15">
+  <circle id="w8" class="word-circle hover-highlight" cx="570" cy="170" r="15" data-filter-trigger="words">
     <title>w8: "by"</title>
   </circle>
   <text x="570" y="175" class="small-text">w8</text>
@@ -192,8 +207,67 @@
   <line x1="535" y1="170" x2="555" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
   <line x1="585" y1="170" x2="605" y2="170" stroke="#000" stroke-width="1" marker-end="url(#arrow)"/>
 
-  
+
 </svg>
+
+<script>
+  (function () {
+    const groupSelectors = {
+      actions: ['#a1', '#a2', '#a3'],
+      discourse: ['#d1', '#d2'],
+      words: ['#w1', '#w2', '#w3', '#w4', '#w5', '#w6', '#w7', '#w8']
+    };
+
+    const groups = {};
+    Object.keys(groupSelectors).forEach((key) => {
+      groups[key] = groupSelectors[key]
+        .map((selector) => document.querySelector(selector))
+        .filter(Boolean);
+    });
+
+    const labels = {
+      actions: document.querySelector('.section-label[data-filter-trigger="actions"]'),
+      discourse: document.querySelector('.section-label[data-filter-trigger="discourse"]'),
+      words: document.querySelector('.section-label[data-filter-trigger="words"]')
+    };
+
+    const triggers = document.querySelectorAll('[data-filter-trigger]');
+    let activeFilter = null;
+
+    function applyHighlight() {
+      Object.keys(groups).forEach((key) => {
+        const isActive = activeFilter === key;
+        groups[key].forEach((node) => node.classList.toggle('active', isActive));
+        if (labels[key]) {
+          labels[key].classList.toggle('active', isActive);
+        }
+      });
+    }
+
+    function postSelection() {
+      window.parent.postMessage(
+        {
+          type: 'cs-filter',
+          value: activeFilter
+        },
+        '*'
+      );
+    }
+
+    triggers.forEach((node) => {
+      const filterKey = node.getAttribute('data-filter-trigger');
+      if (!groups[filterKey]) {
+        return;
+      }
+      node.addEventListener('click', (event) => {
+        event.preventDefault();
+        activeFilter = activeFilter === filterKey ? null : filterKey;
+        applyHighlight();
+        postSelection();
+      });
+    });
+  })();
+</script>
 
 </body>
 </html>
