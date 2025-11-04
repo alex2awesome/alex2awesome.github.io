@@ -14,17 +14,8 @@
     }
   </style>
   <body>
-<nav class="site-nav" aria-label="Primary navigation">
-  <a href="index.html">Home</a>
-  <span class="nav-sep">|</span>
-  <a href="research.html">Academic Research</a>
-  <span class="nav-sep">|</span>
-  <a href="talks.html">Talks</a>
-  <span class="nav-sep">|</span>
-  <a href="data-vis.html">Journalism</a>
-  <span class="nav-sep">|</span>
-  <a href="music.html">Music</a>
-</nav>
+    {% include 'includes/site-header.html' %}
+
   <div class="main">
     <div class="container">
       <h1 id="top-header">Music</h1>
@@ -135,13 +126,7 @@
       </ul>
     </div>
   </div>
-<footer class="site-footer">
-  <div class="footer-inner">
-<h2 id="how-to-contact-me">Contact Information:</h2>
-<p>The best place to reach me is: <a href="mailto:alexspan@stanford.edu">alexspan@stanford.edu</a>. 
-  Other emails I check are: <a href="mailto:spangher@usc.edu">spangher@usc.edu</a> and <a href="mailto:alexander.spangher@gmail.com">alexander.spangher@gmail.com</a>.
-  <img src="assets/img/lapa.jpg" alt="Lapa" id="lapa" class="img-fluid">
-</p>  </div>
-</footer>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% include 'includes/site-footer.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

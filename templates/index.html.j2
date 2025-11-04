@@ -115,17 +115,8 @@
   </head>
   
   <body class="index">
-<nav class="site-nav" aria-label="Primary navigation">
-  <a href="index.html">Home</a>
-  <span class="nav-sep">|</span>
-  <a href="research.html">Academic Research</a>
-  <span class="nav-sep">|</span>
-  <a href="talks.html">Talks</a>
-  <span class="nav-sep">|</span>
-  <a href="data-vis.html">Journalism</a>
-  <span class="nav-sep">|</span>
-  <a href="music.html">Music</a>
-</nav>    <div class="container-fluid">
+    {% include 'includes/site-header.html' %}
+    <div class="container-fluid">
       <div class="row">
         <!-- Left column (1/3 width) -->
         <div class="col-md-4">
@@ -262,11 +253,8 @@
 
 
             <!--  -->
-<h2 id="how-to-contact-me">Contact Information:</h2>
-<p>The best place to reach me is: <a href="mailto:alexspan@stanford.edu">alexspan@stanford.edu</a>. 
-  Other emails I check are: <a href="mailto:spangher@usc.edu">spangher@usc.edu</a> and <a href="mailto:alexander.spangher@gmail.com">alexander.spangher@gmail.com</a>.
-  <img src="assets/img/lapa.jpg" alt="Lapa" id="lapa" class="img-fluid">
-</p>          </div>
+            {% include 'includes/contact-info.html' %}
+          </div>
         </div>
       </div>
     </div>

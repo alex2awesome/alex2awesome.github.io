@@ -29,6 +29,40 @@ a:hover {
     text-decoration: underline;
 }
 
+.site-nav {
+    margin: 1.5rem auto;
+    text-align: center;
+    font-size: 1.1rem;
+    letter-spacing: 0.01em;
+}
+
+.site-nav a {
+    color: inherit;
+    font-weight: 600;
+}
+
+.site-nav .nav-sep {
+    margin: 0 0.35rem;
+    color: #555;
+}
+
+.img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+.site-footer {
+    margin-top: 3rem;
+    padding: 2rem 1rem;
+    background: linear-gradient(180deg, #fdfdfd 0%, #f7f7f7 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.footer-inner {
+    max-width: var(--column-width);
+    margin: 0 auto;
+}
+
 .main {
     width: 98%;
     max-width: var(--column-width);
@@ -36,17 +70,50 @@ a:hover {
     padding: 0 1%;
 }
 h1 {
-    font-size: 2em;
+    font-size: 2.25rem;
 }
 
-h2, h3, h4, h5, h6 {
+h2 {
+    font-size: 1.8rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4, h5, h6 {
     margin: 0.5em 0;
 }
 
-.main h2, .main h3 {
+h1, h2, h3 {
+    margin: 0.5em 0;
+}
+
+.main h1, .main h2, .main h3 {
     border-top: 4px solid #333;
     border-bottom: .5px dashed #333;
-    margin-top: 70px;
+    padding: 1.2rem 0 0.8rem;
+    margin: 2.5rem 0 1.5rem;
+}
+
+.main h1 {
+    font-size: 2.25rem;
+    font-weight: 400;
+}
+
+.main h2 {
+    font-size: 1.75rem;
+    font-weight: 500;
+}
+
+.main h3 {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.main > h1:first-of-type,
+.main > .container:first-child > h1:first-of-type {
+    margin-top: 1.5rem;
 }
 
 .main p {
@@ -152,23 +219,37 @@ hr {
   }
   
   /* News Text */
-  .news-text {
+.news-text {
     line-height: 1.5;
     color: #555;
     flex: 1;
-  }
+}
 
-  .paper_title {
+.video-embed {
+    display: block;
+    margin: 2rem auto;
+    max-width: 840px;
+}
+
+.video-embed iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.paper_title {
     font-size: 1.2em;
     margin-bottom: 5px;
-  }
-  .paper_rest {
+}
+.paper_rest {
     font-size: 1em;
     margin-bottom: 10px;
-  }
-  .paper_bottom_space {
+}
+.paper_bottom_space {
     height: 20px;
-  }
+}
   
 
   .icon-row i {

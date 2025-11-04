@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recreate Diagram (Responsive)</title>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        cursor: pointer;
+      }
+    </style>
+</head>
+<body>
+<canvas id="diagram"></canvas>
+<script>
+    const canvas = document.getElementById('diagram');
+    const originalWidth = 900;
+    const originalHeight = 280;
+
+    const dpr = window.devicePixelRatio || 1;
+
+    // Set canvas dimensions based on its CSS size and scale for high-DPI
+    const cssWidth = canvas.clientWidth;
+    const cssHeight = cssWidth * (originalHeight / originalWidth);
+    
+
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+    const ctx = canvas.getContext('2d');
+
+    // Data for boxes
+    const boxWidth = 150;
+    const boxHeight = 50;
+
+    const storyIdea = {
+        x: 150,
+        y: 50,
+        width: boxWidth,
+        height: boxHeight,
+        color: "#eed0c6",
+        text: "Story Idea"
+    };
+    const articleInProgress = {
+        x: 375,
+        y: 50,
+        width: boxWidth,
+        height: boxHeight,
+        color: "#C9E7FE",
+        text: "Article-in-progress"
+    };
+    const finishedStory = {
+        x: 600,
+        y: 50,
+        width: boxWidth,
+        height: boxHeight,
+        color: "#8def80",
+        text: "Finished story"
+    };
+    const structuredStory = {
+        x: 150,
+        y: 170,
+        width: boxWidth,
+        height: boxHeight,
+        color: "#FFF7A8",
+        text: "Structured story"
+    };
+    const sourcedStory = {
+        x: 600,
+        y: 170,
+        width: boxWidth,
+        height: boxHeight,
+        color: "#efc380",
+        text: "Sourced story"
+    };
+
+    // Utility functions
+    function drawRoundedRect(x, y, width, height, radius, color, text, isActive = false) {
+        const previousFillStyle = ctx.fillStyle;
+        const previousStrokeStyle = ctx.strokeStyle;
+        const previousLineWidth = ctx.lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fillStyle = isActive ? '#ffe082' : color;
+        ctx.fill();
+        ctx.strokeStyle = isActive ? "#b8860b" : "black";
+        ctx.lineWidth = isActive ? 3 : 1;
+        ctx.stroke();
+        ctx.fillStyle = previousFillStyle;
+        ctx.strokeStyle = previousStrokeStyle;
+        ctx.lineWidth = previousLineWidth;
+
+        // Add text inside the box
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x + width / 2, y + height / 2);
+    }
+
+    function drawArrow(x1, y1, x2, y2, controlX, controlY) {
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        if (controlX === null || controlY === null) {
+            // Draw straight line
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+        } else {
+            // Draw curved line
+            ctx.moveTo(x1, y1);
+            ctx.quadraticCurveTo(controlX, controlY, x2, y2);
+        }
+        ctx.stroke();
+
+        // Calculate angle for arrowhead
+        let angle;
+        if (controlX === null || controlY === null) {
+            angle = Math.atan2(y2 - y1, x2 - x1);
+        } else {
+            angle = Math.atan2(y2 - controlY, x2 - controlX);
+        }
+
+        // Draw arrowhead
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - 10 * Math.cos(angle - Math.PI / 6), y2 - 10 * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - 10 * Math.cos(angle + Math.PI / 6), y2 - 10 * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    function drawLabel(text, x, y) {
+        // Draw multi-line text if needed
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "black";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const lines = text.split("<br>");
+        const lineHeight = 14;
+        const startY = y - (lines.length - 1) * (lineHeight / 2);
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], x, startY + i * lineHeight);
+        }
+    }
+
+    const stages = [
+        { key: "story-idea", box: storyIdea },
+        { key: "article-in-progress", box: articleInProgress },
+        { key: "finished-story", box: finishedStory },
+        { key: "structured-story", box: structuredStory },
+        { key: "sourced-story", box: sourcedStory }
+    ];
+
+    let activeStage = null;
+
+    function draw() {
+        // Adjust canvas size based on current container size
+        // We'll take the clientWidth as reference
+        // canvas.width = canvas.clientWidth;
+        // canvas.height = canvas.clientWidth * (originalHeight / originalWidth);
+
+        // Calculate scale factors
+        const scaleX = canvas.width / originalWidth;
+        const scaleY = canvas.height / originalHeight;
+
+        // Reset transformations and apply scaling
+        ctx.setTransform(1, 0, 0, 1, 0, 0); 
+        ctx.scale(scaleX, scaleY);
+
+        ctx.clearRect(0, 0, originalWidth, originalHeight);
+
+        // Draw boxes
+        stages.forEach(({ key, box }) => {
+            drawRoundedRect(
+                box.x,
+                box.y,
+                box.width,
+                box.height,
+                10,
+                box.color,
+                box.text,
+                activeStage === key
+            );
+        });
+
+        // Arrows and labels
+        // Arrow from Story Idea to Article-in-progress
+        drawArrow(
+            storyIdea.x + storyIdea.width,
+            storyIdea.y + storyIdea.height / 2,
+            articleInProgress.x,
+            articleInProgress.y + articleInProgress.height / 2,
+            null,
+            null
+        );
+        drawLabel(
+            "(a) Journalist scans,<br> finds stories",
+            (storyIdea.x + storyIdea.width + articleInProgress.x) / 2,
+            storyIdea.y + storyIdea.height / 2 - 30
+        );
+
+        // Arrow from Article-in-progress to Finished story
+        drawArrow(
+            articleInProgress.x + articleInProgress.width,
+            articleInProgress.y + articleInProgress.height / 2,
+            finishedStory.x,
+            finishedStory.y + finishedStory.height / 2,
+            null,
+            null
+        );
+        drawLabel(
+            "(d) Is it finished?",
+            (articleInProgress.x + articleInProgress.width + finishedStory.x) / 2,
+            articleInProgress.y + articleInProgress.height / 2 - 35
+        );
+
+        // Arrow from Article-in-progress to Sourced story (curved)
+        drawArrow(
+            articleInProgress.x + articleInProgress.width / 2,
+            articleInProgress.y + articleInProgress.height,
+            sourcedStory.x + sourcedStory.width / 2,
+            sourcedStory.y,
+            (articleInProgress.x + sourcedStory.x) / 2 + 170,
+            (articleInProgress.y + sourcedStory.y) / 2
+        );
+        drawLabel(
+            "(b) Journalist finds, <br> talks to sources",
+            (articleInProgress.x + sourcedStory.x) / 2 + 220,
+            (articleInProgress.y + sourcedStory.y) / 2 + 20
+        );
+
+        // Arrow from Sourced story to Structured story (curved)
+        drawArrow(
+            sourcedStory.x + sourcedStory.width / 2,
+            sourcedStory.y + sourcedStory.height,
+            structuredStory.x + structuredStory.width / 2,
+            structuredStory.y + structuredStory.height,
+            originalWidth / 2,
+            structuredStory.y + structuredStory.height + 100
+        );
+
+        // Arrow from Structured story back to Article-in-progress (curved)
+        drawArrow(
+            structuredStory.x + structuredStory.width / 2,
+            structuredStory.y,
+            articleInProgress.x + articleInProgress.width / 2,
+            articleInProgress.y + articleInProgress.height,
+            (structuredStory.x + articleInProgress.x) / 2 - 30,
+            (structuredStory.y + articleInProgress.y) / 2
+        );
+        drawLabel(
+            "(c) Journalist adds info <br> and structure",
+            (structuredStory.x + articleInProgress.x) / 2 - 50,
+            (structuredStory.y + articleInProgress.y) / 2 + 20
+        );
+    }
+
+    window.addEventListener('resize', draw);
+    window.addEventListener('load', draw);
+
+    function pointInBox(x, y, box) {
+        return (
+            x >= box.x &&
+            x <= box.x + box.width &&
+            y >= box.y &&
+            y <= box.y + box.height
+        );
+    }
+
+    function postSelection() {
+        window.parent.postMessage(
+            {
+                type: "cj-filter",
+                value: activeStage
+            },
+            "*"
+        );
+    }
+
+    canvas.addEventListener("click", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const relativeX = (event.clientX - rect.left) * dpr;
+        const relativeY = (event.clientY - rect.top) * dpr;
+        const scaleX = canvas.width / originalWidth;
+        const scaleY = canvas.height / originalHeight;
+        const diagramX = relativeX / scaleX;
+        const diagramY = relativeY / scaleY;
+
+        let clickedStage = null;
+        for (const { key, box } of stages) {
+            if (pointInBox(diagramX, diagramY, box)) {
+                clickedStage = key;
+                break;
+            }
+        }
+
+        if (clickedStage) {
+            activeStage = activeStage === clickedStage ? null : clickedStage;
+            draw();
+            postSelection();
+        }
+    });
+</script>
+</body>
+</html>
