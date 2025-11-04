@@ -4,6 +4,7 @@
   --column-width: 700px;
   --picture-rescale: .6;
   --iframe-rescale: 1;
+  --nav-offset: 3.25rem;
 }
 
 html {
@@ -14,10 +15,10 @@ html {
 body {
     color: #333;
 	font-family: "Times New Roman", Georgia, Serif;
-    margin: 0.5em;
+    margin: 0;
     padding: 0;
     font-size: 16px;
-    background-color: 'white';
+    background-color: white;
 }
 
 a, a:visited {
@@ -30,20 +31,45 @@ a:hover {
 }
 
 .site-nav {
-    margin: 1.5rem auto;
+    display: block;
+    width: 100%;
+    margin: 0 0 2rem;
+    padding: 1.2rem 0 0.75rem;
     text-align: center;
-    font-size: 1.1rem;
-    letter-spacing: 0.01em;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    border-top: 4px solid #333;
+    border-bottom: 0.5px dashed #333;
+    background: linear-gradient(180deg, #fafafa 0%, #fdfdfd 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.sticky-top {
+    top: var(--nav-offset);
+}
+
+@media (max-width: 768px) {
+    .site-nav {
+        font-size: 0.95rem;
+        padding: 1rem 0 0.75rem;
+    }
+    .sticky-top {
+        top: calc(var(--nav-offset) + 0.75rem);
+    }
 }
 
 .site-nav a {
     color: inherit;
     font-weight: 600;
+    margin: 0 0.6rem;
 }
 
 .site-nav .nav-sep {
-    margin: 0 0.35rem;
-    color: #555;
+    margin: 0 0.25rem;
+    color: #666;
 }
 
 .img-fluid {
@@ -92,8 +118,8 @@ h1, h2, h3 {
 .main h1, .main h2, .main h3 {
     border-top: 4px solid #333;
     border-bottom: .5px dashed #333;
-    padding: 1.2rem 0 0.8rem;
-    margin: 2.5rem 0 1.5rem;
+    padding: 0.8rem 0 0.5rem;
+    margin: 1.8rem 0 1rem;
 }
 
 .main h1 {
@@ -113,7 +139,27 @@ h1, h2, h3 {
 
 .main > h1:first-of-type,
 .main > .container:first-child > h1:first-of-type {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
+}
+
+.index .main h1,
+.index .main h2 {
+    position: static;
+}
+
+.research .main h1 {
+    position: static;
+}
+
+.research .main h2 {
+    position: sticky;
+    top: calc(var(--nav-offset) + 0.6rem);
+    background: #ffffff;
+    z-index: 500;
+}
+
+.research .main h2#how-to-contact-me {
+    position: static;
 }
 
 .main p {
@@ -237,6 +283,23 @@ hr {
     border: none;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.talk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.talk-entry h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.talk-entry p {
+    margin: 0 0 1.2rem;
+    color: #555;
+    font-size: 1.05rem;
 }
 
 .paper_title {
