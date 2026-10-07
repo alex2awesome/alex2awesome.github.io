@@ -1,0 +1,6 @@
+# The real wishlist ideas. render_templates.py encrypts this into data/wishlist.enc.json,
+# which is the only form that is committed and served.
+data/*.private.*
+
+__pycache__/
+.DS_Store

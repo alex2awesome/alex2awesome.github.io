@@ -1,0 +1,523 @@
+# ---------------------------------------------------------------------------
+# Publication data for templates/research.html.j2  (rendered by render_templates.py)
+#
+# papers:   one entry per publication. Fields:
+#   id           slug used in `cards` and as the HTML anchor  (#paper-<id>)
+#   section      first-author | thesis | middle-author | in-submission
+#   topics       CS-lens grouping in "All Publications"; first topic = the group shown
+#                (tacit | planning | discourse | sequence | other)
+#   stages       journalism-lens grouping; first stage = the group shown
+#                (news-finding | source-finding | story-structuring | story-editing | information-ecosystem | other)
+#   year         used only for reference
+#   badges       emoji shown before the title (🏆 award, 🎤 oral), or ""
+#   title        HTML allowed
+#   authors      HTML allowed; <strong> marks you
+#   venue        full venue line (HTML allowed); shown as a tooltip on the venue tag
+#   venue_short  short venue tag shown on the card, e.g. "EMNLP 2024"
+#   notes        extra small-print lines (acceptance rate, "also presented at", ...)
+#   link         URL or repo-relative path for the paper link ("" for none)
+#   link_label   text of the link, default "paper"
+#   summary      one sentence in your voice: the goal, how it fits the category, what you showed
+# Entries are listed newest-first within each section.
+# ---------------------------------------------------------------------------
+papers:
+
+  # ---- First author ----
+  - id: multi-doc-retrieval
+    section: first-author
+    topics: [tacit]
+    stages: [source-finding]
+    year: 2025
+    badges: ""
+    title: "A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting"
+    authors: "<strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Lucas Spangher, Sewon Min, Mark Dredze."
+    venue: "<strong>Proceedings of the 4th International Workshop on Knowledge-Augmented Methods for Natural Language Processing</strong> 2025."
+    venue_short: "KnowledgeNLP Workshop 2025"
+    notes: []
+    link: "https://aclanthology.org/2025.knowledgenlp-1.18.pdf"
+    summary: "Journalists choose sources for the discourse role they play together, not just the facts they add; we turned source selection into a multi-document retrieval benchmark and showed LLM query planners improve when they plan over discourse roles."
+
+  - id: newsinterview
+    section: first-author
+    topics: [planning]
+    stages: [source-finding]
+    year: 2025
+    badges: "🎤"
+    title: "NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews"
+    authors: "<strong>Alexander Spangher</strong>, Michael Lu, Sriya Kalyan, Hyundong Justin Cho, Tenghao Huang, Weiyan Shi, Jonathan May."
+    venue: "<strong>Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)</strong> 2025."
+    venue_short: "ACL 2025"
+    notes: []
+    link: "https://aclanthology.org/2025.acl-long.1580.pdf"
+    summary: "Interviewing is multi-turn planning under uncertainty; from 40,000 journalistic interviews we built a simulated environment and found LLM interviewers rabbit-hole, fail to pivot and leave information on the table."
+
+  - id: spatial-layouts
+    section: first-author
+    topics: [tacit]
+    stages: [news-finding]
+    year: 2025
+    badges: ""
+    title: "Spatial Layouts in News Homepages Capture Human Preferences"
+    authors: "<strong>Alexander Spangher</strong>, Michael Vu, Arda Kaz, Naitian Zhou, Ben Welsh."
+    venue: "<strong>Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing</strong> 2025."
+    venue_short: "EMNLP 2025"
+    notes: []
+    link: "https://aclanthology.org/2025.emnlp-main.1695.pdf"
+    summary: "Editors encode what matters in where they put stories on a homepage; from 3,000 homepages captured twice daily for five years, we show these layout preferences are stable and learnable (0.7 F1 against human trials)."
+
+  - id: ghost-in-the-keys
+    section: first-author
+    topics: [sequence]
+    stages: [other]
+    year: 2025
+    badges: ""
+    title: "The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity"
+    authors: "Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton."
+    venue: "<strong>NeurIPS 2025 Creative AI Track</strong> 2025."
+    venue_short: "NeurIPS 2025 Creative AI"
+    notes: []
+    link: "https://arxiv.org/abs/2511.01663"
+    summary: "Aria-Duet puts our piano model on a Disklavier for a live, turn-taking duet with a human pianist; it holds the style and develops phrases rather than merely continuing them."
+
+  - id: llms-plan-like-writers
+    section: first-author
+    topics: [planning]
+    stages: [news-finding]
+    year: 2024
+    badges: "🏆🎤"
+    title: "Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs"
+    authors: "<strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze."
+    venue: "<strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024."
+    venue_short: "EMNLP 2024"
+    notes:
+      - "Acceptance rate 20.8%"
+    link: "https://aclanthology.org/2024.emnlp-main.1216.pdf"
+    summary: "Choosing an angle on a press release is a planning decision; comparing 650k human articles with LLM suggestions, we found LLMs match humans better on angles than on sources, and are less creative at both."
+
+  - id: explaining-mixtures
+    section: first-author
+    topics: [planning]
+    stages: [source-finding]
+    year: 2024
+    badges: ""
+    title: "Explaining Mixtures of Sources in News Articles"
+    authors: "<strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May."
+    venue: "<strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024."
+    venue_short: "EMNLP 2024"
+    notes:
+      - "Acceptance rate 20.8%"
+    link: "https://arxiv.org/abs/2411.05192"
+    summary: "Writers plan, then write; we treat a journalist's source-selection schema as a latent plan and show two schemata, stance and social affiliation, explain most stories and can be predicted from the headline alone."
+
+  - id: cfg
+    section: first-author
+    topics: [sequence]
+    stages: [other]
+    year: 2024
+    badges: "🏆"
+    title: "Stay on Topic with Classifier-Free Guidance"
+    authors: "<strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman."
+    venue: "<strong>Forty-first International Conference on Machine Learning</strong> 2024."
+    venue_short: "ICML 2024"
+    notes:
+      - "Acceptance rate 27.5%"
+    link: "https://arxiv.org/abs/2306.17806"
+    summary: "Classifier-free guidance, borrowed from image diffusion, works for plain language models too: at inference time it buys the accuracy of a model twice the size across Q&amp;A, reasoning, code and translation."
+
+  - id: tracking-newsworthiness
+    section: first-author
+    topics: [tacit]
+    stages: [news-finding]
+    year: 2024
+    badges: ""
+    title: "Tracking the Newsworthiness of Public Documents"
+    authors: "<strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May."
+    venue: "<strong>Association of Computational Linguistics</strong> 2024."
+    venue_short: "ACL 2024"
+    notes:
+      - "Acceptance rate 23.5%"
+    link: "https://arxiv.org/abs/2311.09734"
+    summary: "To learn which public-policy items a local paper will cover, we linked SF Chronicle articles to city-government records and built newsworthiness predictors that expert journalists found helpful 84% of the time."
+
+  - id: legaldiscourse
+    section: first-author
+    topics: [discourse]
+    stages: [story-structuring]
+    year: 2024
+    badges: "🎤"
+    title: "LegalDiscourse: Interpreting When Laws Apply and To Whom"
+    authors: "<strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May."
+    venue: "<strong>North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2024."
+    venue_short: "NAACL 2024"
+    notes:
+      - "Acceptance rate 23%"
+    link: "https://aclanthology.org/2024.naacl-long.472.pdf"
+    summary: "To read when a law applies and to whom, we built a discourse schema for span-and-relation parsing of legal text, annotated 602 state-law paragraphs and put the models in a web app journalists used to investigate state laws."
+
+  - id: identifying-sources
+    section: first-author
+    topics: [tacit]
+    stages: [source-finding]
+    year: 2023
+    badges: ""
+    title: "Identifying Informational Sources in News Articles"
+    authors: "<strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May."
+    venue: "<strong>2023 Conference on Empirical Methods in Natural Language Processing</strong> 2023."
+    venue_short: "EMNLP 2023"
+    notes:
+      - "Acceptance rate 23.3%"
+    link: "https://arxiv.org/abs/2305.14904"
+    summary: "We built the largest annotated dataset of informational sources in news and introduced source prediction: given the sources already in a story, which kind comes next?"
+
+  - id: source-rec-engine
+    section: first-author
+    topics: [tacit]
+    stages: [source-finding]
+    year: 2023
+    badges: "🏆🎤"
+    title: "First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles"
+    authors: "<strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng."
+    venue: "<strong>Computation + Journalism</strong> 2023."
+    venue_short: "Computation + Journalism 2023"
+    notes: []
+    link: "papers/Source_Finding_C_J_short.pdf"
+    summary: "A first step toward recommending sources to journalists: we built source-attribution models, audited major outlets (about half of all sentences carry a source) and showed we can predict when an article needs another one."
+
+  - id: seq-controlled
+    section: first-author
+    topics: [planning, discourse]
+    stages: [story-structuring]
+    year: 2022
+    badges: ""
+    title: "Sequentially Controlled Text Generation"
+    authors: "<strong>Alexander Spangher</strong>, Xinyu Hua, Yao Ming, Nanyun Peng."
+    venue: "<strong>Findings of the 2022 Conference on Empirical Methods in Natural Language Processing</strong> 2022."
+    venue_short: "Findings of EMNLP 2022"
+    notes: []
+    link: "https://arxiv.org/abs/2301.02299"
+    summary: "We ask language models to follow a discourse plan sentence by sentence, and show that more structural awareness yields better control, coherence and topicality, approaching human-level writing."
+
+  - id: newsedits
+    section: first-author
+    topics: [planning]
+    stages: [story-editing]
+    year: 2022
+    badges: "🏆🎤"
+    title: "NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge"
+    authors: "<strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng."
+    venue: "<strong>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2022."
+    venue_short: "NAACL 2022"
+    notes:
+      - "Acceptance rate 26%"
+    link: "https://aclanthology.org/2022.naacl-main.10.pdf"
+    summary: "News revision histories show a writer's plan unfolding; NewsEdits collects 4.6M versions of 1.2M articles and asks models to predict which sentences will be added, deleted or edited next."
+
+  - id: multitask-discourse
+    section: first-author
+    topics: [discourse]
+    stages: [story-structuring]
+    year: 2021
+    badges: ""
+    title: "Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification"
+    authors: "<strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng."
+    venue: "<strong>2021 Conference on Empirical Methods in Natural Language Processing</strong> 2021."
+    venue_short: "EMNLP 2021"
+    notes:
+      - "Acceptance rate 25.6%"
+    link: "https://arxiv.org/abs/2101.00389"
+    summary: "Discourse datasets are small and their schemas drift; we show multitask learning across them lifts News Discourse classification by 4.9 F1, where the usual low-resource tricks do not."
+
+  - id: statecensuslaws
+    section: first-author
+    topics: [discourse]
+    stages: [story-structuring]
+    year: 2022
+    badges: "🎤"
+    title: "StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning"
+    authors: "<strong>Alexander Spangher</strong> and Jonathan May."
+    venue: "<strong>Computation + Journalism</strong> 2022."
+    venue_short: "Computation + Journalism 2022"
+    notes: []
+    link: "https://arxiv.org/abs/2104.10263"
+    summary: "StateCensusLaws.org exposes our legal-discourse parsers on 6,000 census-dependent state laws, with an annotation widget that lets journalists correct and extend the labels."
+
+  - id: news-discourse-patterns
+    section: first-author
+    topics: [discourse]
+    stages: [story-structuring]
+    year: 2021
+    badges: "🎤"
+    title: "News Discourse Patterns: A Roadmap for Computational Journalism"
+    authors: "<strong>Alexander Spangher</strong> and Jonathan May."
+    venue: "<strong>Computation + Journalism</strong> March 2021."
+    venue_short: "Computation + Journalism 2021"
+    notes: []
+    link: "https://cj2021.northeastern.edu/schedule-and-program/"
+    summary: "A roadmap: the discourse structure of a news article (what each sentence is doing) is a scaffold for computational journalism tools, from structuring a story to editing it."
+
+  - id: covid-transfer
+    section: first-author
+    topics: [sequence]
+    stages: [other]
+    year: 2020
+    badges: ""
+    title: "Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training"
+    authors: "<strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara."
+    venue: "<strong>1st Workshop on NLP for COVID-19 at ACL 2020</strong> 2020."
+    venue_short: "NLP for COVID-19 @ ACL 2020"
+    notes: []
+    link: "https://aclanthology.org/2020.nlpcovid19-acl.4.pdf"
+    summary: "Comparing COVID-19 policy announcements with Twitter discussion needs classifiers that transfer across corpora; co-training on event-extraction views lifted transfer accuracy 11 points over baselines."
+
+  - id: dont-quote-me
+    section: first-author
+    topics: [tacit]
+    stages: [source-finding]
+    year: 2020
+    badges: "🎤"
+    title: "Don't quote me on that: Finding Mixtures of Sources in News Articles"
+    authors: "<strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara."
+    venue: "<strong>Computation + Journalism</strong> 2020."
+    venue_short: "Computation + Journalism 2020"
+    notes: []
+    link: "https://arxiv.org/abs/2104.09656"
+    summary: "We describe a news article as a mixture of source types, labeled by affiliation and role, and infer those types for named sources with 80% accuracy in expert trials."
+
+  - id: newsworthiness-lead-gen
+    section: first-author
+    topics: [tacit]
+    stages: [news-finding]
+    year: 2020
+    badges: "🎤"
+    title: "Modeling Newsworthiness for Lead-Generation Across Corpora"
+    authors: "<strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara."
+    venue: "<strong>Computation + Journalism</strong> 2020."
+    venue_short: "Computation + Journalism 2020"
+    notes:
+      - "Southern California Natural Language Processing Conference 2019."
+    link: "https://arxiv.org/abs/2104.09653"
+    summary: "Journalists find leads by sifting government records; we trained front-page-or-not classifiers on published news and transferred them to court cases, bills and council minutes to rank what deserves a look (.88 AUC on expert-checked data)."
+
+  - id: search-engine-ira
+    section: first-author
+    topics: [other]
+    stages: [information-ecosystem]
+    year: 2020
+    badges: "🎤"
+    title: "Characterizing Search Engine Traffic to Internet Research Agency Web Properties"
+    authors: "<strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz."
+    venue: "<strong>The Web Conference 2020</strong> Taipei, Taiwan. 2020."
+    venue_short: "The Web Conference 2020"
+    notes: []
+    link: "https://bit.ly/3aCGlkT"
+    summary: "Joining Bing and browser logs with Facebook and Twitter data, we showed web search also funneled readers to Russia's IRA sites, mostly through apolitical bait, with traffic patterns unlike social media's."
+
+  - id: nasa-knowledge-graphs
+    section: first-author
+    topics: [other]
+    stages: [other]
+    year: 2019
+    badges: ""
+    title: "Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies"
+    authors: "<strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher."
+    venue: "<strong>IEEE Transactions on Cognitive Communications and Networking</strong> 2019."
+    venue_short: "IEEE TCCN 2019"
+    notes:
+      - "Acceptance rate 19.4%"
+    link: "papers/NASA_Knowledge_Cards_IEEE_Submission.pdf"
+    summary: "To help scientists read beyond their field, we tag papers with ontology concepts, extract datasets and instruments, and compress each into a micro-paper, tested on 8,000 atmospheric-science articles."
+
+  - id: actionable-recourse
+    section: first-author
+    topics: [planning]
+    stages: [other]
+    year: 2018
+    badges: ""
+    title: "Actionable Recourse in Linear Classification"
+    authors: "<strong>Alexander Spangher</strong>, Berk Ustun."
+    venue: "<strong>5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML</strong> 2018."
+    venue_short: "FAT/ML Workshop @ ICML 2018"
+    notes:
+      - "Also presented in: Workshop on Ethical, Social and Governance Issues in AI, NIPS 2018."
+    link: "https://bit.ly/2FEj9pf"
+    summary: "A fair classifier should leave people a plan to change its decision; we define recourse and give an integer-programming toolkit to audit whether, and how hard, it is to obtain."
+
+
+  # ---- Ph.D. thesis ----
+  - id: thesis
+    section: thesis
+    topics: [discourse]
+    stages: [news-finding, source-finding, story-structuring, story-editing]
+    year: 2025
+    badges: ""
+    title: "Emulation Learning: A Roadmap to Achieving Human-Like Planning in Creative Tasks"
+    authors: "<strong>Alexander Spangher</strong>."
+    venue: "<strong>Ph.D. Dissertation, University of Southern California</strong> August 2025."
+    venue_short: "Ph.D. Dissertation, USC 2025"
+    notes: []
+    link: "assets/docs/aspangher-thesis.pdf"
+    link_label: "thesis"
+    summary: "My thesis introduces emulation learning: inferring the actions and rewards behind human creative work from its finished artifacts, then learning to plan from them, worked out across four journalistic tasks."
+
+
+  # ---- Middle author ----
+  - id: piano-ssl
+    section: middle-author
+    topics: [sequence]
+    stages: [other]
+    year: 2025
+    badges: ""
+    title: "Scaling Self-Supervised Representation Learning for Symbolic Piano Performance"
+    authors: "Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton."
+    venue: "<strong>International Society for Music Information Retrieval Conference (ISMIR)</strong> 2025."
+    venue_short: "ISMIR 2025"
+    notes: []
+    link: "https://arxiv.org/abs/2506.23869"
+    summary: "We trained autoregressive transformers on 60,000 hours of transcribed solo piano; they generate coherent continuations and yield MIDI embeddings that set the state of the art on MIR classification."
+
+  - id: narratives
+    section: middle-author
+    topics: [discourse]
+    stages: [story-structuring]
+    year: 2024
+    badges: "🏆"
+    title: "Are Large Language Models Capable of Generating Human-Level Narratives?"
+    authors: "Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng."
+    venue: "<strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024."
+    venue_short: "EMNLP 2024"
+    notes:
+      - "Acceptance rate 20.8%"
+    link: "https://arxiv.org/pdf/2407.13248"
+    summary: "We check whether LLM stories have the arcs, turning points and emotional tension of human ones; they don't, and making these discourse features explicit improves generation by over 40%."
+
+  - id: disruptionbench
+    section: middle-author
+    topics: [sequence]
+    stages: [other]
+    year: 2024
+    badges: ""
+    title: "DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction"
+    authors: "Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea."
+    venue: "<strong>Journal of Fusion Energy</strong> 2024."
+    venue_short: "Journal of Fusion Energy 2024"
+    notes:
+      - "Acceptance rate 20%"
+    link: "https://www.researchsquare.com/article/rs-4245117/latest"
+    summary: "DisruptionBench standardizes how disruption predictors are trained and evaluated across three tokamaks, with zero-, few- and many-shot transfer tasks."
+
+  - id: fusion-autoregressive
+    section: middle-author
+    topics: [sequence]
+    stages: [other]
+    year: 2023
+    badges: ""
+    title: "Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas"
+    authors: "Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea."
+    venue: "<strong>NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences</strong> 2023."
+    venue_short: "NeurIPS 2023 ML4PS Workshop"
+    notes:
+      - "Acceptance rate 75.6%"
+    link: "https://neurips.cc/virtual/2023/76249"
+    summary: "Plasma disruptions in tokamaks are a sequence-prediction problem; masked autoregressive transformers beat prior methods by 5 AUC points and suggest the plasma carries a long memory."
+
+  - id: multimodal-procedural
+    section: middle-author
+    topics: [discourse]
+    stages: [other]
+    year: 2023
+    badges: ""
+    title: "Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals"
+    authors: "Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng."
+    venue: "<strong>61st Annual Meeting of the Association for Computational Linguistics</strong> 2023."
+    venue_short: "ACL 2023"
+    notes:
+      - "Acceptance rate 24.1%"
+    link: "https://arxiv.org/pdf/2110.08486"
+    summary: "We benchmark whether models can put the shuffled steps of an illustrated manual back in order, find them far behind humans, and recover part of the gap with sequence-aware pretraining."
+
+  - id: actionable-recourse-expanded
+    section: middle-author
+    topics: [planning]
+    stages: [other]
+    year: 2019
+    badges: ""
+    title: "Actionable Recourse in Linear Classification. (Expanded Version)"
+    authors: "Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu."
+    venue: "<strong>Conference on Fairness, Accountability and Transparency (FAT*), ACM</strong> 2019."
+    venue_short: "FAT* 2019"
+    notes:
+      - "Acceptance rate 27%"
+    link: "https://arxiv.org/pdf/1809.06514.pdf"
+    summary: "The expanded recourse paper: an integer-programming toolkit that measures how feasible recourse is across a population and generates the actionable changes a person needs to flip a decision."
+
+  - id: ira-social-media
+    section: middle-author
+    topics: [other]
+    stages: [information-ecosystem]
+    year: 2019
+    badges: ""
+    title: "Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses"
+    authors: "Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz."
+    venue: "<strong>Whitepaper</strong> 2019."
+    venue_short: "Whitepaper 2019"
+    notes: []
+    link: "https://bit.ly/2SczIKt"
+    summary: "Linguistic analysis of IRA Facebook ads and Twitter trolls shows how left- and right-leaning audiences were targeted differently, and that the operation was linguistically distinct but low-budget."
+
+
+  # ---- In submission ----
+  - id: verifiable-tacit
+    section: in-submission
+    topics: [tacit]
+    stages: [news-finding]
+    year: 2026
+    badges: ""
+    title: "Verifiable, Articulable, and Tacit Components of Preference"
+    authors: "<strong>Alexander Spangher</strong>, Sheldon Huang, Andreas Haupt, Noah D. Goodman, Diyi Yang, Daniel E. Ho, Sanmi Koyejo."
+    venue: "<strong>arXiv preprint</strong> 2026."
+    venue_short: "arXiv 2026"
+    notes: []
+    link: "https://arxiv.org/abs/2610.03025"
+    summary: "We ask how much of human preference can be captured by rubrics and verifiers, and find a stubborn tacit remainder across 7 creative domains and 317M judgments, even in math and code."
+
+  - id: discosum
+    section: in-submission
+    topics: [discourse]
+    stages: [story-editing]
+    year: 2025
+    badges: ""
+    title: "DiscoSum: Discourse-aware News Summarization"
+    authors: "<strong>Alexander Spangher</strong>, Tenghao Huang, Jialiang Gu, Jiatong Shi, Muhao Chen."
+    venue: "<strong>arXiv preprint</strong> 2025."
+    venue_short: "arXiv 2025"
+    notes: []
+    link: "https://arxiv.org/abs/2506.06930"
+    summary: "Summaries that ignore discourse lose the shape of a story; DiscoSum plans a news-discourse structure first and generates summaries that follow it, matching each social platform's house style."
+
+  - id: newsedits-2
+    section: in-submission
+    topics: [discourse]
+    stages: [story-editing]
+    year: 2025
+    badges: ""
+    title: "NewsEdits 2.0: Learning the Intentions Behind Updating News"
+    authors: "<strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May."
+    venue: "<strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025."
+    venue_short: "NAACL 2025"
+    notes: []
+    link: "https://arxiv.org/abs/2411.18811"
+    summary: "To tell which facts in a breaking story will change, we separate factual from stylistic edits in news revisions and show an article's own language predicts its updates well enough to tell an LLM when to abstain."
+
+  - id: patentedits
+    section: in-submission
+    topics: [discourse]
+    stages: [story-editing]
+    year: 2025
+    badges: ""
+    title: "PatentEdits: Framing Patent Novelty as Textual Entailment"
+    authors: "Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma."
+    venue: "<strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025."
+    venue_short: "NAACL 2025"
+    notes: []
+    link: "https://arxiv.org/abs/2411.13477"
+    summary: "Examiners reject claims that aren't novel; PatentEdits collects 105K successful claim revisions and shows textual entailment against the cited prior art predicts which claims survive."

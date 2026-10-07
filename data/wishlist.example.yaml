@@ -1,0 +1,31 @@
+# Example schema for data/wishlist.private.yaml (which is git-ignored; copy this file to start one).
+# render_templates.py encrypts the private file into data/wishlist.enc.json.
+passwords: ["first-pledge-word", "second-pledge-word"]
+updated: 2026-01-01
+preamble: Shown at the top of the unlocked page.
+topics:
+  - name: Topic name
+    blurb: One sentence on what ties these ideas together.
+    ideas:
+      - id: short-slug                 # becomes the anchor wishlist.html#idea-short-slug
+        title: Idea title
+        status: scoped                 # not-started | scoped | early | halfway | mostly-done | active
+        status_label: ""               # optional override, e.g. "About one-third done"
+        added: 2026-01-01
+        keywords: [keyword, another]
+        summary: Two or three sentences. HTML allowed.
+        details:                       # optional labelled bullets
+          - label: Practical problem
+            text: ...
+          - label: What you would do
+            text: ...
+        resources:                     # optional public links shown on the page
+          - label: Prior paper
+            url: https://example.org
+        local:                         # optional, never rendered: where the materials live on your machine
+          - ~/Projects/stanford-research/example
+open_areas_intro: Shown above the open areas list.
+open_areas:
+  - name: Area name
+    keywords: [keyword]
+    summary: Optional sentence.

@@ -1,0 +1,134 @@
+{#
+  The unlocked content of the Wishlist page. Rendered from data/wishlist.private.yaml by
+  render_templates.py, then encrypted; the browser injects the decrypted HTML into #wishlist-content.
+  Everything here must be styled by rules in wishlist.html.j2 (this fragment carries no <style>).
+#}
+{% set status_labels = {
+    'not-started': 'Not started',
+    'scoped': 'Scoped out',
+    'early': 'Early',
+    'halfway': 'Halfway',
+    'mostly-done': 'Almost complete',
+    'active': 'Actively being worked on',
+} %}
+{% set status_order = ['active', 'mostly-done', 'halfway', 'early', 'scoped', 'not-started'] %}
+{% set all_ideas = [] %}
+{% for topic in wishlist.topics %}{% for idea in topic.ideas %}{% set _ = all_ideas.append(idea) %}{% endfor %}{% endfor %}
+<div class="wishlist-unlocked">
+  {% if wishlist.updated %}
+  <p class="wishlist-updated">Last updated {{ wishlist.updated }}.</p>
+  {% endif %}
+
+  <div class="wishlist-filters" role="group" aria-label="Filter ideas by progress">
+    <span class="filter-label">Progress:</span>
+    <button type="button" class="filter-chip is-active" data-status="all">All <span class="filter-count">{{ all_ideas | length }}</span></button>
+    {% for key in status_order %}
+    {% set n = all_ideas | selectattr('status', 'equalto', key) | list | length %}
+    {% if n %}
+    <button type="button" class="filter-chip" data-status="{{ key }}">{{ status_labels[key] }} <span class="filter-count">{{ n }}</span></button>
+    {% endif %}
+    {% endfor %}
+    <span class="filter-sep" aria-hidden="true">|</span>
+    <a href="#" class="wl-expand-all">expand all</a>
+    <span class="nav-sep">·</span>
+    <a href="#" class="wl-collapse-all">collapse all</a>
+  </div>
+
+  <nav class="wishlist-toc" aria-label="Topics">
+    {% for topic in wishlist.topics %}
+    <a href="#topic-{{ loop.index }}">{{ topic.name }}</a>{% if not loop.last %} <span class="nav-sep">·</span> {% endif %}
+    {% endfor %}
+    {% if wishlist.open_areas %}
+    <span class="nav-sep">·</span> <a href="#open-areas">Open areas</a>
+    {% endif %}
+  </nav>
+
+  {% for topic in wishlist.topics %}
+  <section class="wishlist-topic" id="topic-{{ loop.index }}">
+    <h2>
+      <button type="button" class="topic-toggle" aria-expanded="false" aria-controls="topic-{{ loop.index }}-body">
+        <span class="wl-chevron" aria-hidden="true"></span>
+        <span class="topic-name">{{ topic.name }}</span>
+        <span class="topic-count">{{ topic.ideas | length }}</span>
+      </button>
+    </h2>
+    <div class="topic-body" id="topic-{{ loop.index }}-body" hidden>
+    {% if topic.blurb %}
+    <p class="topic-blurb">{{ topic.blurb }}</p>
+    {% endif %}
+    <ul class="idea-list">
+      {% for idea in topic.ideas %}
+      <li class="idea" id="idea-{{ idea.id }}" data-status="{{ idea.status }}">
+        <button type="button" class="idea-toggle" aria-expanded="false" aria-controls="idea-{{ idea.id }}-body">
+          <span class="wl-chevron" aria-hidden="true"></span>
+          <span class="idea-title">{{ idea.title }}</span>
+          <span class="idea-status status-{{ idea.status }}">{{ idea.status_label or status_labels[idea.status] }}</span>
+        </button>
+        {% if idea.warning %}
+        <div class="idea-warning">&#9888; {{ idea.warning }}</div>
+        {% endif %}
+        <div class="idea-body" id="idea-{{ idea.id }}-body" hidden>
+        <div class="idea-meta">
+          {% if idea.added %}<span>Added {{ idea.added }}</span>{% endif %}
+          {% if idea.keywords %}<span class="idea-keywords">{{ idea.keywords | join(' · ') }}</span>{% endif %}
+        </div>
+        <p class="idea-summary">{{ idea.summary }}</p>
+        {% if idea.details %}
+        <ul class="idea-details">
+          {% for d in idea.details %}
+          <li>{% if d.label %}<b>{{ d.label }}.</b> {% endif %}{{ d.text }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if idea.resources %}
+        <div class="idea-resources">
+          <span class="idea-resources-label">Materials:</span>
+          {% for r in idea.resources %}
+          <a href="{{ r.url }}">{{ r.label }}</a>{% if not loop.last %} <span class="nav-sep">·</span> {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if idea.repos %}
+        <div class="idea-repos">
+          <span class="idea-resources-label">Open-source repos:</span>
+          <ul class="repo-list">
+            {% for r in idea.repos %}
+            <li><a href="{{ r.url }}">{{ r.label }}</a>{% if r.note %} <span class="repo-note">{{ r.note }}</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    </div>
+  </section>
+  {% endfor %}
+
+  {% if wishlist.open_areas %}
+  <section class="wishlist-topic wishlist-open-areas" id="open-areas">
+    <h2>
+      <button type="button" class="topic-toggle" aria-expanded="false" aria-controls="open-areas-body">
+        <span class="wl-chevron" aria-hidden="true"></span>
+        <span class="topic-name">Open areas to scope</span>
+        <span class="topic-count">{{ wishlist.open_areas | length }}</span>
+      </button>
+    </h2>
+    <div class="topic-body" id="open-areas-body" hidden>
+    {% if wishlist.open_areas_intro %}
+    <p class="topic-blurb">{{ wishlist.open_areas_intro }}</p>
+    {% endif %}
+    <ul class="idea-list open-areas">
+      {% for area in wishlist.open_areas %}
+      <li class="idea">
+        <div class="idea-head"><span class="idea-title">{{ area.name }}</span></div>
+        {% if area.keywords %}<div class="idea-meta"><span class="idea-keywords">{{ area.keywords | join(' · ') }}</span></div>{% endif %}
+        {% if area.summary %}<p class="idea-summary">{{ area.summary }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    </div>
+  </section>
+  {% endif %}
+</div>

@@ -1,0 +1,646 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Wishlist</title>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
+
+    <style>
+      #top-header {
+          margin-top: 0;
+      }
+
+      /* ---------- Pledge gate ---------- */
+      .gate {
+          margin: 1.5rem 0;
+          padding: 18px 20px;
+          border: 1px solid #d9d9d9;
+          border-radius: 10px;
+          background: linear-gradient(180deg, #fafafa 0%, #fdfdfd 100%);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      .gate-step[hidden] {
+          display: none;
+      }
+
+      .main .gate p {
+          font-size: 1.1em;
+          line-height: 1.5;
+          margin: 0 0 12px;
+      }
+
+      .gate-form {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 10px;
+      }
+
+      .gate-form input {
+          flex: 1 1 240px;
+          min-width: 0;
+          padding: 8px 12px;
+          font: inherit;
+          font-size: 1.05em;
+          color: #333;
+          background: #fff;
+          border: 1px solid #bbb;
+          border-radius: 6px;
+      }
+
+      .gate-form input:focus {
+          outline: 2px solid purple;
+          outline-offset: -1px;
+          border-color: purple;
+      }
+
+      .gate-form button {
+          padding: 8px 18px;
+          font: inherit;
+          font-size: 1.05em;
+          color: #333;
+          background: #fff;
+          border: 1px solid #333;
+          border-radius: 6px;
+          cursor: pointer;
+      }
+
+      .gate-form button:hover {
+          background: #333;
+          color: #fff;
+      }
+
+      .gate-error {
+          flex: 1 1 100%;
+          min-height: 1.3em;
+          font-size: 0.95em;
+          color: #8b0000;
+      }
+
+      .gate-status {
+          font-size: 0.9em;
+          color: #666;
+          margin-top: 8px;
+      }
+
+      code {
+          padding: 1px 6px;
+          font-size: 0.95em;
+          color: #333;
+          background: #f0f0f0;
+          border-radius: 4px;
+      }
+
+      /* ---------- Unlocked content ---------- */
+      #wishlist-content[hidden] {
+          display: none;
+      }
+
+      .main .wishlist-preamble {
+          font-size: 1.15em;
+          line-height: 1.5;
+      }
+
+      .main .wishlist-updated {
+          font-size: 0.95em;
+          color: #666;
+          margin-top: -0.5em;
+      }
+
+      .wishlist-filters {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+          margin: 1rem 0 0.75rem;
+      }
+
+      .filter-label {
+          font-size: 0.9em;
+          color: #666;
+          margin-right: 2px;
+      }
+
+      .filter-chip {
+          padding: 4px 12px;
+          font: inherit;
+          font-size: 0.9em;
+          color: #333;
+          background: #fff;
+          border: 1px solid #ccc;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: border-color 0.15s ease, background 0.15s ease;
+      }
+
+      .filter-chip:hover {
+          border-color: #333;
+      }
+
+      .filter-chip.is-active {
+          background: #333;
+          border-color: #333;
+          color: #fff;
+      }
+
+      .filter-count {
+          display: inline-block;
+          min-width: 1.4em;
+          margin-left: 4px;
+          padding: 0 6px;
+          border-radius: 999px;
+          font-size: 0.85em;
+          background: rgba(0, 0, 0, 0.08);
+      }
+
+      .filter-chip.is-active .filter-count {
+          background: rgba(255, 255, 255, 0.25);
+      }
+
+      .idea.is-filtered-out,
+      .wishlist-topic.is-filtered-out {
+          display: none;
+      }
+
+      .filter-sep {
+          margin: 0 4px;
+          color: #999;
+      }
+
+      .wishlist-filters a {
+          font-size: 0.9em;
+      }
+
+      /* ---------- Collapsible topics and ideas ---------- */
+      .main .wishlist-topic h2 {
+          margin: 2rem 0 0.75rem;
+          padding: 0;
+          border-top: 0;
+          border-bottom: 0.5px dashed #333;
+          font-size: 1.5rem;
+          font-weight: 500;
+      }
+
+      .main .wishlist-topic:first-of-type h2 {
+          margin-top: 1.25rem;
+      }
+
+      .topic-toggle {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          margin: 0;
+          padding: 0.5rem 0 0.45rem;
+          background: none;
+          border: 0;
+          text-align: left;
+          font: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+
+      .topic-toggle:hover .topic-name {
+          text-decoration: underline;
+      }
+
+      .topic-toggle:focus-visible,
+      .idea-toggle:focus-visible {
+          outline: 2px solid purple;
+          outline-offset: -2px;
+      }
+
+      .topic-name {
+          flex: 1 1 auto;
+      }
+
+      .topic-count {
+          flex: 0 0 auto;
+          min-width: 1.6em;
+          padding: 1px 9px;
+          border-radius: 999px;
+          font-size: 0.55em;
+          font-weight: 400;
+          line-height: 1.6;
+          text-align: center;
+          color: #666;
+          background: #f0f0f0;
+      }
+
+      .topic-body {
+          padding-top: 2px;
+      }
+
+      .main .topic-blurb {
+          font-size: 1.05em;
+          line-height: 1.5;
+          color: #555;
+          margin: 0 0 0.9em;
+      }
+
+      .wl-chevron {
+          flex: 0 0 auto;
+          width: 9px;
+          height: 9px;
+          margin: 0 2px;
+          border-right: 2px solid #666;
+          border-bottom: 2px solid #666;
+          transform: rotate(-45deg);
+          transition: transform 0.2s ease;
+      }
+
+      [aria-expanded="true"] > .wl-chevron {
+          transform: rotate(45deg);
+      }
+
+      .topic-body[hidden],
+      .idea-body[hidden] {
+          display: none;
+      }
+
+      .idea-toggle {
+          display: grid;
+          grid-template-columns: 12px minmax(0, 1fr) auto;
+          column-gap: 12px;
+          align-items: start;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          background: none;
+          border: 0;
+          text-align: left;
+          font: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+
+      .idea-toggle .wl-chevron {
+          margin: 0.55em 0 0 2px;
+      }
+
+      .idea-toggle:hover .idea-title {
+          text-decoration: underline;
+      }
+
+      .idea-warning {
+          margin: 8px 0 0 24px;
+          padding: 6px 10px;
+          border-left: 3px solid #d9a400;
+          background: #fff8e1;
+          border-radius: 4px;
+          font-size: 0.9em;
+          color: #5a4500;
+      }
+
+      .wishlist-toc {
+          margin: 1rem 0 0.25rem;
+          padding: 10px 14px;
+          font-size: 0.95em;
+          line-height: 1.8;
+          background: #f6f6f6;
+          border-radius: 8px;
+      }
+
+      .wishlist-topic h2 {
+          position: static;
+      }
+
+
+      .idea-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+      }
+
+      .idea {
+          background: #fff;
+          border: 1px solid #e4e4e4;
+          border-radius: 10px;
+          padding: 13px 16px 12px 14px;
+          margin: 0 0 10px;
+          scroll-margin-top: 5rem;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .idea:hover,
+      .idea:target {
+          border-color: #b5b5b5;
+          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+
+      .idea-body {
+          margin-left: 24px;
+          padding-top: 2px;
+      }
+
+      .idea-head {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 6px 12px;
+      }
+
+      .idea-title {
+          min-width: 0;
+          font-size: 1.12em;
+          font-weight: 600;
+          line-height: 1.35;
+      }
+
+      .idea-status {
+          justify-self: end;
+          margin-top: 3px;
+          padding: 2px 10px;
+          border-radius: 999px;
+          font-size: 0.76em;
+          line-height: 1.45;
+          color: #444;
+          background: #f0f0f0;
+          white-space: nowrap;
+      }
+
+      .idea-status.status-active { background: #fff3cd; }
+      .idea-status.status-mostly-done { background: #e2f3e4; }
+      .idea-status.status-halfway { background: #e3edf7; }
+      .idea-status.status-early { background: #eef1f6; }
+      .idea-status.status-scoped { background: #efe6f4; }
+      .idea-status.status-not-started { background: #f0f0f0; }
+
+      .idea-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 14px;
+          margin-top: 6px;
+          font-size: 0.82em;
+          color: #666;
+      }
+
+      .idea-keywords {
+          font-style: italic;
+      }
+
+      .main .idea-summary {
+          font-size: 1em;
+          line-height: 1.5;
+          margin: 8px 0 0;
+      }
+
+      .idea-details {
+          margin: 8px 0 0;
+          padding-left: 1.2em;
+          font-size: 0.95em;
+          line-height: 1.5;
+          color: #333;
+      }
+
+      .idea-details li {
+          margin-bottom: 4px;
+      }
+
+      .idea-resources {
+          margin-top: 8px;
+          font-size: 0.9em;
+          color: #666;
+      }
+
+      .idea-resources-label {
+          margin-right: 4px;
+      }
+
+      .idea-repos {
+          margin-top: 8px;
+          font-size: 0.9em;
+          color: #666;
+      }
+
+      .repo-list {
+          columns: 2;
+          column-gap: 24px;
+          margin: 4px 0 0;
+          padding-left: 1.1em;
+          line-height: 1.5;
+      }
+
+      .repo-note {
+          color: #888;
+      }
+
+      @media (max-width: 600px) {
+          .repo-list {
+              columns: 1;
+          }
+      }
+
+      @media (max-width: 600px) {
+          .gate {
+              padding: 14px;
+          }
+          .idea-toggle {
+              grid-template-columns: 12px minmax(0, 1fr);
+          }
+          .idea-status {
+              grid-column: 2;
+              justify-self: start;
+              margin-top: 6px;
+          }
+          .idea-body,
+          .idea-warning {
+              margin-left: 0;
+          }
+      }
+    </style>
+  </head>
+
+  <body class="wishlist">
+    {% include 'includes/site-header.html' %}
+
+  <div class="main">
+    <h1 id="top-header">Wishlist</h1>
+
+    <p>Hello! Thank you for your interest in working with me. I like to screen people for how well we will work together and what we think about. Before you reach out, I am asking you to spend 15&ndash;20 hours (one solid week) scoping out and making initial progress on one of these ideas. When you have solid initial results and a scoped direction, please reach out and let's talk. I fully expect you to use all resources (e.g. AI tools, your friends, mentors) to help with the scoping; I welcome anyone who would like to get involved in any of these if the work ends up going forward. Note: I cannot guarantee that this work will result in anything, please understand that it is in part evaluative.</p>
+    <p id="gate-password-line">To access my ideas, please enter the password: <code>{{ wishlist.passwords[0] }}</code></p>
+
+    <div class="gate" id="gate">
+      <div class="gate-step" id="gate-step-1">
+        <form class="gate-form" id="gate-form-1" autocomplete="off">
+          <label for="gate-input-1" class="sr-only" style="position:absolute;left:-9999px;">Password</label>
+          <input type="text" id="gate-input-1" placeholder="password" spellcheck="false" autocapitalize="none">
+          <button type="submit">Continue</button>
+          <div class="gate-error" id="gate-error-1" aria-live="polite"></div>
+        </form>
+      </div>
+      <div class="gate-step" id="gate-step-2" hidden>
+        <p>One more. Do you promise to put in a real week before you write to me? Type <code>{{ wishlist.passwords[1] }}</code> to continue.</p>
+        <form class="gate-form" id="gate-form-2" autocomplete="off">
+          <label for="gate-input-2" style="position:absolute;left:-9999px;">Second password</label>
+          <input type="text" id="gate-input-2" placeholder="second password" spellcheck="false" autocapitalize="none">
+          <button type="submit">I promise</button>
+          <div class="gate-error" id="gate-error-2" aria-live="polite"></div>
+        </form>
+      </div>
+      <div class="gate-status" id="gate-status"></div>
+    </div>
+
+    <div id="wishlist-content" hidden></div>
+  </div>
+
+    {% include 'includes/site-footer.html' %}
+
+    <script>
+      (function () {
+          // The ideas are embedded encrypted (see render_templates.py). The two pledge words
+          // typed above derive the key, so the plain text never appears in this file or in
+          // the repository, and search engines have nothing to index.
+          var bundle = {{ wishlist|tojson }};
+          var STORAGE_KEY = 'wishlist-passphrase';
+
+          var step1 = document.getElementById('gate-step-1');
+          var step2 = document.getElementById('gate-step-2');
+          var status = document.getElementById('gate-status');
+          var content = document.getElementById('wishlist-content');
+
+          function norm(s) { return (s || '').trim().toLowerCase(); }
+          function b64(s) {
+              var bin = atob(s), out = new Uint8Array(bin.length);
+              for (var i = 0; i < bin.length; i++) { out[i] = bin.charCodeAt(i); }
+              return out;
+          }
+
+          async function decrypt(passphrase) {
+              var enc = new TextEncoder();
+              var baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+              var key = await crypto.subtle.deriveKey(
+                  { name: 'PBKDF2', salt: b64(bundle.salt), iterations: bundle.iterations, hash: 'SHA-256' },
+                  baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+              var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(bundle.iv) }, key, b64(bundle.ciphertext));
+              return new TextDecoder().decode(plain);
+          }
+
+          async function unlock(passphrase, remember) {
+              if (!window.crypto || !crypto.subtle) {
+                  status.textContent = 'Your browser cannot decrypt this page here. Please open it over https.';
+                  return false;
+              }
+              status.textContent = 'Unlocking…';
+              try {
+                  var html = await decrypt(passphrase);
+                  content.innerHTML = html;
+                  content.hidden = false;
+                  document.getElementById('gate').hidden = true;
+                  document.getElementById('gate-password-line').hidden = true;
+                  if (remember) { try { sessionStorage.setItem(STORAGE_KEY, passphrase); } catch (e) {} }
+                  revealHash(location.hash);
+                  return true;
+              } catch (e) {
+                  status.textContent = '';
+                  return false;
+              }
+          }
+
+          document.getElementById('gate-form-1').addEventListener('submit', function (event) {
+              event.preventDefault();
+              var err = document.getElementById('gate-error-1');
+              if (norm(document.getElementById('gate-input-1').value) !== norm(bundle.passwords[0])) {
+                  err.textContent = 'That is not it. The password is written just above.';
+                  return;
+              }
+              err.textContent = '';
+              step1.hidden = true;
+              document.getElementById('gate-password-line').hidden = true;
+              step2.hidden = false;
+              document.getElementById('gate-input-2').focus();
+          });
+
+          document.getElementById('gate-form-2').addEventListener('submit', async function (event) {
+              event.preventDefault();
+              var err = document.getElementById('gate-error-2');
+              var pw1 = norm(document.getElementById('gate-input-1').value);
+              var pw2 = norm(document.getElementById('gate-input-2').value);
+              if (pw2 !== norm(bundle.passwords[1])) {
+                  err.textContent = 'Type the second password exactly as shown.';
+                  return;
+              }
+              err.textContent = '';
+              var ok = await unlock(pw1 + '\n' + pw2, true);
+              if (!ok) { err.textContent = 'Could not unlock. Reload the page and try again.'; }
+          });
+
+          // ---------- Collapsible topics and ideas (everything starts collapsed) ----------
+          function setToggle(btn, open) {
+              if (!btn) { return; }
+              btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+              var body = content.querySelector('#' + btn.getAttribute('aria-controls'));
+              if (body) { body.hidden = !open; }
+          }
+          function openAncestorsOf(el) {
+              var section = el.closest('.wishlist-topic');
+              if (section) { setToggle(section.querySelector('.topic-toggle'), true); }
+              var idea = el.closest('.idea');
+              if (idea) { setToggle(idea.querySelector('.idea-toggle'), true); }
+          }
+          function revealHash(hash) {
+              if (!hash || hash.length < 2) { return; }
+              var target = content.querySelector('#' + CSS.escape(hash.slice(1)));
+              if (!target) { return; }
+              openAncestorsOf(target);
+              if (target.classList.contains('idea')) { setToggle(target.querySelector('.idea-toggle'), true); }
+              if (target.classList.contains('wishlist-topic')) { setToggle(target.querySelector('.topic-toggle'), true); }
+              target.scrollIntoView();
+          }
+
+          // Everything interactive lives inside the decrypted content, so delegate from the container.
+          content.addEventListener('click', function (event) {
+              var toggle = event.target.closest('.topic-toggle, .idea-toggle');
+              if (toggle) {
+                  setToggle(toggle, toggle.getAttribute('aria-expanded') !== 'true');
+                  return;
+              }
+              var all = event.target.closest('.wl-expand-all, .wl-collapse-all');
+              if (all) {
+                  event.preventDefault();
+                  var open = all.classList.contains('wl-expand-all');
+                  content.querySelectorAll('.topic-toggle, .idea-toggle').forEach(function (b) { setToggle(b, open); });
+                  return;
+              }
+              var toc = event.target.closest('.wishlist-toc a');
+              if (toc) {
+                  var id = (toc.getAttribute('href') || '').slice(1);
+                  var section = id && content.querySelector('#' + CSS.escape(id));
+                  if (section) { setToggle(section.querySelector('.topic-toggle'), true); }
+                  return;
+              }
+              var chip = event.target.closest('.filter-chip');
+              if (!chip) { return; }
+              var status = chip.getAttribute('data-status');
+              content.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.toggle('is-active', c === chip); });
+              content.querySelectorAll('.idea[data-status]').forEach(function (li) {
+                  li.classList.toggle('is-filtered-out', status !== 'all' && li.getAttribute('data-status') !== status);
+              });
+              content.querySelectorAll('.wishlist-topic').forEach(function (section) {
+                  var isOpenAreas = section.classList.contains('wishlist-open-areas');
+                  var anyVisible = section.querySelector('.idea[data-status]:not(.is-filtered-out)');
+                  var hide = status !== 'all' && (isOpenAreas || !anyVisible);
+                  section.classList.toggle('is-filtered-out', hide);
+                  // A filter is a request to see those ideas: open the sections that still have some.
+                  if (status !== 'all' && !hide) { setToggle(section.querySelector('.topic-toggle'), true); }
+              });
+          });
+          window.addEventListener('hashchange', function () { revealHash(location.hash); });
+
+          // Already unlocked in this tab (e.g. after a reload): decrypt straight away.
+          var saved = null;
+          try { saved = sessionStorage.getItem(STORAGE_KEY); } catch (e) {}
+          if (saved) {
+              unlock(saved, false).then(function (ok) {
+                  if (!ok) { try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {} }
+              });
+          }
+      })();
+    </script>
+</body>
+</html>

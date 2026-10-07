@@ -8,238 +8,419 @@
     <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+      #top-header {
+          margin-top: 0;
+      }
+
+      /* ---------- Research category cards ---------- */
+      .category-list {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          margin: 1.25rem 0 0.5rem;
+      }
+
+      .category-card {
+          border: 1px solid #d9d9d9;
+          border-radius: 10px;
+          background: linear-gradient(180deg, #fafafa 0%, #fdfdfd 100%);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.04);
+          overflow: hidden;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .category-card:hover,
+      .category-card.open {
+          border-color: #333;
+      }
+
+      .category-card.open {
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      .category-summary {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          width: 100%;
+          margin: 0;
+          padding: 14px 18px 14px 14px;
+          background: none;
+          border: 0;
+          text-align: left;
+          font: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+
+      .category-summary:focus-visible {
+          outline: 2px solid purple;
+          outline-offset: -2px;
+      }
+
+      /* override the site-wide <img> sizing for the card icons */
+      .category-card .category-icon {
+          flex: 0 0 auto;
+          width: 96px;
+          height: 96px;
+          padding: 0;
+          margin: 0;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          background: #fff;
+          object-fit: cover;
+      }
+
+      .category-text {
+          flex: 1 1 auto;
+          min-width: 0;
+      }
+
+      .category-title {
+          font-size: 1.35em;
+          font-weight: 600;
+          line-height: 1.2;
+          margin-bottom: 4px;
+      }
+
+      .category-tagline {
+          font-size: 1.05em;
+          font-style: italic;
+          color: #666;
+      }
+
+      .category-chevron {
+          flex: 0 0 auto;
+          width: 10px;
+          height: 10px;
+          margin-right: 6px;
+          border-right: 2px solid #666;
+          border-bottom: 2px solid #666;
+          transform: rotate(45deg);
+          transition: transform 0.2s ease;
+      }
+
+      .category-card.open .category-chevron {
+          transform: rotate(-135deg);
+      }
+
+      .category-details {
+          display: none;
+          padding: 0 18px 18px 18px;
+          border-top: 0.5px dashed #333;
+      }
+
+      .category-description {
+          padding-top: 12px;
+      }
+
+      .main .category-description p {
+          font-size: 1.1em;
+          line-height: 1.5;
+          margin: 0 0 0.75em;
+      }
+
+      .main .category-description p:last-child {
+          margin-bottom: 0;
+      }
+
+      /* ---------- Paper cards ---------- */
+      .paper-card {
+          background: #fff;
+          border: 1px solid #e2e2e2;
+          border-radius: 8px;
+          padding: 12px 14px;
+          margin: 0 0 12px;
+          scroll-margin-top: 8rem;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .paper-card:hover,
+      .paper-card:target {
+          border-color: #999;
+          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+
+      .paper-card .paper_title {
+          margin: 0;
+          font-size: 1.12em;
+          font-weight: 600;
+          line-height: 1.3;
+      }
+
+      .paper-card .paper_title a {
+          color: inherit;
+      }
+
+      .paper-card .paper_title a:hover {
+          color: purple;
+      }
+
+      .paper-meta {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 4px 10px;
+          margin-top: 6px;
+          font-size: 0.82em;
+          color: #666;
+      }
+
+      .paper-venue {
+          padding: 1px 9px;
+          border-radius: 999px;
+          background: #f0f0f0;
+          color: #444;
+          cursor: help;
+      }
+
+      .paper-link {
+          margin-left: auto;
+          white-space: nowrap;
+      }
+
+      .paper-authors {
+          margin-top: 4px;
+          font-size: 0.85em;
+          line-height: 1.4;
+          color: #666;
+      }
+
+      .paper-authors strong {
+          color: #333;
+      }
+
+      .paper-card .paper_summary {
+          margin: 8px 0 0;
+          font-size: 0.98em;
+          line-height: 1.45;
+          color: #333;
+      }
+
+      /* ---------- "All Publications" tree ---------- */
+      .pub-controls {
+          float: right;
+          margin-top: 0.8em;
+          font-size: 0.5em;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+      }
+
+      .pub-tree {
+          margin-top: 0.25rem;
+      }
+
+      .pub-toggle {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          margin: 0;
+          padding: 12px 6px;
+          background: none;
+          border: 0;
+          border-bottom: 0.5px dashed #999;
+          text-align: left;
+          font: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+
+      .pub-toggle:hover .pub-label {
+          text-decoration: underline;
+      }
+
+      .pub-toggle:focus-visible {
+          outline: 2px solid purple;
+          outline-offset: -2px;
+      }
+
+      .pub-section-toggle {
+          font-size: 1.35em;
+          font-weight: 500;
+      }
+
+      .pub-group-toggle {
+          font-size: 1.1em;
+          font-weight: 500;
+          color: #444;
+          margin-left: 22px;
+          width: calc(100% - 22px);
+          padding: 10px 6px;
+      }
+
+      .pub-chevron {
+          flex: 0 0 auto;
+          width: 8px;
+          height: 8px;
+          margin: 0 4px 0 2px;
+          border-right: 2px solid #666;
+          border-bottom: 2px solid #666;
+          transform: rotate(-45deg);
+          transition: transform 0.2s ease;
+      }
+
+      .pub-toggle[aria-expanded="true"] .pub-chevron {
+          transform: rotate(45deg);
+      }
+
+      .pub-label {
+          flex: 1 1 auto;
+      }
+
+      .pub-count {
+          flex: 0 0 auto;
+          font-size: 0.7em;
+          font-weight: 400;
+          color: #666;
+          background: #f0f0f0;
+          border-radius: 999px;
+          padding: 2px 10px;
+      }
+
+      .pub-body {
+          display: none;
+          padding: 10px 0 4px 8px;
+      }
+
+      .pub-group > .pub-body {
+          padding-left: 34px;
+      }
+
+      @media (max-width: 600px) {
+          .category-summary {
+              gap: 12px;
+              padding: 12px;
+          }
+          .category-card .category-icon {
+              width: 72px;
+              height: 72px;
+          }
+          .category-title {
+              font-size: 1.2em;
+          }
+          .category-tagline {
+              font-size: 0.95em;
+          }
+          .pub-group-toggle {
+              margin-left: 10px;
+              width: calc(100% - 10px);
+          }
+          .pub-group > .pub-body {
+              padding-left: 16px;
+          }
+          .pub-controls {
+              float: none;
+              display: block;
+              margin-top: 4px;
+          }
+      }
+    </style>
+
+    <script>
+      $(document).ready(function () {
+          function getUrlParameter(name) {
+              name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+              var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+              var results = regex.exec(location.search);
+              return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+          }
+
+          // ---------- Lens switch (?lens=cs | ?lens=cj) ----------
+          // Everything lens-specific carries class lens-cs or lens-cj: the intro paragraph,
+          // the category cards and the "All Publications" tree.
+          var LENS_LABELS = { cs: 'Computer Science Lens', cj: 'Computational Journalism Lens' };
+          var activeLens = 'cj';
+
+          function applyLens(lens) {
+              activeLens = lens === 'cs' ? 'cs' : 'cj';
+              $('#lens').text(LENS_LABELS[activeLens]);
+              $('.lens-cs').toggle(activeLens === 'cs');
+              $('.lens-cj').toggle(activeLens === 'cj');
+          }
+
+          applyLens(getUrlParameter('lens'));
+
+          $('.lens-switch').on('click', function (event) {
+              event.preventDefault();
+              var lens = $(this).data('lens');
+              applyLens(lens);
+              var url = new URL(location.href);
+              url.searchParams.set('lens', lens);
+              history.replaceState(null, '', url.toString());
+          });
+
+          // ---------- Category cards ----------
+          function setCardOpen($card, open) {
+              $card.toggleClass('open', open);
+              $card.find('.category-summary').attr('aria-expanded', open ? 'true' : 'false');
+              var $details = $card.find('.category-details').stop(true, true);
+              if (open) { $details.slideDown(180); } else { $details.slideUp(180); }
+          }
+
+          $('.category-summary').on('click', function () {
+              var $card = $(this).closest('.category-card');
+              setCardOpen($card, !$card.hasClass('open'));
+          });
+
+          // Deep link: research.html?cat=tacit (or ?cat=news-finding) opens that card, switching lens if needed.
+          var catParam = getUrlParameter('cat');
+          if (catParam) {
+              var $target = $('.category-card[data-cat="' + catParam + '"]');
+              if ($target.length) {
+                  if ($target.data('lens') !== activeLens) { applyLens($target.data('lens')); }
+                  setCardOpen($target, true);
+              }
+          }
+
+          // ---------- "All Publications" tree ----------
+          function setToggle($btn, open, animate) {
+              $btn.attr('aria-expanded', open ? 'true' : 'false');
+              var $body = $('#' + $btn.attr('aria-controls')).stop(true, true);
+              if (animate === false) { $body.toggle(open); return; }
+              if (open) { $body.slideDown(160); } else { $body.slideUp(160); }
+          }
+
+          $('.pub-toggle').on('click', function () {
+              var $btn = $(this);
+              setToggle($btn, $btn.attr('aria-expanded') !== 'true');
+          });
+
+          $('.pub-expand-all').on('click', function (event) {
+              event.preventDefault();
+              $('.pub-toggle').each(function () { setToggle($(this), true); });
+          });
+
+          $('.pub-collapse-all').on('click', function (event) {
+              event.preventDefault();
+              $('.pub-toggle').each(function () { setToggle($(this), false); });
+          });
+
+          if (getUrlParameter('pubs') === 'all') {
+              $('.pub-toggle').each(function () { setToggle($(this), true, false); });
+          }
+
+          // Links to a paper (#cs-paper-<id> or #cj-paper-<id>) expand the sections that contain it,
+          // switch lens if the paper lives in the other tree, and scroll to it.
+          function revealPaper(hash) {
+              var match = /^#(cs|cj)-paper-/.exec(hash || '');
+              if (!match) { return; }
+              var $paper = $(hash);
+              if (!$paper.length) { return; }
+              if (match[1] !== activeLens) { applyLens(match[1]); }
+              $paper.parents('.pub-body').each(function () {
+                  setToggle($('.pub-toggle[aria-controls="' + this.id + '"]'), true, false);
+              });
+              $paper[0].scrollIntoView();
+          }
+
+          revealPaper(location.hash);
+          $(window).on('hashchange', function () { revealPaper(location.hash); });
+      });
+    </script>
   </head>
-  <style>
-    iframe {
-        border: none;
-        width: 100%;
-        height: 200px; /* Adjust height based on content */
-        overflow: hidden;
-    }
-    object {
-        width: 110%;
-        height: 240px;
-        overflow: hidden; /* Ensure overflow is hidden */
-    }
-    canvas {
-        width: 110%;
-        height: 240px;
-        overflow: hidden; /* Ensure overflow is hidden */
-    }
-    .paper-hidden {
-        display: none !important;
-    }
-    #top-header {
-        margin-top: 0;
-    }
-  </style>
-
-<script>
-    $(document).ready(function () {
-        function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            var results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
-
-        var lensParam = getUrlParameter('lens');
-        var activeLens = lensParam === 'cs' ? 'cs' : 'cj';
-
-        if (activeLens === 'cs') {
-            $('#lens').text('Computer Science Lens');
-            $('#computer-science-lens').show();
-            $('#comp-journalism-lens').hide();
-        } else {
-            $('#lens').text('Computational Journalism Lens');
-            $('#computer-science-lens').hide();
-            $('#comp-journalism-lens').show();
-        }
-
-        var activeCsFilter = null;
-        var activeCjFilter = null;
-        var $publicationsHeader = $('#publications-header');
-        var basePublicationsHeader = $publicationsHeader.text();
-
-        var csFilterLabels = {
-            actions: 'Actions',
-            discourse: 'Discourse Elements',
-            words: 'Words'
-        };
-
-        var cjFilterLabels = {
-            'story-idea': 'Story Idea',
-            'article-in-progress': 'Article-in-progress',
-            'finished-story': 'Finished Story',
-            'sourced-story': 'Sourced Story',
-            'structured-story': 'Structured Story'
-        };
-
-        var csGroups = {
-            actions: [
-                'Do LLMs Plan Like Human Writers?',
-                'Tracking the Newsworthiness of Public Documents',
-                'Explaining Mixtures of Sources in News Articles',
-                'First Steps Towards a Source Recommendation Engine',
-                'A Novel Multi-Document Retrieval Benchmark',
-                'NewsInterview: a Dataset and a Playground to Evaluate LLMs',
-                'Identifying Informational Sources in News Articles',
-                "Don't quote me on that: Finding Mixtures of Sources in News Articles",
-                'Modeling Newsworthiness for Lead-Generation Across Corpora'
-            ],
-            discourse: [
-                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
-                'Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification',
-                'News Discourse Patterns: A Roadmap for Computational Journalism',
-                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning',
-                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
-                'PatentEdits: Framing Patent Novelty as Textual Entailment'
-            ],
-            words: [
-                'Stay on Topic with Classifier-Free Guidance',
-                'NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge',
-                'NewsEdits 2.0: Learning the Intentions Behind Updating News',
-                'Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training',
-                'Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses',
-                'Actionable Recourse in Linear Classification. (Expanded Version)',
-                'Actionable Recourse in Linear Classification'
-            ]
-        };
-
-        var cjGroups = {
-            'story-idea': [
-                'Tracking the Newsworthiness of Public Documents',
-                'Modeling Newsworthiness for Lead-Generation Across Corpora',
-                'A Novel Multi-Document Retrieval Benchmark',
-                'Spatial Layouts in News Homepages Capture Human Preferences',
-                'Characterizing Search Engine Traffic to Internet Research Agency Web Properties'
-            ],
-            'article-in-progress': [
-                'Do LLMs Plan Like Human Writers?',
-                'NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge',
-                'NewsEdits 2.0: Learning the Intentions Behind Updating News',
-                'Stay on Topic with Classifier-Free Guidance',
-                'Are Large Language Models Capable of Generating Human-Level Narratives?',
-                'PatentEdits: Framing Patent Novelty as Textual Entailment'
-            ],
-            'finished-story': [
-                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
-                'News Discourse Patterns: A Roadmap for Computational Journalism',
-                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
-                'Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses',
-                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning'
-            ],
-            'sourced-story': [
-                'Explaining Mixtures of Sources in News Articles',
-                'Identifying Informational Sources in News Articles',
-                'First Steps Towards a Source Recommendation Engine',
-                "Don't quote me on that: Finding Mixtures of Sources in News Articles",
-                'NewsInterview: a Dataset and a Playground to Evaluate LLMs',
-                'A Novel Multi-Document Retrieval Benchmark'
-            ],
-            'structured-story': [
-                'Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification',
-                'LegalDiscourse: Interpreting When Laws Apply and To Whom',
-                'StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning',
-                'Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals',
-                'PatentEdits: Framing Patent Novelty as Textual Entailment',
-                'News Discourse Patterns: A Roadmap for Computational Journalism',
-                'Spatial Layouts in News Homepages Capture Human Preferences'
-            ]
-        };
-
-        var $paperEntries = $('#cs-papers > div[valign="top"]').addClass('paper-entry');
-
-        function findPaper(titleFragment) {
-            return $('.paper_title')
-                .filter(function () {
-                    return $(this).text().indexOf(titleFragment) !== -1;
-                })
-                .closest('div[valign]');
-        }
-
-        function assignGroups(groupMap, lensKey) {
-            $.each(groupMap, function (group, titles) {
-                titles.forEach(function (titleFragment) {
-                    var $matches = findPaper(titleFragment);
-                    if (!$matches.length) {
-                        return;
-                    }
-                    var attributeName = lensKey === 'cs' ? 'data-cs' : 'data-cj';
-                    $matches.each(function () {
-                        var $entry = $(this);
-                        var existing = ($entry.attr(attributeName) || '').split(/\s+/).filter(function (token) {
-                            return token.length > 0;
-                        });
-                        if (existing.indexOf(group) === -1) {
-                            existing.push(group);
-                        }
-                        $entry.attr(attributeName, existing.join(' '));
-                    });
-                });
-            });
-        }
-
-        assignGroups(csGroups, 'cs');
-        assignGroups(cjGroups, 'cj');
-
-        function updateHeaderForFilter(lensKey, filterValue) {
-            if (lensKey !== activeLens) {
-                return;
-            }
-            if (!filterValue) {
-                $publicationsHeader.text(basePublicationsHeader);
-                return;
-            }
-            var labelMap = lensKey === 'cs' ? csFilterLabels : cjFilterLabels;
-            var label = labelMap[filterValue] || filterValue;
-            $publicationsHeader.text(basePublicationsHeader + ' (' + label + ')');
-        }
-
-        function applyFilter(lensKey, filterValue) {
-            $paperEntries.removeClass('paper-hidden');
-            if (filterValue) {
-                var attributeName = lensKey === 'cs' ? 'data-cs' : 'data-cj';
-                $paperEntries.each(function () {
-                    var groups = ($(this).attr(attributeName) || '').split(/\s+/).filter(function (token) {
-                        return token.length > 0;
-                    });
-                    if (groups.indexOf(filterValue) === -1) {
-                        $(this).addClass('paper-hidden');
-                    }
-                });
-            }
-            updateHeaderForFilter(lensKey, filterValue);
-        }
-
-        function handleFilterMessage(lensKey, value) {
-            if (lensKey === 'cs') {
-                activeCsFilter = value || null;
-                if (activeLens === 'cs') {
-                    applyFilter('cs', activeCsFilter);
-                }
-            } else {
-                activeCjFilter = value || null;
-                if (activeLens === 'cj') {
-                    applyFilter('cj', activeCjFilter);
-                }
-            }
-        }
-
-        applyFilter(activeLens, activeLens === 'cs' ? activeCsFilter : activeCjFilter);
-
-        window.addEventListener('message', function (event) {
-            if (!event || typeof event.data !== 'object' || event.data === null) {
-                return;
-            }
-            if (event.data.type === 'cs-filter') {
-                handleFilterMessage('cs', event.data.value);
-            } else if (event.data.type === 'cj-filter') {
-                handleFilterMessage('cj', event.data.value);
-            }
-        });
-    });
-</script>
 
   <body class="research">
 <nav class="site-nav" aria-label="Primary navigation">
@@ -252,407 +433,1192 @@
   <a href="data-vis.html">Journalism</a>
   <span class="nav-sep">|</span>
   <a href="music.html">Music</a>
+  <span class="nav-sep">|</span>
+  <a href="wishlist.html">Wishlist</a>
 </nav>
+
+
+
+
+
   <div class="main">    
     <h1 id="top-header">Academic Research</h1>
 
     <div id="lens-description" style="background-color: #f0f0f0; padding: 10px; font-size: 0.9em;">
-        My research breaks down into two lenses: <a href="research.html?lens=cs">[Computer Science]</a> | <a href="research.html?lens=cj">[Computational Journalism]</a>.
+        My research breaks down into two lenses: <a href="research.html?lens=cs" class="lens-switch" data-lens="cs">[Computer Science]</a> | <a href="research.html?lens=cj" class="lens-switch" data-lens="cj">[Computational Journalism]</a>.
         <br>
         You are currently viewing the <b id="lens">Computer Science Lens</b>. Click on the other lens to view it.
     </div>
     <p></p>
 
-    <div id="computer-science-lens">
+    <div id="computer-science-lens" class="lens-cs">
         <p>
             For AI to play a more integrated role in human tasks, it must align with human values and decision-making processes. Doing
             so, I believe, requires a radically different approach to conceptualizing and training AI; it requires an AI that understands, on a
             fundamental level, why humans make the decisions we do. My work illuminates this process through simply observing the creative outputs humans produce. 
-
-            <object type="image/svg+xml" data="cs-flow.html" scrolling="no"></object>
-
-            This generative model says that a <i>document</i> is generated by a sequence of human <i>actions</i>, which can be inferred by anaylzing the macrostructure of that document (also known as the "discourse structure"). 
-            <i><u>Click on the diagram to filter articles by each area.</u></i>
-            <!-- Where is this work going? I would like to take the next step: use <i>inferred actions</i> as a guide for learning the <i>reward functions</i> that drive human writing behavior.  -->
-            <!-- I believe that only with these rewards can we train creative AI systems that understand human decision-making processes and are aligned with human values. -->
         </p>
     </div>
-    <div id="comp-journalism-lens">
+    <div id="comp-journalism-lens" class="lens-cj">
         <p>
             I imagine a society where professional journalists can produce more higher-quality information at lower costs, improving our information ecosystem, better informing the public and improving our democracy. 
-            My work has targeted different steps in the news gathering process. The workflow for journalism is:
-            <object type="image/svg+xml" data="journalism-flow.html" scrolling="no"></object>
-            I develop computational methods to improve each step. <i><u>Click on the diagram to filter articles by each area.</u></i>
+            My work has targeted different steps in the news gathering process, from finding story ideas, to sourcing, to structuring the finished story, to editing it, and I develop computational methods to improve each step.
         </p>
-        <!-- Click on the diagram to filter articles by each area. -->
     </div>
 
-    <h2 id="publications-header">Publications</h2>
-    <div id="cs-papers">
-        <div valign="top">
-            <div class="paper_title">
-            A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting
-            </div>
-            <div class="paper_rest">
-            <strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Lucas Spangher, Sewon Min, Mark Dredze.<br>
-            <strong>Proceedings of the 4th International Workshop on Knowledge-Augmented Methods for Natural Language Processing</strong> 2025.<br>
-            Association for Computational Linguistics.
-            </div>
-            <div class="paper_bottom_space"></div>
-        </div>
 
-        <div valign="top">
-            <div class="paper_title">
-            🎤 NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews
-            </div>
-            <div class="paper_rest">
-            <strong>Alexander Spangher</strong>, Michael Lu, Sriya Kalyan, Hyundong Justin Cho, Tenghao Huang, Weiyan Shi, Jonathan May.<br>
-            <strong>Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)</strong> 2025.<br>
-            Association for Computational Linguistics.
-            </div>
-            <div class="paper_bottom_space"></div>
-        </div>
+    <div class="category-list lens-cs">
 
-        <div valign="top">
-            <div class="paper_title">
-            Spatial Layouts in News Homepages Capture Human Preferences
-            </div>
-            <div class="paper_rest">
-            <strong>Alexander Spangher</strong>, Michael Vu, Arda Kaz, Naitian Zhou, Ben Welsh.<br>
-            <strong>Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing</strong> 2025.<br>
-            </div>
-            <div class="paper_bottom_space"></div>
-        </div>
+      <div class="category-card" data-cat="tacit" data-lens="cs">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-tacit-details">
+          <img class="category-icon" src="assets/img/research/tacit.png" alt="" title="Figure from: Verifiable, Articulable, and Tacit Components of Preference">
+          <div class="category-text">
+            <div class="category-title">Tacit Knowledge</div>
+            <div class="category-tagline">Measuring what humans know but cannot say</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-tacit-details">
+          <div class="category-description">
+                    <p>I am currently developing a line of work exploring <a href="https://www.goodreads.com/book/show/225665.Tacit_Dimension">tacit knowledge</a>: how to measure it, learn it and understand what role it has in human tasks.</p>
+        <p>Tacit knowledge, I believe, is how humans construct <a href="https://www.goodreads.com/book/show/66322.Creativity">taste</a>, <a href="https://www.goodreads.com/book/show/12073.Philosophical_Investigations">meaning</a> and <a href="https://www.goodreads.com/book/show/19068.The_Nicomachean_Ethics">values</a>; our models do not currently acquire tacit knowledge in the same ways humans do, and I believe that is the root of safety and capability failures at the frontier.</p>
+        <p>I am currently asking <a href="#cs-paper-verifiable-tacit" title="Verifiable, Articulable, and Tacit Components of Preference">how much human preference</a> can be captured by rubrics and verifiers across seven creative domains (journalism, law, math, code, etc.) and find robust evidence of tacit knowledge, even in math and code. This builds from a long line of observations I have made in how human preference gets encoded in <a href="#cs-paper-spatial-layouts" title="Spatial Layouts in News Homepages Capture Human Preferences">homepages</a>, <a href="#cs-paper-tracking-newsworthiness" title="Tracking the Newsworthiness of Public Documents">news coverage selections</a> and <a href="#cs-paper-identifying-sources" title="Identifying Informational Sources in News Articles">source selections</a>. Understanding how these qualitative shared values arise, and how they can be encoded, presents in my mind the biggest challenge to continued frontier model development.</p>
 
-        <div valign="top">
-            <div class="paper_title">
-            The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity
-            </div>
-            <div class="paper_rest">
-            Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.<br>
-            <strong>NeurIPS 2025 Creative AI Track</strong> 2025.
-            </div>
-            <div class="paper_bottom_space"></div>
+          </div>
         </div>
+      </div>
 
-        <div valign="top">
-            <div class="paper_title">
-            🏆🎤 Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs
-            </div>
-            <div class="paper_rest">
-            <strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze.<br>
-            <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-            Acceptance rate 20.8%
-            </div>
-            <div class="paper_bottom_space"></div>
+      <div class="category-card" data-cat="planning" data-lens="cs">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-planning-details">
+          <img class="category-icon" src="assets/img/research/planning.png" alt="" title="Figure from: Sequentially Controlled Text Generation">
+          <div class="category-text">
+            <div class="category-title">Planning</div>
+            <div class="category-tagline">Learning how humans plan before they act</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-planning-details">
+          <div class="category-description">
+                    <p>I believe modern agentic systems benefit when considering more elements of planning. Goal-directed RL, constrained planning and latent learning are all directions that I am interested in considering.</p>
+        <p>My prior work in this domain has considered hierarchical approaches to mapping trajectories, learning from human planning processes and fair low-level plans.</p>
+        <p>Most recently, I have studied planning where the plan is a conversation: in <a href="#cs-paper-newsinterview" title="NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews">NewsInterview</a>, we built a simulated interviewing environment from 40,000 journalistic interviews and found that LLM interviewers rabbit-hole and fail to pivot, a long-horizon planning failure that no single-turn benchmark would show. Before that, I asked whether LLMs <a href="#cs-paper-llms-plan-like-writers" title="Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs">plan like human writers</a> when choosing an angle on a press release (they match us better on angles than on sources, and are less creative at both), and treated a journalist's choice of sources as a <a href="#cs-paper-explaining-mixtures" title="Explaining Mixtures of Sources in News Articles">latent plan</a> that can be recovered from the finished article.</p>
+        <p>That work grew out of earlier attempts to impose structure on generation and to read structure off of human drafts: <a href="#cs-paper-seq-controlled" title="Sequentially Controlled Text Generation">sequentially controlled text generation</a> asks a model to follow a discourse plan sentence by sentence, and <a href="#cs-paper-newsedits" title="NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge">NewsEdits</a> captures 4.6M article versions so we can watch a writer's plan unfold edit by edit. The earliest thread, <a href="#cs-paper-actionable-recourse" title="Actionable Recourse in Linear Classification">actionable recourse</a>, is planning at its most constrained: what is the cheapest sequence of changes a person can make to flip a classifier's decision?</p>
+
+          </div>
         </div>
-        
-        <div valign="top">
-            <div class="paper_title">
-            Explaining Mixtures of Sources in News Articles
-            </div>
-            <div class="paper_rest">
-            <strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May.<br>
-            <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-            Acceptance rate 20.8%
-            </div>
-            <div class="paper_bottom_space"></div>
+      </div>
+
+      <div class="category-card" data-cat="discourse" data-lens="cs">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-discourse-details">
+          <img class="category-icon" src="assets/img/research/discourse.png" alt="" title="Figure from: LegalDiscourse: Interpreting When Laws Apply and To Whom">
+          <div class="category-text">
+            <div class="category-title">Discourse and Emulation</div>
+            <div class="category-tagline">Reconstructing the process behind the artifact</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-discourse-details">
+          <div class="category-description">
+                    <p>Humans leave traces of our own planning and ideation in the artifacts we create: you or I could look at a scientific paper and reconstruct many steps in its execution (explicit and implicit), based on what we call <i>discourse cues</i>. Cognitive scientists call this <i>emulation</i>, or the ability to (a) work backwards and recreate missing steps in the state-and-action sequences of others and (b) recreate them.</p>
+        <p>I centered my thesis around this topic: that our ML systems can learn better from human actions if we take some of these processes better into account.</p>
+        <p>My <a href="#cs-paper-thesis" title="Emulation Learning: A Roadmap to Achieving Human-Like Planning in Creative Tasks">thesis</a> frames this as emulation learning: infer the actions and rewards behind a finished artifact, then learn to plan from them. The most recent pieces read discourse to recover intent: <a href="#cs-paper-newsedits-2" title="NewsEdits 2.0: Learning the Intentions Behind Updating News">NewsEdits 2.0</a> separates factual from stylistic edits and shows an article's own language predicts which facts will change, and <a href="#cs-paper-discosum" title="DiscoSum: Discourse-aware News Summarization">DiscoSum</a> plans a discourse structure before it summarizes, so a story keeps its shape across platforms. The same move works outside news: <a href="#cs-paper-patentedits" title="PatentEdits: Framing Patent Novelty as Textual Entailment">which patent claims survive examination</a> is predictable from textual entailment against the prior art.</p>
+        <p>The discourse machinery itself came first. <a href="#cs-paper-legaldiscourse" title="LegalDiscourse: Interpreting When Laws Apply and To Whom">LegalDiscourse</a> asks when a law applies and to whom, and answers with a span-and-relation schema that journalists then used, through <a href="#cs-paper-statecensuslaws" title="StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning">StateCensusLaws.org</a>, to investigate 6,000 census-dependent state laws. Underneath that is the practical problem that discourse datasets are small and their schemas drift, which <a href="#cs-paper-multitask-discourse" title="Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification">multitask learning</a> helps with where the usual low-resource tricks do not, and a <a href="#cs-paper-news-discourse-patterns" title="News Discourse Patterns: A Roadmap for Computational Journalism">roadmap</a> for why the structure of a news article is a scaffold for computational journalism in the first place.</p>
+
+          </div>
         </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🏆 Stay on Topic with Classifier-Free Guidance
+      </div>
+
+      <div class="category-card" data-cat="sequence" data-lens="cs">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-sequence-details">
+          <img class="category-icon" src="assets/img/research/sequence.png" alt="" title="Figure from: Stay on Topic with Classifier-Free Guidance">
+          <div class="category-text">
+            <div class="category-title">Sequence Modeling</div>
+            <div class="category-tagline">Structure in sequences, in language and beyond</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-sequence-details">
+          <div class="category-description">
+                    <p>I have been fascinated by sequence modeling both in and outside of language, and what this tells us about fundamental similarities between domains.</p>
+        <p>Most recently, with EleutherAI, we trained autoregressive transformers on <a href="#cs-paper-piano-ssl" title="Scaling Self-Supervised Representation Learning for Symbolic Piano Performance">60,000 hours of transcribed solo piano</a>; the models produce coherent continuations and MIDI embeddings that set the state of the art on music-information-retrieval classification, and <a href="#cs-paper-ghost-in-the-keys" title="The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity">Aria-Duet</a> puts one on a Disklavier for a live, turn-taking duet with a human pianist. Before that, we showed that <a href="#cs-paper-cfg" title="Stay on Topic with Classifier-Free Guidance">classifier-free guidance</a>, borrowed from image diffusion, works for plain language models too: at inference time it buys the accuracy of a model twice the size.</p>
+        <p>Outside language and music, the same tools show up in physics and public health: masked autoregressive transformers <a href="#cs-paper-fusion-autoregressive" title="Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas">predict plasma disruptions</a> in fusion tokamaks and suggest the plasma carries a long memory, and, early in the pandemic, co-training on event-extraction views let classifiers <a href="#cs-paper-covid-transfer" title="Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training">transfer</a> from COVID-19 policy announcements to Twitter discussion of them.</p>
+
+          </div>
         </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman.<br>
-        <strong>Forty-first International Conference on Machine Learning</strong> 2024.<br>
-        Acceptance rate 27.5%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Tracking the Newsworthiness of Public Documents
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May.<br>
-        <strong>Association of Computational Linguistics</strong> 2024.<br>
-        Acceptance rate 23.5%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 LegalDiscourse: Interpreting When Laws Apply and To Whom
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May.<br>
-        <strong>North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2024.<br>
-        [ <a href="https://aclanthology.org/2024.naacl-long.472.pdf">paper</a> ]<br>
-        Acceptance rate 23%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Identifying Informational Sources in News Articles
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May.<br>
-        <strong>2023 Conference on Empirical Methods in Natural Language Processing</strong> 2023.<br>
-        Acceptance rate 23.3%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🏆🎤 First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng.<br>
-        <strong>Computation + Journalism</strong> 2023.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🏆🎤 NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng.<br>
-        <strong>Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2022.<br>
-        [ <a href="https://aclanthology.org/2022.naacl-main.10.pdf">paper</a> ]<br>
-        Acceptance rate 26%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng.<br>
-        <strong>2021 Conference on Empirical Methods in Natural Language Processing</strong> 2021.<br>
-        [ <a href="https://arxiv.org/abs/2101.00389">paper</a> ]<br>
-        Acceptance rate 25.6%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong> and Jonathan May.<br>
-        <strong>Computation + Journalism</strong> 2022.<br>
-        [ <a href="https://arxiv.org/abs/2104.10263">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 News Discourse Patterns: A Roadmap for Computational Journalism
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong> and Jonathan May.<br>
-        <strong>Computation + Journalism</strong> March 2021.<br>
-        [ <a href="https://cj2021.northeastern.edu/schedule-and-program/">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-        <strong>1st Workshop on NLP for COVID-19 at ACL 2020</strong> 2020.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 Don't quote me on that: Finding Mixtures of Sources in News Articles
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-        <strong>Computation + Journalism</strong> 2020.<br>
-        [ <a href="https://arxiv.org/abs/2104.09656">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 Modeling Newsworthiness for Lead-Generation Across Corpora
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.<br>
-        <strong>Computation + Journalism</strong> 2020.<br>
-        <strong>Southern California Natural Language Processing Conference</strong> 2019.<br>
-        [ <a href="https://arxiv.org/abs/2104.09653">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🎤 Characterizing Search Engine Traffic to Internet Research Agency Web Properties
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz.<br>
-        <strong>The Web Conference 2020</strong> Taipei, Taiwan. 2020.<br>
-        [ <a href="https://bit.ly/3aCGlkT">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher.<br>
-        <strong>IEEE Transactions on Cognitive Communications and Networking</strong> 2019.<br>
-        Acceptance rate 19.4%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Actionable Recourse in Linear Classification
-        </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Berk Ustun.<br>
-        <strong>5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML</strong> 2018.<br>
-        <strong>Also presented in:</strong> <strong>Workshop on Ethical, Social and Governance Issues in AI, NIPS</strong> 2018.<br>
-        [ <a href="https://bit.ly/2FEj9pf">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <h2>Publications (Middle Author)</h2>
-    <div valign="top">
-        <div class="paper_title">
-        Scaling Self-Supervised Representation Learning for Symbolic Piano Performance
-        </div>
-        <div class="paper_rest">
-        Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.<br>
-        <strong>International Society for Music Information Retrieval Conference (ISMIR)</strong> 2025.
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        🏆 Are Large Language Models Capable of Generating Human-Level Narratives?
-        </div>
-        <div class="paper_rest">
-        Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng.<br>
-        <strong>2024 Conference on Empirical Methods in Natural Language Processing</strong> 2024.<br>
-        [ <a href="https://arxiv.org/pdf/2407.13248">paper</a> ]<br>
-        Acceptance rate 20.8%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction
-        </div>
-        <div class="paper_rest">
-        Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea.<br>
-        <strong>Journal of Fusion Energy</strong> 2024.<br>
-        [ <a href="https://www.researchsquare.com/article/rs-4245117/latest">paper</a> ]<br>
-        Acceptance rate 20%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas
-        </div>
-        <div class="paper_rest">
-        Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea.<br>
-        <strong>NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences</strong> 2023.<br>
-        [ <a href="https://neurips.cc/virtual/2023/76249">paper</a> ]<br>
-        Acceptance rate 75.6%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals
-        </div>
-        <div class="paper_rest">
-        Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng.<br>
-        <strong>61st Annual Meeting of the Association for Computational Linguistics</strong> 2023.<br>
-        [ <a href="https://arxiv.org/pdf/2110.08486">paper</a> ]<br>
-        Acceptance rate 24.1%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Actionable Recourse in Linear Classification. (Expanded Version)
-        </div>
-        <div class="paper_rest">
-        Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu.<br>
-        <strong>Conference on Fairness, Accountability and Transparency (FAT*), ACM</strong> 2019.<br>
-        [ <a href="https://arxiv.org/pdf/1809.06514.pdf">paper</a> ]<br>
-        Acceptance rate 27%
-        </div>
-        <div class="paper_bottom_space"></div>
-    </div>
-    
-    <div valign="top">
-        <div class="paper_title">
-        Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses
-        </div>
-        <div class="paper_rest">
-        Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz.<br>
-        <strong>Whitepaper</strong> 2019.<br>
-        [ <a href="https://bit.ly/2SczIKt">paper</a> ]
-        </div>
-        <div class="paper_bottom_space"></div>
+      </div>
+
     </div>
 
-    <h2>Publications (In Submission)</h2>
-    <div valign="top">
-        <div class="paper_title">
-        NewsEdits 2.0: Learning the Intentions Behind Updating News
+    <div class="category-list lens-cj">
+
+      <div class="category-card" data-cat="news-finding" data-lens="cj">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-news-finding-details">
+          <img class="category-icon" src="assets/img/research/news-finding.png" alt="" title="Figure from: Spatial Layouts in News Homepages Capture Human Preferences">
+          <div class="category-text">
+            <div class="category-title">News Finding</div>
+            <div class="category-tagline">Which events and documents become news</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-news-finding-details">
+          <div class="category-description">
+                    <p>Journalists find stories by reading: leaks, bills, court filings, press releases, meeting minutes. Only a sliver of it becomes news, and the judgment of what deserves coverage is one of the most important, and least articulated, decisions in the newsroom.</p>
+        <p>Most recently, we showed that editors' judgments are legible in the <a href="#cj-paper-spatial-layouts" title="Spatial Layouts in News Homepages Capture Human Preferences">layout of a homepage</a>: from 3,000 homepages captured twice daily for five years, we learned stable, transferable preferences over what goes where. Before that, we <a href="#cj-paper-tracking-newsworthiness" title="Tracking the Newsworthiness of Public Documents">linked San Francisco Chronicle coverage to city-government records</a> and built newsworthiness predictors that expert journalists found helpful 84% of the time, extending an earlier idea of <a href="#cj-paper-newsworthiness-lead-gen" title="Modeling Newsworthiness for Lead-Generation Across Corpora">training on front pages and transferring to court cases, bills and council minutes</a>.</p>
+        <p>Looking at the other end of the pipeline, we asked whether LLMs <a href="#cj-paper-llms-plan-like-writers" title="Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs">choose angles on press releases the way reporters do</a>: they are closer to us on angles than on sources, and less creative at both. The newest piece, on <a href="#cj-paper-verifiable-tacit" title="Verifiable, Articulable, and Tacit Components of Preference">tacit components of preference</a>, treats newsworthiness as one of several human judgments that resist rubrics and verifiers.</p>
+
+          </div>
         </div>
-        <div class="paper_rest">
-        <strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.<br>
-        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
+      </div>
+
+      <div class="category-card" data-cat="source-finding" data-lens="cj">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-source-finding-details">
+          <img class="category-icon" src="assets/img/research/source-finding.png" alt="" title="Figure from: A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting">
+          <div class="category-text">
+            <div class="category-title">Source Finding</div>
+            <div class="category-tagline">Who gets quoted, and why</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-source-finding-details">
+          <div class="category-description">
+                    <p>Reporting is sourcing. Which people, documents and databases a journalist consults shapes the story more than any sentence they write, and sources tend to be used together in canonical ways.</p>
+        <p><a href="#cj-paper-newsinterview" title="NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews">NewsInterview</a> is the most recent step: a simulated interviewing environment built from 40,000 journalistic interviews, in which LLM interviewers rabbit-hole, fail to pivot and leave information on the table. Alongside it, we recast source selection as <a href="#cj-paper-multi-doc-retrieval" title="A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting">multi-document retrieval</a> and showed query planners do better when they plan over the discourse role each source will play, and we modeled a journalist's choice of sources as a <a href="#cj-paper-explaining-mixtures" title="Explaining Mixtures of Sources in News Articles">latent plan</a> recoverable from the finished article.</p>
+        <p>The foundation is the <a href="#cj-paper-identifying-sources" title="Identifying Informational Sources in News Articles">largest annotated dataset of informational sources in news</a>, which grew out of <a href="#cj-paper-source-rec-engine" title="First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles">first steps toward a source recommendation engine</a> and, before that, a model of articles as <a href="#cj-paper-dont-quote-me" title="Don't quote me on that: Finding Mixtures of Sources in News Articles">mixtures of source types</a> labeled by affiliation and role.</p>
+
+          </div>
         </div>
-        <div class="paper_bottom_space"></div>
+      </div>
+
+      <div class="category-card" data-cat="story-structuring" data-lens="cj">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-story-structuring-details">
+          <img class="category-icon" src="assets/img/research/structuring.png" alt="" title="Figure from: Sequentially Controlled Text Generation">
+          <div class="category-text">
+            <div class="category-title">Story Structuring</div>
+            <div class="category-tagline">How a story is built, sentence by sentence</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-story-structuring-details">
+          <div class="category-description">
+                    <p>A news article has a shape: a main event, context, history, reactions, expectations. Journalists learn this structure by apprenticeship; I want machines to read it off finished stories and to write with it.</p>
+        <p>Most recently we took the discourse approach to law: <a href="#cj-paper-legaldiscourse" title="LegalDiscourse: Interpreting When Laws Apply and To Whom">LegalDiscourse</a> parses when a law applies and to whom, and <a href="#cj-paper-statecensuslaws" title="StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning">StateCensusLaws.org</a> put those parsers in front of journalists investigating 6,000 census-dependent state laws. In news itself, <a href="#cj-paper-seq-controlled" title="Sequentially Controlled Text Generation">sequentially controlled generation</a> asks a model to follow a discourse plan one sentence at a time and gets closer to human-level writing the more structure it is given.</p>
+        <p>Underneath is the practical problem that discourse datasets are small and their schemas drift, which <a href="#cj-paper-multitask-discourse" title="Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification">multitask learning</a> helps with where the usual low-resource tricks do not, and the <a href="#cj-paper-news-discourse-patterns" title="News Discourse Patterns: A Roadmap for Computational Journalism">roadmap</a> that argued news discourse structure is the scaffold for computational journalism tools in the first place.</p>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="category-card" data-cat="story-editing" data-lens="cj">
+        <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-story-editing-details">
+          <img class="category-icon" src="assets/img/research/editing.png" alt="" title="Figure from: NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge">
+          <div class="category-text">
+            <div class="category-title">Story Editing</div>
+            <div class="category-tagline">How stories change after they are published</div>
+          </div>
+          <span class="category-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="category-details" id="cat-story-editing-details">
+          <div class="category-description">
+                    <p>Breaking news is written in versions. Each revision records a decision: a fact that changed, a frame that shifted, a quote that was cut. Those traces are a rare window into the writing process itself.</p>
+        <p>Most recently, <a href="#cj-paper-newsedits-2" title="NewsEdits 2.0: Learning the Intentions Behind Updating News">NewsEdits 2.0</a> separates factual updates from stylistic and narrative ones and shows that an article's own language predicts which facts will change, well enough to tell an LLM when to abstain from answering. <a href="#cj-paper-discosum" title="DiscoSum: Discourse-aware News Summarization">DiscoSum</a> treats re-writing a story for each social platform as a structured edit, planning the discourse structure before summarizing.</p>
+        <p>The dataset behind this is <a href="#cj-paper-newsedits" title="NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge">NewsEdits</a>, 4.6M versions of 1.2M articles, with tasks that ask models to predict which sentences will be added, deleted or edited next; the same edit-prediction framing carries over to <a href="#cj-paper-patentedits" title="PatentEdits: Framing Patent Novelty as Textual Entailment">patent claims</a>, where textual entailment against prior art predicts which claims survive examination.</p>
+
+          </div>
+        </div>
+      </div>
+
     </div>
-    
-    <div valign="top">
+
+    <h2 id="publications-header">All Publications
+      <span class="pub-controls"><a href="#" class="pub-expand-all">expand all</a> <span class="nav-sep">|</span> <a href="#" class="pub-collapse-all">collapse all</a></span>
+    </h2>
+        <div class="pub-tree lens-cs" id="pubs-cs">
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">First Author</span>
+          <span class="pub-count">22</span>
+        </button>
+        <div class="pub-body" id="pubs-cs-first-author-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-tacit-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Tacit Knowledge</span>
+              <span class="pub-count">7</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-first-author-tacit-body">
+            <div class="paper-card paper-entry" id="cs-paper-multi-doc-retrieval">
         <div class="paper_title">
-        PatentEdits: Framing Patent Novelty as Textual Entailment
+<a href="https://aclanthology.org/2025.knowledgenlp-1.18.pdf">A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 4th International Workshop on Knowledge-Augmented Methods for Natural Language Processing 2025.">KnowledgeNLP Workshop 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.knowledgenlp-1.18.pdf">paper</a> ]</span>
         </div>
-        <div class="paper_rest">
-        Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma.<br>
-        <strong>2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies</strong> 2025.
-        </div>
-        <div class="paper_bottom_space"></div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Lucas Spangher, Sewon Min, Mark Dredze.</div>
+        <div class="paper_summary">Journalists choose sources for the discourse role they play together, not just the facts they add; we turned source selection into a multi-document retrieval benchmark and showed LLM query planners improve when they plan over discourse roles.</div>
     </div>
+            <div class="paper-card paper-entry" id="cs-paper-spatial-layouts">
+        <div class="paper_title">
+<a href="https://aclanthology.org/2025.emnlp-main.1695.pdf">Spatial Layouts in News Homepages Capture Human Preferences</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing 2025.">EMNLP 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.emnlp-main.1695.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Michael Vu, Arda Kaz, Naitian Zhou, Ben Welsh.</div>
+        <div class="paper_summary">Editors encode what matters in where they put stories on a homepage; from 3,000 homepages captured twice daily for five years, we show these layout preferences are stable and learnable (0.7 F1 against human trials).</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-tracking-newsworthiness">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2311.09734">Tracking the Newsworthiness of Public Documents</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Association of Computational Linguistics 2024.">ACL 2024</span>
+            <span class="paper-note">Acceptance rate 23.5%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2311.09734">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May.</div>
+        <div class="paper_summary">To learn which public-policy items a local paper will cover, we linked SF Chronicle articles to city-government records and built newsworthiness predictors that expert journalists found helpful 84% of the time.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-identifying-sources">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2305.14904">Identifying Informational Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2023 Conference on Empirical Methods in Natural Language Processing 2023.">EMNLP 2023</span>
+            <span class="paper-note">Acceptance rate 23.3%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2305.14904">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May.</div>
+        <div class="paper_summary">We built the largest annotated dataset of informational sources in news and introduced source prediction: given the sources already in a story, which kind comes next?</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-source-rec-engine">
+        <div class="paper_title">
+🏆🎤 <a href="papers/Source_Finding_C_J_short.pdf">First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2023.">Computation + Journalism 2023</span>
+            <span class="paper-link">[ <a href="papers/Source_Finding_C_J_short.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng.</div>
+        <div class="paper_summary">A first step toward recommending sources to journalists: we built source-attribution models, audited major outlets (about half of all sentences carry a source) and showed we can predict when an article needs another one.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-dont-quote-me">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.09656">Don't quote me on that: Finding Mixtures of Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2020.">Computation + Journalism 2020</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.09656">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">We describe a news article as a mixture of source types, labeled by affiliation and role, and infer those types for named sources with 80% accuracy in expert trials.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-newsworthiness-lead-gen">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.09653">Modeling Newsworthiness for Lead-Generation Across Corpora</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2020.">Computation + Journalism 2020</span>
+            <span class="paper-note">Southern California Natural Language Processing Conference 2019.</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.09653">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">Journalists find leads by sifting government records; we trained front-page-or-not classifiers on published news and transferred them to court cases, bills and council minutes to rank what deserves a look (.88 AUC on expert-checked data).</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-planning-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Planning</span>
+              <span class="pub-count">6</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-first-author-planning-body">
+            <div class="paper-card paper-entry" id="cs-paper-newsinterview">
+        <div class="paper_title">
+🎤 <a href="https://aclanthology.org/2025.acl-long.1580.pdf">NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) 2025.">ACL 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.acl-long.1580.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Michael Lu, Sriya Kalyan, Hyundong Justin Cho, Tenghao Huang, Weiyan Shi, Jonathan May.</div>
+        <div class="paper_summary">Interviewing is multi-turn planning under uncertainty; from 40,000 journalistic interviews we built a simulated environment and found LLM interviewers rabbit-hole, fail to pivot and leave information on the table.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-llms-plan-like-writers">
+        <div class="paper_title">
+🏆🎤 <a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze.</div>
+        <div class="paper_summary">Choosing an angle on a press release is a planning decision; comparing 650k human articles with LLM suggestions, we found LLMs match humans better on angles than on sources, and are less creative at both.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-explaining-mixtures">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.05192">Explaining Mixtures of Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.05192">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May.</div>
+        <div class="paper_summary">Writers plan, then write; we treat a journalist's source-selection schema as a latent plan and show two schemata, stance and social affiliation, explain most stories and can be predicted from the headline alone.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-seq-controlled">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2301.02299">Sequentially Controlled Text Generation</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Findings of the 2022 Conference on Empirical Methods in Natural Language Processing 2022.">Findings of EMNLP 2022</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2301.02299">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Xinyu Hua, Yao Ming, Nanyun Peng.</div>
+        <div class="paper_summary">We ask language models to follow a discourse plan sentence by sentence, and show that more structural awareness yields better control, coherence and topicality, approaching human-level writing.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-newsedits">
+        <div class="paper_title">
+🏆🎤 <a href="https://aclanthology.org/2022.naacl-main.10.pdf">NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2022.">NAACL 2022</span>
+            <span class="paper-note">Acceptance rate 26%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2022.naacl-main.10.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng.</div>
+        <div class="paper_summary">News revision histories show a writer's plan unfolding; NewsEdits collects 4.6M versions of 1.2M articles and asks models to predict which sentences will be added, deleted or edited next.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-actionable-recourse">
+        <div class="paper_title">
+<a href="https://bit.ly/2FEj9pf">Actionable Recourse in Linear Classification</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML 2018.">FAT/ML Workshop @ ICML 2018</span>
+            <span class="paper-note">Also presented in: Workshop on Ethical, Social and Governance Issues in AI, NIPS 2018.</span>
+            <span class="paper-link">[ <a href="https://bit.ly/2FEj9pf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Berk Ustun.</div>
+        <div class="paper_summary">A fair classifier should leave people a plan to change its decision; we define recourse and give an integer-programming toolkit to audit whether, and how hard, it is to obtain.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-discourse-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Discourse and Emulation</span>
+              <span class="pub-count">4</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-first-author-discourse-body">
+            <div class="paper-card paper-entry" id="cs-paper-legaldiscourse">
+        <div class="paper_title">
+🎤 <a href="https://aclanthology.org/2024.naacl-long.472.pdf">LegalDiscourse: Interpreting When Laws Apply and To Whom</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2024.">NAACL 2024</span>
+            <span class="paper-note">Acceptance rate 23%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2024.naacl-long.472.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May.</div>
+        <div class="paper_summary">To read when a law applies and to whom, we built a discourse schema for span-and-relation parsing of legal text, annotated 602 state-law paragraphs and put the models in a web app journalists used to investigate state laws.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-multitask-discourse">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2101.00389">Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2021 Conference on Empirical Methods in Natural Language Processing 2021.">EMNLP 2021</span>
+            <span class="paper-note">Acceptance rate 25.6%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2101.00389">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng.</div>
+        <div class="paper_summary">Discourse datasets are small and their schemas drift; we show multitask learning across them lifts News Discourse classification by 4.9 F1, where the usual low-resource tricks do not.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-statecensuslaws">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.10263">StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2022.">Computation + Journalism 2022</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.10263">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong> and Jonathan May.</div>
+        <div class="paper_summary">StateCensusLaws.org exposes our legal-discourse parsers on 6,000 census-dependent state laws, with an annotation widget that lets journalists correct and extend the labels.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-news-discourse-patterns">
+        <div class="paper_title">
+🎤 <a href="https://cj2021.northeastern.edu/schedule-and-program/">News Discourse Patterns: A Roadmap for Computational Journalism</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism March 2021.">Computation + Journalism 2021</span>
+            <span class="paper-link">[ <a href="https://cj2021.northeastern.edu/schedule-and-program/">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong> and Jonathan May.</div>
+        <div class="paper_summary">A roadmap: the discourse structure of a news article (what each sentence is doing) is a scaffold for computational journalism tools, from structuring a story to editing it.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-sequence-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Sequence Modeling</span>
+              <span class="pub-count">3</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-first-author-sequence-body">
+            <div class="paper-card paper-entry" id="cs-paper-ghost-in-the-keys">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2511.01663">The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="NeurIPS 2025 Creative AI Track 2025.">NeurIPS 2025 Creative AI</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2511.01663">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+        <div class="paper_summary">Aria-Duet puts our piano model on a Disklavier for a live, turn-taking duet with a human pianist; it holds the style and develops phrases rather than merely continuing them.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-cfg">
+        <div class="paper_title">
+🏆 <a href="https://arxiv.org/abs/2306.17806">Stay on Topic with Classifier-Free Guidance</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Forty-first International Conference on Machine Learning 2024.">ICML 2024</span>
+            <span class="paper-note">Acceptance rate 27.5%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2306.17806">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman.</div>
+        <div class="paper_summary">Classifier-free guidance, borrowed from image diffusion, works for plain language models too: at inference time it buys the accuracy of a model twice the size across Q&amp;A, reasoning, code and translation.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-covid-transfer">
+        <div class="paper_title">
+<a href="https://aclanthology.org/2020.nlpcovid19-acl.4.pdf">Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="1st Workshop on NLP for COVID-19 at ACL 2020 2020.">NLP for COVID-19 @ ACL 2020</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2020.nlpcovid19-acl.4.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">Comparing COVID-19 policy announcements with Twitter discussion needs classifiers that transfer across corpora; co-training on event-extraction views lifted transfer accuracy 11 points over baselines.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-first-author-other-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Other</span>
+              <span class="pub-count">2</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-first-author-other-body">
+            <div class="paper-card paper-entry" id="cs-paper-search-engine-ira">
+        <div class="paper_title">
+🎤 <a href="https://bit.ly/3aCGlkT">Characterizing Search Engine Traffic to Internet Research Agency Web Properties</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="The Web Conference 2020 Taipei, Taiwan. 2020.">The Web Conference 2020</span>
+            <span class="paper-link">[ <a href="https://bit.ly/3aCGlkT">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz.</div>
+        <div class="paper_summary">Joining Bing and browser logs with Facebook and Twitter data, we showed web search also funneled readers to Russia's IRA sites, mostly through apolitical bait, with traffic patterns unlike social media's.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-nasa-knowledge-graphs">
+        <div class="paper_title">
+<a href="papers/NASA_Knowledge_Cards_IEEE_Submission.pdf">Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="IEEE Transactions on Cognitive Communications and Networking 2019.">IEEE TCCN 2019</span>
+            <span class="paper-note">Acceptance rate 19.4%</span>
+            <span class="paper-link">[ <a href="papers/NASA_Knowledge_Cards_IEEE_Submission.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher.</div>
+        <div class="paper_summary">To help scientists read beyond their field, we tag papers with ontology concepts, extract datasets and instruments, and compress each into a micro-paper, tested on 8,000 atmospheric-science articles.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cs-thesis-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Ph.D. Thesis</span>
+          <span class="pub-count">1</span>
+        </button>
+        <div class="pub-body" id="pubs-cs-thesis-body">
+          <div class="paper-card paper-entry" id="cs-paper-thesis">
+        <div class="paper_title">
+<a href="assets/docs/aspangher-thesis.pdf">Emulation Learning: A Roadmap to Achieving Human-Like Planning in Creative Tasks</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Ph.D. Dissertation, University of Southern California August 2025.">Ph.D. Dissertation, USC 2025</span>
+            <span class="paper-link">[ <a href="assets/docs/aspangher-thesis.pdf">thesis</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>.</div>
+        <div class="paper_summary">My thesis introduces emulation learning: inferring the actions and rewards behind human creative work from its finished artifacts, then learning to plan from them, worked out across four journalistic tasks.</div>
+    </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cs-middle-author-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Publications (Middle Author)</span>
+          <span class="pub-count">7</span>
+        </button>
+        <div class="pub-body" id="pubs-cs-middle-author-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-middle-author-planning-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Planning</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-middle-author-planning-body">
+            <div class="paper-card paper-entry" id="cs-paper-actionable-recourse-expanded">
+        <div class="paper_title">
+<a href="https://arxiv.org/pdf/1809.06514.pdf">Actionable Recourse in Linear Classification. (Expanded Version)</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Conference on Fairness, Accountability and Transparency (FAT*), ACM 2019.">FAT* 2019</span>
+            <span class="paper-note">Acceptance rate 27%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/1809.06514.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu.</div>
+        <div class="paper_summary">The expanded recourse paper: an integer-programming toolkit that measures how feasible recourse is across a population and generates the actionable changes a person needs to flip a decision.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-middle-author-discourse-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Discourse and Emulation</span>
+              <span class="pub-count">2</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-middle-author-discourse-body">
+            <div class="paper-card paper-entry" id="cs-paper-narratives">
+        <div class="paper_title">
+🏆 <a href="https://arxiv.org/pdf/2407.13248">Are Large Language Models Capable of Generating Human-Level Narratives?</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/2407.13248">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng.</div>
+        <div class="paper_summary">We check whether LLM stories have the arcs, turning points and emotional tension of human ones; they don't, and making these discourse features explicit improves generation by over 40%.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-multimodal-procedural">
+        <div class="paper_title">
+<a href="https://arxiv.org/pdf/2110.08486">Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="61st Annual Meeting of the Association for Computational Linguistics 2023.">ACL 2023</span>
+            <span class="paper-note">Acceptance rate 24.1%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/2110.08486">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng.</div>
+        <div class="paper_summary">We benchmark whether models can put the shuffled steps of an illustrated manual back in order, find them far behind humans, and recover part of the gap with sequence-aware pretraining.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-middle-author-sequence-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Sequence Modeling</span>
+              <span class="pub-count">3</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-middle-author-sequence-body">
+            <div class="paper-card paper-entry" id="cs-paper-piano-ssl">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2506.23869">Scaling Self-Supervised Representation Learning for Symbolic Piano Performance</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="International Society for Music Information Retrieval Conference (ISMIR) 2025.">ISMIR 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2506.23869">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+        <div class="paper_summary">We trained autoregressive transformers on 60,000 hours of transcribed solo piano; they generate coherent continuations and yield MIDI embeddings that set the state of the art on MIR classification.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-disruptionbench">
+        <div class="paper_title">
+<a href="https://www.researchsquare.com/article/rs-4245117/latest">DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Journal of Fusion Energy 2024.">Journal of Fusion Energy 2024</span>
+            <span class="paper-note">Acceptance rate 20%</span>
+            <span class="paper-link">[ <a href="https://www.researchsquare.com/article/rs-4245117/latest">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea.</div>
+        <div class="paper_summary">DisruptionBench standardizes how disruption predictors are trained and evaluated across three tokamaks, with zero-, few- and many-shot transfer tasks.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-fusion-autoregressive">
+        <div class="paper_title">
+<a href="https://neurips.cc/virtual/2023/76249">Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences 2023.">NeurIPS 2023 ML4PS Workshop</span>
+            <span class="paper-note">Acceptance rate 75.6%</span>
+            <span class="paper-link">[ <a href="https://neurips.cc/virtual/2023/76249">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea.</div>
+        <div class="paper_summary">Plasma disruptions in tokamaks are a sequence-prediction problem; masked autoregressive transformers beat prior methods by 5 AUC points and suggest the plasma carries a long memory.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-middle-author-other-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Other</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-middle-author-other-body">
+            <div class="paper-card paper-entry" id="cs-paper-ira-social-media">
+        <div class="paper_title">
+<a href="https://bit.ly/2SczIKt">Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Whitepaper 2019.">Whitepaper 2019</span>
+            <span class="paper-link">[ <a href="https://bit.ly/2SczIKt">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz.</div>
+        <div class="paper_summary">Linguistic analysis of IRA Facebook ads and Twitter trolls shows how left- and right-leaning audiences were targeted differently, and that the operation was linguistically distinct but low-budget.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cs-in-submission-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Publications (In Submission)</span>
+          <span class="pub-count">4</span>
+        </button>
+        <div class="pub-body" id="pubs-cs-in-submission-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-in-submission-tacit-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Tacit Knowledge</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-in-submission-tacit-body">
+            <div class="paper-card paper-entry" id="cs-paper-verifiable-tacit">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2610.03025">Verifiable, Articulable, and Tacit Components of Preference</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="arXiv preprint 2026.">arXiv 2026</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2610.03025">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Sheldon Huang, Andreas Haupt, Noah D. Goodman, Diyi Yang, Daniel E. Ho, Sanmi Koyejo.</div>
+        <div class="paper_summary">We ask how much of human preference can be captured by rubrics and verifiers, and find a stubborn tacit remainder across 7 creative domains and 317M judgments, even in math and code.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cs-in-submission-discourse-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Discourse and Emulation</span>
+              <span class="pub-count">3</span>
+            </button>
+            <div class="pub-body" id="pubs-cs-in-submission-discourse-body">
+            <div class="paper-card paper-entry" id="cs-paper-discosum">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2506.06930">DiscoSum: Discourse-aware News Summarization</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="arXiv preprint 2025.">arXiv 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2506.06930">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Tenghao Huang, Jialiang Gu, Jiatong Shi, Muhao Chen.</div>
+        <div class="paper_summary">Summaries that ignore discourse lose the shape of a story; DiscoSum plans a news-discourse structure first and generates summaries that follow it, matching each social platform's house style.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-newsedits-2">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.18811">NewsEdits 2.0: Learning the Intentions Behind Updating News</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2025.">NAACL 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.18811">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.</div>
+        <div class="paper_summary">To tell which facts in a breaking story will change, we separate factual from stylistic edits in news revisions and show an article's own language predicts its updates well enough to tell an LLM when to abstain.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cs-paper-patentedits">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.13477">PatentEdits: Framing Patent Novelty as Textual Entailment</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2025.">NAACL 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.13477">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma.</div>
+        <div class="paper_summary">Examiners reject claims that aren't novel; PatentEdits collects 105K successful claim revisions and shows textual entailment against the cited prior art predicts which claims survive.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <div class="pub-tree lens-cj" id="pubs-cj">
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">First Author</span>
+          <span class="pub-count">22</span>
+        </button>
+        <div class="pub-body" id="pubs-cj-first-author-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-news-finding-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">News Finding</span>
+              <span class="pub-count">4</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-news-finding-body">
+            <div class="paper-card paper-entry" id="cj-paper-spatial-layouts">
+        <div class="paper_title">
+<a href="https://aclanthology.org/2025.emnlp-main.1695.pdf">Spatial Layouts in News Homepages Capture Human Preferences</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing 2025.">EMNLP 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.emnlp-main.1695.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Michael Vu, Arda Kaz, Naitian Zhou, Ben Welsh.</div>
+        <div class="paper_summary">Editors encode what matters in where they put stories on a homepage; from 3,000 homepages captured twice daily for five years, we show these layout preferences are stable and learnable (0.7 F1 against human trials).</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-llms-plan-like-writers">
+        <div class="paper_title">
+🏆🎤 <a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">Do LLMs Plan Like Human Writers? Comparing Journalistic Coverage of Press Releases with LLMs</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2024.emnlp-main.1216.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Sebastian Gehrmann, Mark Dredze.</div>
+        <div class="paper_summary">Choosing an angle on a press release is a planning decision; comparing 650k human articles with LLM suggestions, we found LLMs match humans better on angles than on sources, and are less creative at both.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-tracking-newsworthiness">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2311.09734">Tracking the Newsworthiness of Public Documents</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Association of Computational Linguistics 2024.">ACL 2024</span>
+            <span class="paper-note">Acceptance rate 23.5%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2311.09734">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Emilio Ferrara, Ben Welsh, Nanyun Peng, Serdar Tumgoren, and Jonathan May.</div>
+        <div class="paper_summary">To learn which public-policy items a local paper will cover, we linked SF Chronicle articles to city-government records and built newsworthiness predictors that expert journalists found helpful 84% of the time.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-newsworthiness-lead-gen">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.09653">Modeling Newsworthiness for Lead-Generation Across Corpora</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2020.">Computation + Journalism 2020</span>
+            <span class="paper-note">Southern California Natural Language Processing Conference 2019.</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.09653">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">Journalists find leads by sifting government records; we trained front-page-or-not classifiers on published news and transferred them to court cases, bills and council minutes to rank what deserves a look (.88 AUC on expert-checked data).</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-source-finding-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Source Finding</span>
+              <span class="pub-count">6</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-source-finding-body">
+            <div class="paper-card paper-entry" id="cj-paper-multi-doc-retrieval">
+        <div class="paper_title">
+<a href="https://aclanthology.org/2025.knowledgenlp-1.18.pdf">A Novel Multi-Document Retrieval Benchmark: Journalist Source-Selection in Newswriting</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 4th International Workshop on Knowledge-Augmented Methods for Natural Language Processing 2025.">KnowledgeNLP Workshop 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.knowledgenlp-1.18.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Tenghao Huang, Yiqin Huang, Lucas Spangher, Sewon Min, Mark Dredze.</div>
+        <div class="paper_summary">Journalists choose sources for the discourse role they play together, not just the facts they add; we turned source selection into a multi-document retrieval benchmark and showed LLM query planners improve when they plan over discourse roles.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-newsinterview">
+        <div class="paper_title">
+🎤 <a href="https://aclanthology.org/2025.acl-long.1580.pdf">NewsInterview: a Dataset and a Playground to Evaluate LLMs’ Grounding Gap via Informational Interviews</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) 2025.">ACL 2025</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2025.acl-long.1580.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Michael Lu, Sriya Kalyan, Hyundong Justin Cho, Tenghao Huang, Weiyan Shi, Jonathan May.</div>
+        <div class="paper_summary">Interviewing is multi-turn planning under uncertainty; from 40,000 journalistic interviews we built a simulated environment and found LLM interviewers rabbit-hole, fail to pivot and leave information on the table.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-explaining-mixtures">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.05192">Explaining Mixtures of Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.05192">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, James Youn, Matt DeButts, Nanyun Peng, Jonathan May.</div>
+        <div class="paper_summary">Writers plan, then write; we treat a journalist's source-selection schema as a latent plan and show two schemata, stance and social affiliation, explain most stories and can be predicted from the headline alone.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-identifying-sources">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2305.14904">Identifying Informational Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2023 Conference on Empirical Methods in Natural Language Processing 2023.">EMNLP 2023</span>
+            <span class="paper-note">Acceptance rate 23.3%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2305.14904">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Emilio Ferrara, and Jonathan May.</div>
+        <div class="paper_summary">We built the largest annotated dataset of informational sources in news and introduced source prediction: given the sources already in a story, which kind comes next?</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-source-rec-engine">
+        <div class="paper_title">
+🏆🎤 <a href="papers/Source_Finding_C_J_short.pdf">First Steps Towards a Source Recommendation Engine: Investigating How Sources Are Used in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2023.">Computation + Journalism 2023</span>
+            <span class="paper-link">[ <a href="papers/Source_Finding_C_J_short.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, James Youn, Jonathan May and Nanyun Peng.</div>
+        <div class="paper_summary">A first step toward recommending sources to journalists: we built source-attribution models, audited major outlets (about half of all sentences carry a source) and showed we can predict when an article needs another one.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-dont-quote-me">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.09656">Don't quote me on that: Finding Mixtures of Sources in News Articles</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2020.">Computation + Journalism 2020</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.09656">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">We describe a news article as a mixture of source types, labeled by affiliation and role, and infer those types for named sources with 80% accuracy in expert trials.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-story-structuring-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Story Structuring</span>
+              <span class="pub-count">5</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-story-structuring-body">
+            <div class="paper-card paper-entry" id="cj-paper-legaldiscourse">
+        <div class="paper_title">
+🎤 <a href="https://aclanthology.org/2024.naacl-long.472.pdf">LegalDiscourse: Interpreting When Laws Apply and To Whom</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2024.">NAACL 2024</span>
+            <span class="paper-note">Acceptance rate 23%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2024.naacl-long.472.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Zihan Xue, Te-Lin Wu, Mark Hansen, Jonathan May.</div>
+        <div class="paper_summary">To read when a law applies and to whom, we built a discourse schema for span-and-relation parsing of legal text, annotated 602 state-law paragraphs and put the models in a web app journalists used to investigate state laws.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-seq-controlled">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2301.02299">Sequentially Controlled Text Generation</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Findings of the 2022 Conference on Empirical Methods in Natural Language Processing 2022.">Findings of EMNLP 2022</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2301.02299">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Xinyu Hua, Yao Ming, Nanyun Peng.</div>
+        <div class="paper_summary">We ask language models to follow a discourse plan sentence by sentence, and show that more structural awareness yields better control, coherence and topicality, approaching human-level writing.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-multitask-discourse">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2101.00389">Multitask Semi-Supervised Learning for Class-Imbalanced Discourse Classification</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2021 Conference on Empirical Methods in Natural Language Processing 2021.">EMNLP 2021</span>
+            <span class="paper-note">Acceptance rate 25.6%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2101.00389">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Jonathan May, Sz-rung Shiang, Lingjia Deng.</div>
+        <div class="paper_summary">Discourse datasets are small and their schemas drift; we show multitask learning across them lifts News Discourse classification by 4.9 F1, where the usual low-resource tricks do not.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-statecensuslaws">
+        <div class="paper_title">
+🎤 <a href="https://arxiv.org/abs/2104.10263">StateCensusLaws.org: A Web Application for Consuming and Annotating Legal Discourse Learning</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism 2022.">Computation + Journalism 2022</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2104.10263">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong> and Jonathan May.</div>
+        <div class="paper_summary">StateCensusLaws.org exposes our legal-discourse parsers on 6,000 census-dependent state laws, with an annotation widget that lets journalists correct and extend the labels.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-news-discourse-patterns">
+        <div class="paper_title">
+🎤 <a href="https://cj2021.northeastern.edu/schedule-and-program/">News Discourse Patterns: A Roadmap for Computational Journalism</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Computation + Journalism March 2021.">Computation + Journalism 2021</span>
+            <span class="paper-link">[ <a href="https://cj2021.northeastern.edu/schedule-and-program/">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong> and Jonathan May.</div>
+        <div class="paper_summary">A roadmap: the discourse structure of a news article (what each sentence is doing) is a scaffold for computational journalism tools, from structuring a story to editing it.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-story-editing-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Story Editing</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-story-editing-body">
+            <div class="paper-card paper-entry" id="cj-paper-newsedits">
+        <div class="paper_title">
+🏆🎤 <a href="https://aclanthology.org/2022.naacl-main.10.pdf">NewsEdits: A News Article Revision Dataset and a Novel Document-level Reasoning Challenge</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2022.">NAACL 2022</span>
+            <span class="paper-note">Acceptance rate 26%</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2022.naacl-main.10.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Xiang Ren, Jonathan May and Nanyun Peng.</div>
+        <div class="paper_summary">News revision histories show a writer's plan unfolding; NewsEdits collects 4.6M versions of 1.2M articles and asks models to predict which sentences will be added, deleted or edited next.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-information-ecosystem-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Information Ecosystem</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-information-ecosystem-body">
+            <div class="paper-card paper-entry" id="cj-paper-search-engine-ira">
+        <div class="paper_title">
+🎤 <a href="https://bit.ly/3aCGlkT">Characterizing Search Engine Traffic to Internet Research Agency Web Properties</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="The Web Conference 2020 Taipei, Taiwan. 2020.">The Web Conference 2020</span>
+            <span class="paper-link">[ <a href="https://bit.ly/3aCGlkT">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Gireeja Ranade, Besamira Nushi, Adam Fourney, Eric Horvitz.</div>
+        <div class="paper_summary">Joining Bing and browser logs with Facebook and Twitter data, we showed web search also funneled readers to Russia's IRA sites, mostly through apolitical bait, with traffic patterns unlike social media's.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-first-author-other-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Outside Journalism</span>
+              <span class="pub-count">5</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-first-author-other-body">
+            <div class="paper-card paper-entry" id="cj-paper-ghost-in-the-keys">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2511.01663">The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="NeurIPS 2025 Creative AI Track 2025.">NeurIPS 2025 Creative AI</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2511.01663">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+        <div class="paper_summary">Aria-Duet puts our piano model on a Disklavier for a live, turn-taking duet with a human pianist; it holds the style and develops phrases rather than merely continuing them.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-cfg">
+        <div class="paper_title">
+🏆 <a href="https://arxiv.org/abs/2306.17806">Stay on Topic with Classifier-Free Guidance</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Forty-first International Conference on Machine Learning 2024.">ICML 2024</span>
+            <span class="paper-note">Acceptance rate 27.5%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2306.17806">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Guillaume Sanchez, Honglu Fan, Elad Levi, and Stella Biderman.</div>
+        <div class="paper_summary">Classifier-free guidance, borrowed from image diffusion, works for plain language models too: at inference time it buys the accuracy of a model twice the size across Q&amp;A, reasoning, code and translation.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-covid-transfer">
+        <div class="paper_title">
+<a href="https://aclanthology.org/2020.nlpcovid19-acl.4.pdf">Enabling Low-Resource Transfer Learning across COVID-19 Corpora by Combining Event-Extraction and Co-Training</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="1st Workshop on NLP for COVID-19 at ACL 2020 2020.">NLP for COVID-19 @ ACL 2020</span>
+            <span class="paper-link">[ <a href="https://aclanthology.org/2020.nlpcovid19-acl.4.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Nanyun Peng, Jonathan May, Emilio Ferrara.</div>
+        <div class="paper_summary">Comparing COVID-19 policy announcements with Twitter discussion needs classifiers that transfer across corpora; co-training on event-extraction views lifted transfer accuracy 11 points over baselines.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-nasa-knowledge-graphs">
+        <div class="paper_title">
+<a href="papers/NASA_Knowledge_Cards_IEEE_Submission.pdf">Methodology for Building Scalable Knowledge Graphs using Pre-existing NASA Ontologies</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="IEEE Transactions on Cognitive Communications and Networking 2019.">IEEE TCCN 2019</span>
+            <span class="paper-note">Acceptance rate 19.4%</span>
+            <span class="paper-link">[ <a href="papers/NASA_Knowledge_Cards_IEEE_Submission.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Jia Zhang, Rahul Ramachandran, Manil Maskey, Patrick Gatlin, J.J. Miller, Sundar Christopher.</div>
+        <div class="paper_summary">To help scientists read beyond their field, we tag papers with ontology concepts, extract datasets and instruments, and compress each into a micro-paper, tested on 8,000 atmospheric-science articles.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-actionable-recourse">
+        <div class="paper_title">
+<a href="https://bit.ly/2FEj9pf">Actionable Recourse in Linear Classification</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="5th Workshop on Fairness, Accountability and Transparency in Machine Learning, ICML 2018.">FAT/ML Workshop @ ICML 2018</span>
+            <span class="paper-note">Also presented in: Workshop on Ethical, Social and Governance Issues in AI, NIPS 2018.</span>
+            <span class="paper-link">[ <a href="https://bit.ly/2FEj9pf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Berk Ustun.</div>
+        <div class="paper_summary">A fair classifier should leave people a plan to change its decision; we define recourse and give an integer-programming toolkit to audit whether, and how hard, it is to obtain.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cj-thesis-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Ph.D. Thesis</span>
+          <span class="pub-count">1</span>
+        </button>
+        <div class="pub-body" id="pubs-cj-thesis-body">
+          <div class="paper-card paper-entry" id="cj-paper-thesis">
+        <div class="paper_title">
+<a href="assets/docs/aspangher-thesis.pdf">Emulation Learning: A Roadmap to Achieving Human-Like Planning in Creative Tasks</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Ph.D. Dissertation, University of Southern California August 2025.">Ph.D. Dissertation, USC 2025</span>
+            <span class="paper-link">[ <a href="assets/docs/aspangher-thesis.pdf">thesis</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>.</div>
+        <div class="paper_summary">My thesis introduces emulation learning: inferring the actions and rewards behind human creative work from its finished artifacts, then learning to plan from them, worked out across four journalistic tasks.</div>
+    </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cj-middle-author-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Publications (Middle Author)</span>
+          <span class="pub-count">7</span>
+        </button>
+        <div class="pub-body" id="pubs-cj-middle-author-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-middle-author-story-structuring-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Story Structuring</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-middle-author-story-structuring-body">
+            <div class="paper-card paper-entry" id="cj-paper-narratives">
+        <div class="paper_title">
+🏆 <a href="https://arxiv.org/pdf/2407.13248">Are Large Language Models Capable of Generating Human-Level Narratives?</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2024 Conference on Empirical Methods in Natural Language Processing 2024.">EMNLP 2024</span>
+            <span class="paper-note">Acceptance rate 20.8%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/2407.13248">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Yufei Tian, Tenghao Huang, Miri Liu, Derek Jiang, <strong>Alexander Spangher</strong>, Muhao Chen, Jonathan May, Nanyun Peng.</div>
+        <div class="paper_summary">We check whether LLM stories have the arcs, turning points and emotional tension of human ones; they don't, and making these discourse features explicit improves generation by over 40%.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-middle-author-information-ecosystem-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Information Ecosystem</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-middle-author-information-ecosystem-body">
+            <div class="paper-card paper-entry" id="cj-paper-ira-social-media">
+        <div class="paper_title">
+<a href="https://bit.ly/2SczIKt">Characterizing the Internet Research Agency’s Social Media Operations During the 2016 US Presidential Election using Linguistic Analyses</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Whitepaper 2019.">Whitepaper 2019</span>
+            <span class="paper-link">[ <a href="https://bit.ly/2SczIKt">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Ryan L Boyd, <strong>Alexander Spangher</strong>, Adam Fourney, Besmira Nushi, Gireeja Ranade, James Pennebaker, Eric Horvitz.</div>
+        <div class="paper_summary">Linguistic analysis of IRA Facebook ads and Twitter trolls shows how left- and right-leaning audiences were targeted differently, and that the operation was linguistically distinct but low-budget.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-middle-author-other-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Outside Journalism</span>
+              <span class="pub-count">5</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-middle-author-other-body">
+            <div class="paper-card paper-entry" id="cj-paper-piano-ssl">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2506.23869">Scaling Self-Supervised Representation Learning for Symbolic Piano Performance</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="International Society for Music Information Retrieval Conference (ISMIR) 2025.">ISMIR 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2506.23869">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+        <div class="paper_summary">We trained autoregressive transformers on 60,000 hours of transcribed solo piano; they generate coherent continuations and yield MIDI embeddings that set the state of the art on MIR classification.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-disruptionbench">
+        <div class="paper_title">
+<a href="https://www.researchsquare.com/article/rs-4245117/latest">DisruptionBench: A Robust Benchmarking Framework for Machine Learning-Driven Disruption Prediction</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Journal of Fusion Energy 2024.">Journal of Fusion Energy 2024</span>
+            <span class="paper-note">Acceptance rate 20%</span>
+            <span class="paper-link">[ <a href="https://www.researchsquare.com/article/rs-4245117/latest">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Lucas Spangher, Matteo Bonotto, William Arnold, Dhruva Chayapathy, Tommaso Gallingani, <strong>Alexander Spangher</strong>, Francesco Cannarile, Daniele Bigoni, Eliana De Marchi, Cristina Rea.</div>
+        <div class="paper_summary">DisruptionBench standardizes how disruption predictors are trained and evaluated across three tokamaks, with zero-, few- and many-shot transfer tasks.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-fusion-autoregressive">
+        <div class="paper_title">
+<a href="https://neurips.cc/virtual/2023/76249">Autoregressive Transformers for Disruption Prediction in Nuclear Fusion Plasmas</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="NeurIPS 2023 Workshop: Machine Learning and the Physical Sciences 2023.">NeurIPS 2023 ML4PS Workshop</span>
+            <span class="paper-note">Acceptance rate 75.6%</span>
+            <span class="paper-link">[ <a href="https://neurips.cc/virtual/2023/76249">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Lucas Spangher, William Arnold, <strong>Alexander Spangher</strong>, Andrew Maris, Cristina Rea.</div>
+        <div class="paper_summary">Plasma disruptions in tokamaks are a sequence-prediction problem; masked autoregressive transformers beat prior methods by 5 AUC points and suggest the plasma carries a long memory.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-multimodal-procedural">
+        <div class="paper_title">
+<a href="https://arxiv.org/pdf/2110.08486">Understanding multimodal procedural knowledge by sequencing multimodal instructional manuals</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="61st Annual Meeting of the Association for Computational Linguistics 2023.">ACL 2023</span>
+            <span class="paper-note">Acceptance rate 24.1%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/2110.08486">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Te-Lin Wu, <strong>Alexander Spangher</strong>, Pegah Alipoormolabashi, Marjorie Freedman, Ralph Weischedel, Nanyun Peng.</div>
+        <div class="paper_summary">We benchmark whether models can put the shuffled steps of an illustrated manual back in order, find them far behind humans, and recover part of the gap with sequence-aware pretraining.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-actionable-recourse-expanded">
+        <div class="paper_title">
+<a href="https://arxiv.org/pdf/1809.06514.pdf">Actionable Recourse in Linear Classification. (Expanded Version)</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="Conference on Fairness, Accountability and Transparency (FAT*), ACM 2019.">FAT* 2019</span>
+            <span class="paper-note">Acceptance rate 27%</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/pdf/1809.06514.pdf">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Berk Ustun, <strong>Alexander Spangher</strong>, Yang Liu.</div>
+        <div class="paper_summary">The expanded recourse paper: an integer-programming toolkit that measures how feasible recourse is across a population and generates the actionable changes a person needs to flip a decision.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pub-section">
+        <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-cj-in-submission-body">
+          <span class="pub-chevron" aria-hidden="true"></span>
+          <span class="pub-label">Publications (In Submission)</span>
+          <span class="pub-count">4</span>
+        </button>
+        <div class="pub-body" id="pubs-cj-in-submission-body">
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-in-submission-news-finding-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">News Finding</span>
+              <span class="pub-count">1</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-in-submission-news-finding-body">
+            <div class="paper-card paper-entry" id="cj-paper-verifiable-tacit">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2610.03025">Verifiable, Articulable, and Tacit Components of Preference</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="arXiv preprint 2026.">arXiv 2026</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2610.03025">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Sheldon Huang, Andreas Haupt, Noah D. Goodman, Diyi Yang, Daniel E. Ho, Sanmi Koyejo.</div>
+        <div class="paper_summary">We ask how much of human preference can be captured by rubrics and verifiers, and find a stubborn tacit remainder across 7 creative domains and 317M judgments, even in math and code.</div>
+    </div>
+            </div>
+          </div>
+          <div class="pub-group">
+            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-cj-in-submission-story-editing-body">
+              <span class="pub-chevron" aria-hidden="true"></span>
+              <span class="pub-label">Story Editing</span>
+              <span class="pub-count">3</span>
+            </button>
+            <div class="pub-body" id="pubs-cj-in-submission-story-editing-body">
+            <div class="paper-card paper-entry" id="cj-paper-discosum">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2506.06930">DiscoSum: Discourse-aware News Summarization</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="arXiv preprint 2025.">arXiv 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2506.06930">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Tenghao Huang, Jialiang Gu, Jiatong Shi, Muhao Chen.</div>
+        <div class="paper_summary">Summaries that ignore discourse lose the shape of a story; DiscoSum plans a news-discourse structure first and generates summaries that follow it, matching each social platform's house style.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-newsedits-2">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.18811">NewsEdits 2.0: Learning the Intentions Behind Updating News</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2025.">NAACL 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.18811">paper</a> ]</span>
+        </div>
+        <div class="paper-authors"><strong>Alexander Spangher</strong>, Kung-Hsiang (Steeve) Huang, Hyundong Justin Cho and Jonathan May.</div>
+        <div class="paper_summary">To tell which facts in a breaking story will change, we separate factual from stylistic edits in news revisions and show an article's own language predicts its updates well enough to tell an LLM when to abstain.</div>
+    </div>
+            <div class="paper-card paper-entry" id="cj-paper-patentedits">
+        <div class="paper_title">
+<a href="https://arxiv.org/abs/2411.13477">PatentEdits: Framing Patent Novelty as Textual Entailment</a>        </div>
+        <div class="paper-meta">
+            <span class="paper-venue" title="2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies 2025.">NAACL 2025</span>
+            <span class="paper-link">[ <a href="https://arxiv.org/abs/2411.13477">paper</a> ]</span>
+        </div>
+        <div class="paper-authors">Ryan Lee, <strong>Alexander Spangher</strong>, Xuezhe Ma.</div>
+        <div class="paper_summary">Examiners reject claims that aren't novel; PatentEdits collects 105K successful claim revisions and shows textual entailment against the cited prior art predicts which claims survive.</div>
+    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 <footer class="site-footer">
   <div class="footer-inner">
