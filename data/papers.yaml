@@ -66,6 +66,7 @@ papers:
     summary: "Editors encode what matters in where they put stories on a homepage; from 3,000 homepages captured twice daily for five years, we show these layout preferences are stable and learnable (0.7 F1 against human trials)."
 
   - id: ghost-in-the-keys
+    tags: [music]
     section: first-author
     topics: [sequence]
     stages: [other]
@@ -362,6 +363,7 @@ papers:
 
   # ---- Middle author ----
   - id: piano-ssl
+    tags: [music]
     section: middle-author
     topics: [sequence]
     stages: [other]
@@ -479,6 +481,21 @@ papers:
     notes: []
     link: "https://arxiv.org/abs/2610.03025"
     summary: "We ask how much of human preference can be captured by rubrics and verifiers, and find a stubborn tacit remainder across 7 creative domains and 317M judgments, even in math and code."
+
+  - id: aria-amt
+    tags: [music]
+    section: in-submission
+    topics: [sequence]
+    stages: [other]
+    year: 2025
+    badges: ""
+    title: "Musically Aware Automatic Piano Transcription Using Synthetic Pretraining"
+    authors: "Louis Bradshaw*, <strong>Alexander Spangher*</strong>, Stella Biderman, Simon Colton."
+    venue: "<strong>In submission</strong> 2025."
+    venue_short: "In submission"
+    notes: []
+    link: "papers/aria_amt.pdf"
+    summary: "Transcription models trained only on clean studio audio break on real recordings; folding in unlabeled audio makes them robust, and we release the models, re-transcribed MIDI datasets and 5,000+ new piano transcriptions."
 
   - id: discosum
     section: in-submission

@@ -84,6 +84,7 @@ def load_papers() -> dict:
         paper.setdefault("link", "")
         paper.setdefault("summary", "")
         paper.setdefault("notes", [])
+        paper.setdefault("tags", [])        # e.g. [music]: also listed on music.html
         by_id[paper["id"]] = paper
 
     return {"papers": papers, "papers_by_id": by_id}

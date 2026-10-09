@@ -3,16 +3,28 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Music Videos</title>
+    <title>Music</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/papers.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/assets/js/research-cards.js"></script>
+    <style>
+      #top-header {
+        margin-top: 0;
+      }
+    </style>
+    <script>
+      $(document).ready(function () {
+          // Deep links: music.html?cat=cocreation opens that card; #music-paper-<id> reveals a paper.
+          var cat = ResearchCards.getUrlParameter('cat');
+          if (cat) { ResearchCards.setCardOpen($('.category-card[data-cat="' + cat + '"]'), true); }
+          ResearchCards.revealPaper(location.hash);
+          $(window).on('hashchange', function () { ResearchCards.revealPaper(location.hash); });
+      });
+    </script>
   </head>
-  <style>
-    #top-header {
-      margin-top: 0;
-    }
-  </style>
   <body>
 <nav class="site-nav" aria-label="Primary navigation">
   <a href="index.html">Home</a>
@@ -34,7 +46,7 @@
       <p>I am deeply interested in how music forms a communicative language (don't know what I'm talking about? Read <a href="https://www.hup.harvard.edu/books/9780674665033">Susanne Langer's book</a>!). I have explored this throughout my career as a musician and more recently as a researcher.</p>
       
       <h2>Music AI Research</h2>
-      
+
       <p>I am very excited for the <i>Aria</i> project, a 3-year collaboration with <a href="https://loubbrad.com/">Louis Bradshaw</a>, funded by EleutherAI, to bear fruit! The goal of <i>Aria</i> was to train state-of-the-art generative music models.
       As a highlight, a Disklavier demo video is shown:
       </p>
@@ -42,42 +54,149 @@
         <div class="video-embed">
           <iframe src="https://www.youtube.com/embed/8s3V922h3CU" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
+        <p>On Oct. 23, 2025, I gave an overview of the Aria project and its relation to linguistics in a talk at the Stanford NLP Lunch <a href="https://docs.google.com/presentation/d/1Cc_oD9zN4Aq6vs603TSWFn1u4LhPGiHpRarRi0NVkn0/edit?usp=sharing">[slides]</a>.</p>
+      </div>
 
-        <p>On Oct. 23, 2025, I gave an overview of the Aria project and it's relation to linguistics in a talk at the Stanford NLP Lunch <a href="https://docs.google.com/presentation/d/1Cc_oD9zN4Aq6vs603TSWFn1u4LhPGiHpRarRi0NVkn0/edit?usp=sharing">[slides]</a>. The Aria project has led to the following publications:</p>.
-        <div class="paper_bottom_space"></div>
-        <div class="paper_entry">
-          <div class="paper_title">The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity</div>
-          <div class="paper_rest">
-            <strong>Alexander Spangher*</strong>, Louis Bradshaw*, Stella Biderman, Simon Colton.<br>
-            <strong>NeurIPS Creative AI Track 2025.</strong> [ <a href="papers/aria_duet.pdf">paper</a> ]
+      <div class="category-list">
+
+  <div class="category-card" data-cat="pretraining" data-lens="music">
+    <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-pretraining-details">
+      <img class="category-icon" src="assets/img/research/music-pretraining.png" alt="" title="Figure from: Scaling Self-Supervised Representation Learning for Symbolic Piano Performance">
+      <div class="category-text">
+        <div class="category-title">Modeling Performance</div>
+        <div class="category-tagline">What 60,000 hours of piano teach a transformer</div>
+      </div>
+      <span class="category-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="category-details" id="cat-pretraining-details">
+      <div class="category-description">
+                  <p>We pretrain autoregressive transformers on <a href="#music-paper-piano-ssl" title="Scaling Self-Supervised Representation Learning for Symbolic Piano Performance">roughly 60,000 hours of transcribed solo piano</a>, then finetune on a small, high-quality subset. The generative model produces continuations that beat prior symbolic systems and compete with proprietary audio models; a contrastive variant yields MIDI embeddings that set the state of the art on MIR classification, often from a few hundred labeled examples.</p>
+          <p>These are the models behind the Disklavier demo above.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="category-card" data-cat="transcription" data-lens="music">
+    <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-transcription-details">
+      <img class="category-icon" src="assets/img/research/music-transcription.png" alt="" title="Figure from: Musically Aware Automatic Piano Transcription Using Synthetic Pretraining">
+      <div class="category-text">
+        <div class="category-title">Transcription and Data</div>
+        <div class="category-tagline">Turning recordings into training data</div>
+      </div>
+      <span class="category-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="category-details" id="cat-transcription-details">
+      <div class="category-description">
+                  <p>None of this works without transcription: the pretraining corpus is audio recordings turned into MIDI. <a href="#music-paper-aria-midi" title="Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling">Aria-MIDI</a>, Louis's ICLR 2025 dataset, used a language model to crawl and score piano recordings and an audio classifier to prune them, transcribing about 100,000 hours into over a million MIDI files.</p>
+          <p>Transcription models trained only on clean studio audio, though, fall apart on the noise and reverb of real recordings. <a href="#music-paper-aria-amt" title="Musically Aware Automatic Piano Transcription Using Synthetic Pretraining">Our transcription work</a> folds unlabeled audio into training to make them robust, and releases the models, re-transcriptions of the standard expressive MIDI datasets and 5,000+ new piano transcriptions.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="category-card" data-cat="cocreation" data-lens="music">
+    <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-cocreation-details">
+      <img class="category-icon" src="assets/img/research/music-cocreation.png" alt="" title="Figure from: The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity">
+      <div class="category-text">
+        <div class="category-title">Human-AI Co-Creation</div>
+        <div class="category-tagline">Playing with the model instead of prompting it</div>
+      </div>
+      <span class="category-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="category-details" id="cat-cocreation-details">
+      <div class="category-description">
+                  <p>Musicians have been slow to adopt generative composition tools, and I don't think it is because they object to sharing creative control: text-prompting is simply nothing like playing. <a href="#music-paper-ghost-in-the-keys" title="The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity">Aria-Duet</a> puts the model on a Yamaha Disklavier for a live, turn-taking duet. You play, signal a handover, and the model's continuation is performed acoustically on the same piano.</p>
+          <p>Musicologically, the model holds stylistic semantics across genres and develops coherent phrasal ideas rather than merely continuing. The same questions run through the <a href="https://genaicreativity.org/icml2026/">ICML 2026 workshop on human-AI co-creativity</a> that I co-organized.</p>
+
+      </div>
+    </div>
+  </div>
+
+      </div>
+
+      <h2 id="publications-header">All Publications
+        <span class="pub-controls"><a href="#" class="pub-expand-all">expand all</a> <span class="nav-sep">|</span> <a href="#" class="pub-collapse-all">collapse all</a></span>
+      </h2>
+      <div class="pub-tree" id="pubs-music">
+        <div class="pub-section">
+          <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-music-first-author-body">
+            <span class="pub-chevron" aria-hidden="true"></span>
+            <span class="pub-label">First Author</span>
+            <span class="pub-count">1</span>
+          </button>
+          <div class="pub-body" id="pubs-music-first-author-body">
+          <div class="paper-card paper-entry" id="music-paper-ghost-in-the-keys">
+    <div class="paper_title">
+<a href="https://arxiv.org/abs/2511.01663">The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity</a>    </div>
+    <div class="paper-meta">
+        <span class="paper-venue" title="NeurIPS 2025 Creative AI Track 2025.">NeurIPS 2025 Creative AI</span>
+        <span class="paper-link">[ <a href="https://arxiv.org/abs/2511.01663">paper</a> ]</span>
+    </div>
+    <div class="paper-authors">Louis Bradshaw, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+    <div class="paper_summary">Aria-Duet puts our piano model on a Disklavier for a live, turn-taking duet with a human pianist; it holds the style and develops phrases rather than merely continuing them.</div>
+</div>
           </div>
-          <div class="paper_bottom_space"></div>
         </div>
-        <div class="paper_entry">
-          <div class="paper_title">Scaling Self-Supervised Representation Learning for Symbolic Piano Performance</div>
-          <div class="paper_rest">
-            Louis Bradshaw, <strong>Alexander Spangher</strong>, Hong Lu, Stella Biderman, Simon Colton.<br>
-            <strong>ISMIR 2025.</strong> [ <a href="https://arxiv.org/pdf/2506.23869" target="_blank" rel="noopener">paper</a> ]
+        <div class="pub-section">
+          <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-music-middle-author-body">
+            <span class="pub-chevron" aria-hidden="true"></span>
+            <span class="pub-label">Publications (Middle Author)</span>
+            <span class="pub-count">1</span>
+          </button>
+          <div class="pub-body" id="pubs-music-middle-author-body">
+          <div class="paper-card paper-entry" id="music-paper-piano-ssl">
+    <div class="paper_title">
+<a href="https://arxiv.org/abs/2506.23869">Scaling Self-Supervised Representation Learning for Symbolic Piano Performance</a>    </div>
+    <div class="paper-meta">
+        <span class="paper-venue" title="International Society for Music Information Retrieval Conference (ISMIR) 2025.">ISMIR 2025</span>
+        <span class="paper-link">[ <a href="https://arxiv.org/abs/2506.23869">paper</a> ]</span>
+    </div>
+    <div class="paper-authors">Louis Bradshaw, Honglu Fan, <strong>Alexander Spangher</strong>, Stella Biderman, Simon Colton.</div>
+    <div class="paper_summary">We trained autoregressive transformers on 60,000 hours of transcribed solo piano; they generate coherent continuations and yield MIDI embeddings that set the state of the art on MIR classification.</div>
+</div>
           </div>
-          <div class="paper_bottom_space"></div>
         </div>
-        <div class="paper_entry">
-          <div class="paper_title">Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling</div>
-          <div class="paper_rest">
-            Louis Bradshaw, Simon Colton.<br>
-            <strong>ICLR 2025.</strong> (Acknowledged: <strong>Alexander Spangher</strong>) [ <a href="https://openreview.net/pdf?id=X5hrhgndxW" target="_blank" rel="noopener">paper</a> ]
+        <div class="pub-section">
+          <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-music-in-submission-body">
+            <span class="pub-chevron" aria-hidden="true"></span>
+            <span class="pub-label">Publications (In Submission)</span>
+            <span class="pub-count">1</span>
+          </button>
+          <div class="pub-body" id="pubs-music-in-submission-body">
+          <div class="paper-card paper-entry" id="music-paper-aria-amt">
+    <div class="paper_title">
+<a href="papers/aria_amt.pdf">Musically Aware Automatic Piano Transcription Using Synthetic Pretraining</a>    </div>
+    <div class="paper-meta">
+        <span class="paper-venue" title="In submission 2025.">In submission</span>
+        <span class="paper-link">[ <a href="papers/aria_amt.pdf">paper</a> ]</span>
+    </div>
+    <div class="paper-authors">Louis Bradshaw*, <strong>Alexander Spangher*</strong>, Stella Biderman, Simon Colton.</div>
+    <div class="paper_summary">Transcription models trained only on clean studio audio break on real recordings; folding in unlabeled audio makes them robust, and we release the models, re-transcribed MIDI datasets and 5,000+ new piano transcriptions.</div>
+</div>
           </div>
-          <div class="paper_bottom_space"></div>
-        </div>        
-        <div class="paper_entry">
-          <div class="paper_title">Musically Aware Automatic Piano Transcription Using Synthetic Pretraining</div>
-          <div class="paper_rest">
-            Louis Bradshaw*, <strong>Alexander Spangher*</strong>, Stella Biderman, Simon Colton.<br>
-            <strong>In submission.</strong> [ <a href="papers/aria_amt.pdf">paper</a> ]
+        </div>
+        <div class="pub-section">
+          <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-music-related-body">
+            <span class="pub-chevron" aria-hidden="true"></span>
+            <span class="pub-label">Related Work (Acknowledged)</span>
+            <span class="pub-count">1</span>
+          </button>
+          <div class="pub-body" id="pubs-music-related-body">
+          <div class="paper-card paper-entry" id="music-paper-aria-midi">
+    <div class="paper_title">
+<a href="https://arxiv.org/abs/2504.15071">Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling</a>    </div>
+    <div class="paper-meta">
+        <span class="paper-venue" title="International Conference on Learning Representations (ICLR) 2025.">ICLR 2025</span>
+        <span class="paper-link">[ <a href="https://arxiv.org/abs/2504.15071">paper</a> ]</span>
+    </div>
+    <div class="paper-authors">Louis Bradshaw, Simon Colton. (Acknowledged: <strong>Alexander Spangher</strong>.)</div>
+    <div class="paper_summary">The dataset behind Aria: a language model crawls and scores piano recordings, an audio classifier prunes them, and roughly 100,000 hours are transcribed into over a million MIDI files.</div>
+</div>
           </div>
-          <div class="paper_bottom_space"></div>
         </div>
       </div>
+
       <p>We are continuing to work on the Aria project, if you are interested in working on music AI, please reach out!</p>
 
       <h2>Videos of Musical Performances</h2>

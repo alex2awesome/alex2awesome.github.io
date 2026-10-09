@@ -6,7 +6,8 @@ This site uses Jinja2 templates to keep shared snippets (like the contact block)
 
 1. Install the dependencies once: `python3 -m pip install --user jinja2 pyyaml`
 2. Edit template sources in `templates/`, e.g. `templates/index.html.j2`
-3. Edit publications in `data/papers.yaml`. One entry per paper; `topics` groups it under the Computer Science lens and `stages` under the Computational Journalism lens. The narrative in each research-category card links to papers by id with `plink(...)` in `templates/research.html.j2`.
+3. Edit publications in `data/papers.yaml`. One entry per paper; `topics` groups it under the Computer Science lens and `stages` under the Computational Journalism lens; `tags: [music]` also lists it on `music.html`. The narrative in each research-category card links to papers by id with `plink(...)` in `templates/research.html.j2` and `templates/music.html.j2`.
+   The card and paper-entry macros are shared in `templates/includes/research_macros.html.j2`, their styles in `assets/css/papers.css`, and the expand/collapse behaviour in `assets/js/research-cards.js`.
 4. Render static pages with `python3 render_templates.py`
 5. Preview locally with `python3 -m http.server 8000` and open http://localhost:8000
 

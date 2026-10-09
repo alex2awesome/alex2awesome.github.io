@@ -3,18 +3,31 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Music Videos</title>
+    <title>Music</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/papers.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/assets/js/research-cards.js"></script>
+    <style>
+      #top-header {
+        margin-top: 0;
+      }
+    </style>
+    <script>
+      $(document).ready(function () {
+          // Deep links: music.html?cat=cocreation opens that card; #music-paper-<id> reveals a paper.
+          var cat = ResearchCards.getUrlParameter('cat');
+          if (cat) { ResearchCards.setCardOpen($('.category-card[data-cat="' + cat + '"]'), true); }
+          ResearchCards.revealPaper(location.hash);
+          $(window).on('hashchange', function () { ResearchCards.revealPaper(location.hash); });
+      });
+    </script>
   </head>
-  <style>
-    #top-header {
-      margin-top: 0;
-    }
-  </style>
   <body>
     {% include 'includes/site-header.html' %}
+    {% from 'includes/research_macros.html.j2' import paper_entry, plink, card with context %}
 
   <div class="main">
     <div class="container">
@@ -23,7 +36,7 @@
       <p>I am deeply interested in how music forms a communicative language (don't know what I'm talking about? Read <a href="https://www.hup.harvard.edu/books/9780674665033">Susanne Langer's book</a>!). I have explored this throughout my career as a musician and more recently as a researcher.</p>
       
       <h2>Music AI Research</h2>
-      
+
       <p>I am very excited for the <i>Aria</i> project, a 3-year collaboration with <a href="https://loubbrad.com/">Louis Bradshaw</a>, funded by EleutherAI, to bear fruit! The goal of <i>Aria</i> was to train state-of-the-art generative music models.
       As a highlight, a Disklavier demo video is shown:
       </p>
@@ -31,42 +44,74 @@
         <div class="video-embed">
           <iframe src="https://www.youtube.com/embed/8s3V922h3CU" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
-
-        <p>On Oct. 23, 2025, I gave an overview of the Aria project and it's relation to linguistics in a talk at the Stanford NLP Lunch <a href="https://docs.google.com/presentation/d/1Cc_oD9zN4Aq6vs603TSWFn1u4LhPGiHpRarRi0NVkn0/edit?usp=sharing">[slides]</a>. The Aria project has led to the following publications:</p>.
-        <div class="paper_bottom_space"></div>
-        <div class="paper_entry">
-          <div class="paper_title">The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity</div>
-          <div class="paper_rest">
-            <strong>Alexander Spangher*</strong>, Louis Bradshaw*, Stella Biderman, Simon Colton.<br>
-            <strong>NeurIPS Creative AI Track 2025.</strong> [ <a href="papers/aria_duet.pdf">paper</a> ]
-          </div>
-          <div class="paper_bottom_space"></div>
-        </div>
-        <div class="paper_entry">
-          <div class="paper_title">Scaling Self-Supervised Representation Learning for Symbolic Piano Performance</div>
-          <div class="paper_rest">
-            Louis Bradshaw, <strong>Alexander Spangher</strong>, Hong Lu, Stella Biderman, Simon Colton.<br>
-            <strong>ISMIR 2025.</strong> [ <a href="https://arxiv.org/pdf/2506.23869" target="_blank" rel="noopener">paper</a> ]
-          </div>
-          <div class="paper_bottom_space"></div>
-        </div>
-        <div class="paper_entry">
-          <div class="paper_title">Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling</div>
-          <div class="paper_rest">
-            Louis Bradshaw, Simon Colton.<br>
-            <strong>ICLR 2025.</strong> (Acknowledged: <strong>Alexander Spangher</strong>) [ <a href="https://openreview.net/pdf?id=X5hrhgndxW" target="_blank" rel="noopener">paper</a> ]
-          </div>
-          <div class="paper_bottom_space"></div>
-        </div>        
-        <div class="paper_entry">
-          <div class="paper_title">Musically Aware Automatic Piano Transcription Using Synthetic Pretraining</div>
-          <div class="paper_rest">
-            Louis Bradshaw*, <strong>Alexander Spangher*</strong>, Stella Biderman, Simon Colton.<br>
-            <strong>In submission.</strong> [ <a href="papers/aria_amt.pdf">paper</a> ]
-          </div>
-          <div class="paper_bottom_space"></div>
-        </div>
+        <p>On Oct. 23, 2025, I gave an overview of the Aria project and its relation to linguistics in a talk at the Stanford NLP Lunch <a href="https://docs.google.com/presentation/d/1Cc_oD9zN4Aq6vs603TSWFn1u4LhPGiHpRarRi0NVkn0/edit?usp=sharing">[slides]</a>.</p>
       </div>
+
+      {#
+        Research-category cards, organized like research.html: a stance, then the findings, linking to the
+        papers below with plink('music', paper-id, text). Paper ids are in data/papers.yaml (tags: [music]);
+        icons are figure crops in assets/img/research/music-*.png (480x480).
+      #}
+      <div class="category-list">
+
+        {% call card('music', 'pretraining', 'music-pretraining.png', 'Scaling Self-Supervised Representation Learning for Symbolic Piano Performance', 'Modeling Performance', 'What 60,000 hours of piano teach a transformer') %}
+          <p>We pretrain autoregressive transformers on {{ plink('music', 'piano-ssl', 'roughly 60,000 hours of transcribed solo piano') }}, then finetune on a small, high-quality subset. The generative model produces continuations that beat prior symbolic systems and compete with proprietary audio models; a contrastive variant yields MIDI embeddings that set the state of the art on MIR classification, often from a few hundred labeled examples.</p>
+          <p>These are the models behind the Disklavier demo above.</p>
+        {% endcall %}
+
+        {% call card('music', 'transcription', 'music-transcription.png', 'Musically Aware Automatic Piano Transcription Using Synthetic Pretraining', 'Transcription and Data', 'Turning recordings into training data') %}
+          <p>None of this works without transcription: the pretraining corpus is audio recordings turned into MIDI. <a href="#music-paper-aria-midi" title="Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling">Aria-MIDI</a>, Louis's ICLR 2025 dataset, used a language model to crawl and score piano recordings and an audio classifier to prune them, transcribing about 100,000 hours into over a million MIDI files.</p>
+          <p>Transcription models trained only on clean studio audio, though, fall apart on the noise and reverb of real recordings. {{ plink('music', 'aria-amt', 'Our transcription work') }} folds unlabeled audio into training to make them robust, and releases the models, re-transcriptions of the standard expressive MIDI datasets and 5,000+ new piano transcriptions.</p>
+        {% endcall %}
+
+        {% call card('music', 'cocreation', 'music-cocreation.png', 'The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity', 'Human-AI Co-Creation', 'Playing with the model instead of prompting it') %}
+          <p>Musicians have been slow to adopt generative composition tools, and I don't think it is because they object to sharing creative control: text-prompting is simply nothing like playing. {{ plink('music', 'ghost-in-the-keys', 'Aria-Duet') }} puts the model on a Yamaha Disklavier for a live, turn-taking duet. You play, signal a handover, and the model's continuation is performed acoustically on the same piano.</p>
+          <p>Musicologically, the model holds stylistic semantics across genres and develops coherent phrasal ideas rather than merely continuing. The same questions run through the <a href="https://genaicreativity.org/icml2026/">ICML 2026 workshop on human-AI co-creativity</a> that I co-organized.</p>
+        {% endcall %}
+
+      </div>
+
+      {# ---------- All Publications: the papers tagged `music` in data/papers.yaml, plus related work ---------- #}
+      <h2 id="publications-header">All Publications
+        <span class="pub-controls"><a href="#" class="pub-expand-all">expand all</a> <span class="nav-sep">|</span> <a href="#" class="pub-collapse-all">collapse all</a></span>
+      </h2>
+      {% set ns = namespace(music=[]) %}
+      {% for p in papers if 'music' in p.tags %}{% set ns.music = ns.music + [p] %}{% endfor %}
+      {# Not my paper, but the dataset Aria is built on; it is only listed here. #}
+      {% set related = [{
+          'id': 'aria-midi',
+          'badges': '',
+          'title': 'Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling',
+          'authors': 'Louis Bradshaw, Simon Colton. (Acknowledged: <strong>Alexander Spangher</strong>.)',
+          'venue': '<strong>International Conference on Learning Representations (ICLR)</strong> 2025.',
+          'venue_short': 'ICLR 2025',
+          'notes': [],
+          'link': 'https://arxiv.org/abs/2504.15071',
+          'summary': 'The dataset behind Aria: a language model crawls and scores piano recordings, an audio classifier prunes them, and roughly 100,000 hours are transcribed into over a million MIDI files.'
+      }] %}
+      {% set sections = [
+          ('first-author', 'First Author', ns.music | selectattr('section', 'equalto', 'first-author') | list),
+          ('middle-author', 'Publications (Middle Author)', ns.music | selectattr('section', 'equalto', 'middle-author') | list),
+          ('in-submission', 'Publications (In Submission)', ns.music | selectattr('section', 'equalto', 'in-submission') | list),
+          ('related', 'Related Work (Acknowledged)', related),
+      ] %}
+      <div class="pub-tree" id="pubs-music">
+      {% for key, label, group in sections if group %}
+        <div class="pub-section">
+          <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-music-{{ key }}-body">
+            <span class="pub-chevron" aria-hidden="true"></span>
+            <span class="pub-label">{{ label }}</span>
+            <span class="pub-count">{{ group | length }}</span>
+          </button>
+          <div class="pub-body" id="pubs-music-{{ key }}-body">
+          {% for p in group %}
+          {{ paper_entry(p, 'music') }}
+          {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+
       <p>We are continuing to work on the Aria project, if you are interested in working on music AI, please reach out!</p>
 
       <h2>Videos of Musical Performances</h2>

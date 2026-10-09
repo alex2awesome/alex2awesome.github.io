@@ -1,0 +1,307 @@
+/* Research-category cards, publication cards and the collapsible "All Publications"
+   tree. Shared by research.html and music.html. The macros that render them are in
+   templates/includes/research_macros.html.j2; the toggle behaviour is assets/js/research-cards.js. */
+
+/* ---------- Research category cards ---------- */
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.category-card {
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fafafa 0%, #fdfdfd 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.category-card:hover,
+.category-card.open {
+    border-color: #333;
+}
+
+.category-card.open {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.category-summary {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+    margin: 0;
+    padding: 14px 18px 14px 14px;
+    background: none;
+    border: 0;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.category-summary:focus-visible {
+    outline: 2px solid purple;
+    outline-offset: -2px;
+}
+
+/* override the site-wide <img> sizing for the card icons */
+.category-card .category-icon {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 96px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    object-fit: cover;
+}
+
+.category-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.category-title {
+    font-size: 1.35em;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.category-tagline {
+    font-size: 1.05em;
+    font-style: italic;
+    color: #666;
+}
+
+.category-chevron {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-right: 2px solid #666;
+    border-bottom: 2px solid #666;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.category-card.open .category-chevron {
+    transform: rotate(-135deg);
+}
+
+.category-details {
+    display: none;
+    padding: 0 18px 18px 18px;
+    border-top: 0.5px dashed #333;
+}
+
+.category-description {
+    padding-top: 12px;
+}
+
+.main .category-description p {
+    font-size: 1.1em;
+    line-height: 1.5;
+    margin: 0 0 0.75em;
+}
+
+.main .category-description p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- Paper cards ---------- */
+.paper-card {
+    background: #fff;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0 0 12px;
+    scroll-margin-top: 8rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.paper-card:hover,
+.paper-card:target {
+    border-color: #999;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.paper-card .paper_title {
+    margin: 0;
+    font-size: 1.12em;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.paper-card .paper_title a {
+    color: inherit;
+}
+
+.paper-card .paper_title a:hover {
+    color: purple;
+}
+
+.paper-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-top: 6px;
+    font-size: 0.82em;
+    color: #666;
+}
+
+.paper-venue {
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: #f0f0f0;
+    color: #444;
+    cursor: help;
+}
+
+.paper-link {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.paper-authors {
+    margin-top: 4px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: #666;
+}
+
+.paper-authors strong {
+    color: #333;
+}
+
+.paper-card .paper_summary {
+    margin: 8px 0 0;
+    font-size: 0.98em;
+    line-height: 1.45;
+    color: #333;
+}
+
+/* ---------- "All Publications" tree ---------- */
+.pub-controls {
+    float: right;
+    margin-top: 0.8em;
+    font-size: 0.5em;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.pub-tree {
+    margin-top: 0.25rem;
+}
+
+.pub-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 12px 6px;
+    background: none;
+    border: 0;
+    border-bottom: 0.5px dashed #999;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.pub-toggle:hover .pub-label {
+    text-decoration: underline;
+}
+
+.pub-toggle:focus-visible {
+    outline: 2px solid purple;
+    outline-offset: -2px;
+}
+
+.pub-section-toggle {
+    font-size: 1.35em;
+    font-weight: 500;
+}
+
+.pub-group-toggle {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #444;
+    margin-left: 22px;
+    width: calc(100% - 22px);
+    padding: 10px 6px;
+}
+
+.pub-chevron {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    margin: 0 4px 0 2px;
+    border-right: 2px solid #666;
+    border-bottom: 2px solid #666;
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+}
+
+.pub-toggle[aria-expanded="true"] .pub-chevron {
+    transform: rotate(45deg);
+}
+
+.pub-label {
+    flex: 1 1 auto;
+}
+
+.pub-count {
+    flex: 0 0 auto;
+    font-size: 0.7em;
+    font-weight: 400;
+    color: #666;
+    background: #f0f0f0;
+    border-radius: 999px;
+    padding: 2px 10px;
+}
+
+.pub-body {
+    display: none;
+    padding: 10px 0 4px 8px;
+}
+
+.pub-group > .pub-body {
+    padding-left: 34px;
+}
+
+@media (max-width: 600px) {
+    .category-summary {
+        gap: 12px;
+        padding: 12px;
+    }
+    .category-card .category-icon {
+        width: 72px;
+        height: 72px;
+    }
+    .category-title {
+        font-size: 1.2em;
+    }
+    .category-tagline {
+        font-size: 0.95em;
+    }
+    .pub-group-toggle {
+        margin-left: 10px;
+        width: calc(100% - 10px);
+    }
+    .pub-group > .pub-body {
+        padding-left: 16px;
+    }
+    .pub-controls {
+        float: none;
+        display: block;
+        margin-top: 4px;
+    }
+}

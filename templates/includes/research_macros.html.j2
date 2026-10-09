@@ -1,0 +1,52 @@
+{# Macros shared by research.html.j2 and music.html.j2. Import them `with context` so plink()
+   can see papers_by_id. Styles: assets/css/papers.css; behaviour: assets/js/research-cards.js. #}
+
+{# One publication, rendered as a card. `lens` makes the anchor id unique per tree:
+   #cs-paper-<id>, #cj-paper-<id>, #music-paper-<id>. #}
+{# One publication, rendered as a card. `lens` makes the anchor id unique per tree. #}
+{% macro paper_entry(p, lens) -%}
+<div class="paper-card paper-entry" id="{{ lens }}-paper-{{ p.id }}">
+    <div class="paper_title">
+        {% if p.badges %}{{ p.badges|safe }} {% endif %}
+        {% if p.link %}<a href="{{ p.link }}">{{ p.title|safe }}</a>{% else %}{{ p.title|safe }}{% endif %}
+    </div>
+    <div class="paper-meta">
+        <span class="paper-venue"{% if p.venue %} title="{{ p.venue|striptags }}"{% endif %}>{{ p.venue_short|default(p.venue)|safe }}</span>
+        {% for note in p.notes %}
+        <span class="paper-note">{{ note|safe }}</span>
+        {% endfor %}
+        {% if p.link %}
+        <span class="paper-link">[ <a href="{{ p.link }}">{{ p.link_label|default('paper') }}</a> ]</span>
+        {% endif %}
+    </div>
+    <div class="paper-authors">{{ p.authors|safe }}</div>
+    {% if p.summary %}
+    <div class="paper_summary">{{ p.summary|safe }}</div>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{# Inline link from a card narrative to a paper in the "All Publications" tree of the same lens.
+   Fails at render time if the id is not in data/papers.yaml. #}
+{% macro plink(lens, id, text) -%}
+<a href="#{{ lens }}-paper-{{ id }}" title="{{ papers_by_id[id].title|striptags }}">{{ text }}</a>
+{%- endmacro %}
+
+{# A research-category card. The body of the {% call %} block is the narrative. #}
+{% macro card(lens, key, icon, icon_title, title, tagline) %}
+  <div class="category-card" data-cat="{{ key }}" data-lens="{{ lens }}">
+    <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-{{ key }}-details">
+      <img class="category-icon" src="assets/img/research/{{ icon }}" alt="" title="Figure from: {{ icon_title }}">
+      <div class="category-text">
+        <div class="category-title">{{ title }}</div>
+        <div class="category-tagline">{{ tagline }}</div>
+      </div>
+      <span class="category-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="category-details" id="cat-{{ key }}-details">
+      <div class="category-description">
+        {{ caller() }}
+      </div>
+    </div>
+  </div>
+{% endmacro %}
