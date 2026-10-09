@@ -328,14 +328,14 @@
               return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
           }
 
-          // ---------- Lens switch (?lens=cs | ?lens=cj) ----------
+          // ---------- Lens switch (?lens=cs | ?lens=cj; defaults to cs) ----------
           // Everything lens-specific carries class lens-cs or lens-cj: the intro paragraph,
           // the category cards and the "All Publications" tree.
           var LENS_LABELS = { cs: 'Computer Science Lens', cj: 'Computational Journalism Lens' };
-          var activeLens = 'cj';
+          var activeLens = 'cs';
 
           function applyLens(lens) {
-              activeLens = lens === 'cs' ? 'cs' : 'cj';
+              activeLens = lens === 'cj' ? 'cj' : 'cs';
               $('#lens').text(LENS_LABELS[activeLens]);
               $('.lens-cs').toggle(activeLens === 'cs');
               $('.lens-cj').toggle(activeLens === 'cj');
