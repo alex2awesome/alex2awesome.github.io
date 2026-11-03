@@ -49,6 +49,7 @@ papers:
     venue_short: "ACL 2025"
     notes: []
     link: "https://aclanthology.org/2025.acl-long.1580.pdf"
+    tweet: "https://x.com/AlexanderSpangh/status/1859803359232000126"
     summary: "Interviewing is multi-turn planning under uncertainty; from 40,000 journalistic interviews we built a simulated environment and found LLM interviewers rabbit-hole, fail to pivot and leave information on the table."
 
   - id: spatial-layouts
@@ -78,6 +79,7 @@ papers:
     venue_short: "NeurIPS 2025 Creative AI"
     notes: []
     link: "https://arxiv.org/abs/2511.01663"
+    tweet: "https://x.com/AlexanderSpangh/status/1988052193774366731"
     summary: "Aria-Duet puts our piano model on a Disklavier for a live, turn-taking duet with a human pianist; it holds the style and develops phrases rather than merely continuing them."
 
   - id: llms-plan-like-writers
@@ -93,6 +95,7 @@ papers:
     notes:
       - "Acceptance rate 20.8%"
     link: "https://aclanthology.org/2024.emnlp-main.1216.pdf"
+    tweet: "https://x.com/AlexanderSpangh/status/1856138126512533796"
     summary: "Choosing an angle on a press release is a planning decision; comparing 650k human articles with LLM suggestions, we found LLMs match humans better on angles than on sources, and are less creative at both."
 
   - id: explaining-mixtures
@@ -168,6 +171,7 @@ papers:
     notes:
       - "Acceptance rate 23.3%"
     link: "https://arxiv.org/abs/2305.14904"
+    tweet: "https://x.com/AlexanderSpangh/status/1732541667948020178"
     summary: "We built the largest annotated dataset of informational sources in news and introduced source prediction: given the sources already in a story, which kind comes next?"
 
   - id: source-rec-engine
@@ -211,6 +215,7 @@ papers:
     notes:
       - "Acceptance rate 26%"
     link: "https://aclanthology.org/2022.naacl-main.10.pdf"
+    tweet: "https://x.com/AlexanderSpangh/status/1542572735775363072"
     summary: "News revision histories show a writer's plan unfolding; NewsEdits collects 4.6M versions of 1.2M articles and asks models to predict which sentences will be added, deleted or edited next."
 
   - id: multitask-discourse
@@ -341,6 +346,7 @@ papers:
     notes:
       - "Also presented in: Workshop on Ethical, Social and Governance Issues in AI, NIPS 2018."
     link: "https://bit.ly/2FEj9pf"
+    tweet: "https://x.com/AlexanderSpangh/status/1051913704562876416"
     summary: "A fair classifier should leave people a plan to change its decision; we define recourse and give an integer-programming toolkit to audit whether, and how hard, it is to obtain."
 
 
@@ -357,6 +363,7 @@ papers:
     venue_short: "Ph.D. Dissertation, USC 2025"
     notes: []
     link: "assets/docs/aspangher-thesis.pdf"
+    tweet: "https://x.com/AlexanderSpangh/status/1953564830377685073"
     link_label: "thesis"
     summary: "My thesis introduces emulation learning: inferring the actions and rewards behind human creative work from its finished artifacts, then learning to plan from them, worked out across four journalistic tasks."
 
@@ -390,6 +397,7 @@ papers:
     notes:
       - "Acceptance rate 20.8%"
     link: "https://arxiv.org/pdf/2407.13248"
+    tweet: "https://x.com/AlexanderSpangh/status/1857179543116906826"
     summary: "We check whether LLM stories have the arcs, turning points and emotional tension of human ones; they don't, and making these discourse features explicit improves generation by over 40%."
 
   - id: disruptionbench
@@ -480,7 +488,23 @@ papers:
     venue_short: "arXiv 2026"
     notes: []
     link: "https://arxiv.org/abs/2610.03025"
+    tweet: "https://x.com/AlexanderSpangh/status/2115493055507902563"
     summary: "We ask how much of human preference can be captured by rubrics and verifiers, and find a stubborn tacit remainder across 7 creative domains and 317M judgments, even in math and code."
+
+  - id: articulation-upper-bounds
+    section: in-submission
+    topics: [tacit]
+    stages: [other]
+    year: 2026
+    badges: ""
+    title: "Articulation Upper Bounds for Language Models"
+    authors: "<strong>Alexander Spangher</strong>, Daniel E. Ho, Diyi Yang, Noah Goodman, Sanmi Koyejo."
+    venue: "<strong>arXiv preprint</strong> 2026."
+    venue_short: "arXiv 2026"
+    notes: []
+    link: "https://arxiv.org/abs/2610.19721"
+    tweet: "https://x.com/AlexanderSpangh/status/2115484608603262986"
+    summary: "How much of a concept can be put into words? We measure how well 1.2k concepts transmit between two LLMs under optimal prompts as both scale: local patterns articulate fully, whole-text structure may with stronger models, and concepts tied to identity and social-group awareness hit a ceiling."
 
   - id: aria-amt
     tags: [music]

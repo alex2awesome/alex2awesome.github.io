@@ -15,8 +15,8 @@
         {% for note in p.notes %}
         <span class="paper-note">{{ note|safe }}</span>
         {% endfor %}
-        {% if p.link %}
-        <span class="paper-link">[ <a href="{{ p.link }}">{{ p.link_label|default('paper') }}</a> ]</span>
+        {% if p.link or p.tweet %}
+        <span class="paper-link">{% if p.link %}[ <a href="{{ p.link }}">{{ p.link_label|default('paper') }}</a> ]{% endif %}{% if p.tweet %} [ <a href="{{ p.tweet }}">tweet</a> ]{% endif %}</span>
         {% endif %}
     </div>
     <div class="paper-authors">{{ p.authors|safe }}</div>
