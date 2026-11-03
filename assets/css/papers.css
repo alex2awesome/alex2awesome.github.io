@@ -114,6 +114,17 @@
     margin-bottom: 0;
 }
 
+.category-actions {
+    margin-top: 10px;
+    text-align: right;
+    font-size: 0.95em;
+}
+
+/* The page's h2s are sticky under the nav; land the tree header just below it. */
+#publications-header {
+    scroll-margin-top: calc(var(--nav-offset) + 0.6rem);
+}
+
 /* ---------- Paper cards ---------- */
 .paper-card {
     background: #fff;

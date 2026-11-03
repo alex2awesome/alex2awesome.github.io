@@ -96,7 +96,7 @@
         {% set group = section_papers | selectattr(groupfield ~ '.0', 'equalto', t) | list %}
         {% if group %}{% set ns.groups = ns.groups + [(t, group)] %}{% endif %}
       {% endfor %}
-      <div class="pub-section">
+      <div class="pub-section"{% if ns.groups | length == 1 %} data-group="{{ ns.groups[0][0] }}"{% endif %}>
         <button type="button" class="pub-toggle pub-section-toggle" aria-expanded="false" aria-controls="pubs-{{ lens }}-{{ key }}-body">
           <span class="pub-chevron" aria-hidden="true"></span>
           <span class="pub-label">{{ label }}</span>
@@ -110,7 +110,7 @@
         {% else %}
           {% for t, group in ns.groups %}
           <div class="pub-group">
-            <button type="button" class="pub-toggle pub-group-toggle" aria-expanded="false" aria-controls="pubs-{{ lens }}-{{ key }}-{{ t }}-body">
+            <button type="button" class="pub-toggle pub-group-toggle" data-group="{{ t }}" aria-expanded="false" aria-controls="pubs-{{ lens }}-{{ key }}-{{ t }}-body">
               <span class="pub-chevron" aria-hidden="true"></span>
               <span class="pub-label">{{ names[t] }}</span>
               <span class="pub-count">{{ group | length }}</span>

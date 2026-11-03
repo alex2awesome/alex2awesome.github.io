@@ -61,6 +61,24 @@
         if (getUrlParameter('pubs') === 'all') {
             $('.pub-toggle').each(function () { setToggle($(this), true, false); });
         }
+
+        // "[see papers]" at the bottom of a category card: in the visible tree, open only that
+        // category's group in every section that has one, then bring the tree header to the top.
+        $('.category-see-papers').on('click', function (event) {
+            event.preventDefault();
+            var cat = $(this).data('cat');
+            $('.pub-toggle').each(function () { setToggle($(this), false, false); });
+            $('.pub-tree:visible .pub-section').each(function () {
+                var $section = $(this);
+                var $groups = $section.find('.pub-group-toggle').filter(function () { return $(this).data('group') === cat; });
+                if ($groups.length || $section.data('group') === cat) {
+                    setToggle($section.children('.pub-section-toggle'), true, false);
+                    $groups.each(function () { setToggle($(this), true, false); });
+                }
+            });
+            var header = document.getElementById('publications-header');
+            if (header) { header.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
     });
 
     window.ResearchCards = {

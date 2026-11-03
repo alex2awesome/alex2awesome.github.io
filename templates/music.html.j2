@@ -54,17 +54,17 @@
       #}
       <div class="category-list">
 
-        {% call card('music', 'pretraining', 'music-pretraining.png', 'Scaling Self-Supervised Representation Learning for Symbolic Piano Performance', 'Modeling Performance', 'What 60,000 hours of piano teach a transformer') %}
+        {% call card('music', 'pretraining', 'music-pretraining.png', 'Scaling Self-Supervised Representation Learning for Symbolic Piano Performance', 'Modeling Performance', 'What 60,000 hours of piano teach a transformer', see_papers=false) %}
           <p>We pretrain autoregressive transformers on {{ plink('music', 'piano-ssl', 'roughly 60,000 hours of transcribed solo piano') }}, then finetune on a small, high-quality subset. The generative model produces continuations that beat prior symbolic systems and compete with proprietary audio models; a contrastive variant yields MIDI embeddings that set the state of the art on MIR classification, often from a few hundred labeled examples.</p>
           <p>These are the models behind the Disklavier demo above.</p>
         {% endcall %}
 
-        {% call card('music', 'transcription', 'music-transcription.png', 'Musically Aware Automatic Piano Transcription Using Synthetic Pretraining', 'Transcription and Data', 'Turning recordings into training data') %}
+        {% call card('music', 'transcription', 'music-transcription.png', 'Musically Aware Automatic Piano Transcription Using Synthetic Pretraining', 'Transcription and Data', 'Turning recordings into training data', see_papers=false) %}
           <p>None of this works without transcription: the pretraining corpus is audio recordings turned into MIDI. <a href="#music-paper-aria-midi" title="Aria-MIDI: A Dataset of Piano MIDI Files for Symbolic Music Modeling">Aria-MIDI</a>, Louis's ICLR 2025 dataset, used a language model to crawl and score piano recordings and an audio classifier to prune them, transcribing about 100,000 hours into over a million MIDI files.</p>
           <p>Transcription models trained only on clean studio audio, though, fall apart on the noise and reverb of real recordings. {{ plink('music', 'aria-amt', 'Our transcription work') }} folds unlabeled audio into training to make them robust, and releases the models, re-transcriptions of the standard expressive MIDI datasets and 5,000+ new piano transcriptions.</p>
         {% endcall %}
 
-        {% call card('music', 'cocreation', 'music-cocreation.png', 'The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity', 'Human-AI Co-Creation', 'Playing with the model instead of prompting it') %}
+        {% call card('music', 'cocreation', 'music-cocreation.png', 'The Ghost in the Keys: A Disklavier Demo for Human-AI Musical Co-Creativity', 'Human-AI Co-Creation', 'Playing with the model instead of prompting it', see_papers=false) %}
           <p>Musicians have been slow to adopt generative composition tools, and I don't think it is because they object to sharing creative control: text-prompting is simply nothing like playing. {{ plink('music', 'ghost-in-the-keys', 'Aria-Duet') }} puts the model on a Yamaha Disklavier for a live, turn-taking duet. You play, signal a handover, and the model's continuation is performed acoustically on the same piano.</p>
           <p>Musicologically, the model holds stylistic semantics across genres and develops coherent phrasal ideas rather than merely continuing. The same questions run through the <a href="https://genaicreativity.org/icml2026/">ICML 2026 workshop on human-AI co-creativity</a> that I co-organized.</p>
         {% endcall %}

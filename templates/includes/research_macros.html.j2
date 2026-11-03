@@ -33,7 +33,7 @@
 {%- endmacro %}
 
 {# A research-category card. The body of the {% call %} block is the narrative. #}
-{% macro card(lens, key, icon, icon_title, title, tagline) %}
+{% macro card(lens, key, icon, icon_title, title, tagline, see_papers=true) %}
   <div class="category-card" data-cat="{{ key }}" data-lens="{{ lens }}">
     <button type="button" class="category-summary" aria-expanded="false" aria-controls="cat-{{ key }}-details">
       <img class="category-icon" src="assets/img/research/{{ icon }}" alt="" title="Figure from: {{ icon_title }}">
@@ -47,6 +47,10 @@
       <div class="category-description">
         {{ caller() }}
       </div>
+      {% if see_papers %}
+      {# Opens this category's group in every section of the publication tree (see research-cards.js). #}
+      <div class="category-actions"><a href="#publications-header" class="category-see-papers" data-cat="{{ key }}">[see papers]</a></div>
+      {% endif %}
     </div>
   </div>
 {% endmacro %}
