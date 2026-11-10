@@ -72,7 +72,7 @@
           {% if idea.added %}<span>Added {{ idea.added }}</span>{% endif %}
           {% if idea.keywords %}<span class="idea-keywords">{{ idea.keywords | join(' · ') }}</span>{% endif %}
         </div>
-        <p class="idea-summary">{{ idea.summary }}</p>
+        <div class="idea-summary">{{ idea.summary }}</div>
         {% if idea.details %}
         <ul class="idea-details">
           {% for d in idea.details %}
@@ -124,7 +124,7 @@
       <li class="idea">
         <div class="idea-head"><span class="idea-title">{{ area.name }}</span></div>
         {% if area.keywords %}<div class="idea-meta"><span class="idea-keywords">{{ area.keywords | join(' · ') }}</span></div>{% endif %}
-        {% if area.summary %}<p class="idea-summary">{{ area.summary }}</p>{% endif %}
+        {% if area.summary %}<div class="idea-summary">{{ area.summary }}</div>{% endif %}
       </li>
       {% endfor %}
     </ul>
