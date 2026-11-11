@@ -476,6 +476,20 @@ papers:
 
 
   # ---- In submission ----
+  - id: one-construct-many-names
+    section: in-submission
+    topics: [tacit]
+    stages: [other]
+    year: 2026
+    badges: ""
+    title: "One Construct, Many Names: Synonyms Yield Divergent Judgements"
+    authors: "<strong>Alexander Spangher</strong>, Daniel E. Ho, Sanmi Koyejo, Diyi Yang."
+    venue: "<strong>Preprint</strong> 2026."
+    venue_short: "Preprint 2026"
+    notes: []
+    link: "papers/One_Construct_Many_Names.pdf"
+    summary: "The same evaluative criterion goes by many names across communities; from 53k criteria mined across 11 creative domains we show that community rules are worded less formally than institutional ones, that LLMs name criteria in the formal register, and that swapping only a construct's name changes which outputs an LLM judge prefers."
+
   - id: verifiable-tacit
     section: in-submission
     topics: [tacit]
