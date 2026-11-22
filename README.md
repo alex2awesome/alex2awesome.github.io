@@ -25,6 +25,8 @@ It has a title, subtitle, date and URL field, a Markdown body, and a live previe
 
 After publishing from the browser, this repository on your laptop is behind: run `git pull` before your next local commit.
 
+GitHub Pages tells browsers to keep each page for ten minutes. The editor waits until a publish is really on the website and then refreshes its own browser's copies of the blog pages, so you see the change at once. A reader who opened the blog in the last ten minutes sees the older copy until then (or until they reload).
+
 ### Signing in
 
 The page is static, so there is no server to check a password. The key is a GitHub access token:

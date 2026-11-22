@@ -988,6 +988,8 @@ function renderList() {
   }
 }
 
+let noticeId = 0;
+
 function notify(kind, paragraphs) {
   el.noticeBody.textContent = "";
   for (const paragraph of paragraphs) {
@@ -998,6 +1000,7 @@ function notify(kind, paragraphs) {
   }
   el.notice.className = "notice is-" + kind;
   el.notice.hidden = false;
+  return ++noticeId;
 }
 
 function link(href) {
@@ -1177,7 +1180,7 @@ async function changesFor(snap, sources) {
     const copy = await gh(SITE, "git/blobs", { method: "POST", body: { content: image.content.replace(/\s+/g, ""), encoding: "base64" } });
     changes.push(entry(`assets/blog/${name}`, { sha: copy.sha }));
   }
-  return changes;
+  return { changes, index: outputs["index.html"] };
 }
 
 /**
@@ -1192,10 +1195,10 @@ async function commitToSite(message, decide) {
     const snap = await readSite(head);
     const sources = new Map([...snap.posts].map(([slug, post]) => [slug, post.text]));
     decide(sources);
-    const changes = await changesFor(snap, sources);
+    const { changes, index } = await changesFor(snap, sources);
     if (!changes.length) {
       adoptSite(snap);
-      return { changed: false };
+      return { changed: false, index };
     }
     const tree = await gh(SITE, "git/trees", { method: "POST", body: { base_tree: baseTree, tree: changes } });
     const commit = await gh(SITE, "git/commits", { method: "POST", body: { message, tree: tree.sha, parents: [head] } });
@@ -1207,8 +1210,51 @@ async function commitToSite(message, decide) {
       throw err;
     }
     adoptSite(await readSite(commit.sha));
-    return { changed: true };
+    return { changed: true, index };
   }
+}
+
+// ============================================================ waiting for the website
+
+let liveWatch = 0;
+
+/**
+ * Wait until the website serves the blog index that was just committed, then refresh this
+ * browser's saved copies of the pages that changed. GitHub Pages tells browsers to keep a page
+ * for ten minutes, so without this the blog would look unchanged right after publishing.
+ * Resolves to "live", "timeout", "superseded" (a newer publish took over) or "elsewhere" (the
+ * editor is not running on the website itself, so there is nothing to check).
+ */
+async function whenLive(index, paths) {
+  if (!liveBase || location.host !== new URL(liveBase).host) return "elsewhere";
+  const watch = ++liveWatch;
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    if (watch !== liveWatch) return "superseded";
+    try {
+      // cache: "reload" asks the server and replaces the browser's saved copy with the answer
+      const response = await fetch("/blog/index.html", { cache: "reload" });
+      if (response.ok && (await response.text()) === index) {
+        await Promise.all(["/blog/", ...paths].map((path) => fetch(path, { cache: "reload" }).catch(() => null)));
+        return "live";
+      }
+    } catch (err) {
+      // offline for a moment: keep trying
+    }
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+  }
+  return "timeout";
+}
+
+/** Say `waiting` now, and replace it with `done` once the change is really on the website. */
+function announce(kind, outcome, paths, text, extra) {
+  const mine = notify(kind, [text.waiting, ...extra]);
+  whenLive(outcome.index, paths).then((result) => {
+    if (result === "superseded" || mine !== noticeId || el.notice.hidden) return;   // the notice has been replaced or dismissed
+    if (result === "live") notify(kind, [text.done, ...extra]);
+    else if (result === "elsewhere") notify(kind, [text.soon, ...extra]);
+    else notify("warn", ["The change is saved on GitHub, but five minutes later the website still shows the old pages. Reload the blog in a few minutes; if nothing changes, look at the repository's Pages build on GitHub.", ...extra]);
+  });
 }
 
 async function publish() {
@@ -1247,11 +1293,15 @@ async function publish() {
     }
   }
   const url = `${liveBase}/blog/${slug}.html`;
-  const lines = outcome.changed
-    ? [["Published. It should be live in about a minute at ", link(url)]]
-    : [["Nothing had changed since the last publish. The live page is ", link(url)]];
-  if (warning) lines.push(warning);
-  notify(warning ? "warn" : "ok", lines);
+  const paths = [`/blog/${slug}.html`, "/blog/feed.xml"];
+  if (wasLive && wasLive !== slug) paths.push(`/blog/${wasLive}.html`);
+  announce(warning ? "warn" : "ok", outcome, paths, {
+    waiting: outcome.changed
+      ? "Published. GitHub is putting it on the website, which takes about a minute. This message will change when it is live."
+      : "Nothing had changed since the last publish. Checking that the website is up to date…",
+    done: [outcome.changed ? "Published, and live at " : "Nothing had changed since the last publish. The live page is ", link(url)],
+    soon: ["Published. It should be live in about a minute at ", link(url)],
+  }, warning ? [warning] : []);
 }
 
 async function unpublish() {
@@ -1261,9 +1311,13 @@ async function unpublish() {
   // First make sure the text is safe as an ordinary draft, then take the page down.
   await writeDraft({ ...values, slug: values.slug || slug }, "", false);
   savedSnapshot = snapshot();
-  await commitToSite(`Blog: unpublish ${title}`, (sources) => { sources.delete(slug); });
+  const outcome = await commitToSite(`Blog: unpublish ${title}`, (sources) => { sources.delete(slug); });
   cur = { draftId: cur.draftId, liveSlug: null };
-  notify("ok", ["Unpublished. The post is a draft again and its page will be gone from the website in about a minute."]);
+  announce("ok", outcome, [`/blog/${slug}.html`, "/blog/feed.xml"], {
+    waiting: "Unpublished. The post is a draft again. GitHub is taking its page down, which takes about a minute. This message will change when it is gone.",
+    done: "Unpublished. The post is a draft again and its page is gone from the website.",
+    soon: "Unpublished. The post is a draft again and its page will be gone from the website in about a minute.",
+  }, []);
 }
 
 async function discard() {
