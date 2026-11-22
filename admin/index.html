@@ -1,0 +1,1500 @@
+<!doctype html>
+<!--
+  The blog editor, served at /admin/. It is a static page: there is no server behind it.
+
+  - It talks to the GitHub API straight from the browser, using an access token that you paste
+    once per browser. The token is kept in this browser's storage, encrypted with a password.
+  - Drafts are saved to a private repository (CONFIG.drafts). The website's repository is public,
+    so nothing unpublished is ever written there.
+  - The preview and the published pages are produced by the site's own render_templates.py and
+    templates, run here in the browser by Pyodide (Python compiled to WebAssembly, in
+    vendor/pyodide/). The preview is therefore exactly the page that gets published.
+  - Publish makes one commit in the website's repository: the post's Markdown in _blog/posts/,
+    the re-rendered blog/ pages, and any new images in assets/blog/. GitHub Pages then deploys it.
+
+  Everything this page loads comes from this site; the only other host it contacts is
+  api.github.com.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Blog editor</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --ink: #2b2b2b;
+    --muted: #767676;
+    --line: #e2dfe5;
+    --paper: #ffffff;
+    --wash: #f6f5f7;
+    --accent: #800080;        /* the site's link colour */
+    --accent-wash: #f6f0f8;
+    --danger: #a02020;
+    --ok: #1f6f3a;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --ui: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 14px/1.4 var(--ui); color: var(--ink); background: var(--wash); }
+  button, input, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  .btn {
+    padding: 6px 13px;
+    white-space: nowrap;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid #c4c0c8;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .btn:hover:not(:disabled) { border-color: var(--ink); }
+  .btn:disabled { cursor: default; opacity: 0.5; }
+  .btn:focus-visible, .post-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.primary { font-weight: 600; color: #fff; background: var(--accent); border-color: var(--accent); }
+  .btn.primary:hover:not(:disabled) { background: #660066; border-color: #660066; }
+  .btn.quiet { border-color: transparent; background: none; color: var(--muted); }
+  .btn.quiet:hover:not(:disabled) { color: var(--ink); border-color: #c4c0c8; }
+  .btn.is-armed { color: #fff; background: var(--danger); border-color: var(--danger); }
+  a.btn { text-decoration: none; }
+
+  /* ---------- Sign-in ---------- */
+  .auth {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 9vh 24px 48px;
+  }
+
+  .auth h1 {
+    margin: 0 0 6px;
+    padding-top: 14px;
+    font: 600 28px/1.2 var(--serif);
+    border-top: 4px solid #333;
+  }
+
+  .auth p { margin: 0 0 14px; font-size: 15px; line-height: 1.5; }
+  .auth .lede { color: var(--muted); }
+  .auth ol { margin: 0 0 18px; padding-left: 20px; font-size: 15px; line-height: 1.5; }
+  .auth li { margin-bottom: 12px; }
+  .auth li ul { margin: 6px 0 0; padding-left: 18px; color: #555; }
+  .auth li li { margin-bottom: 2px; }
+  .auth a { color: var(--accent); }
+  .auth code { padding: 1px 5px; font: 13px var(--mono); background: #ebe9ee; border-radius: 4px; }
+  .auth label { display: block; margin: 0 0 4px; font-weight: 600; }
+
+  .auth input[type="password"], .auth input[type="text"] {
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 9px 11px;
+    font-size: 15px;
+    background: var(--paper);
+    border: 1px solid #c4c0c8;
+    border-radius: 6px;
+  }
+
+  .auth input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  .auth .btn { padding: 9px 18px; font-size: 15px; }
+  .auth-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .auth-error { min-height: 1.4em; margin: 10px 0 0; color: var(--danger); }
+  .auth .fine { margin-top: 22px; font-size: 13px; color: var(--muted); }
+  .linkish { padding: 0; color: var(--accent); background: none; border: 0; cursor: pointer; text-decoration: underline; }
+
+  /* ---------- Editor shell ---------- */
+  .app { display: flex; flex-direction: column; height: 100%; }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 16px;
+    background: var(--paper);
+    border-top: 4px solid #333;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar-name { font-weight: 650; letter-spacing: 0.01em; white-space: nowrap; }
+
+  .status {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .status .pill {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 1px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: #ececec;
+  }
+
+  .status .pill.is-published { color: var(--ok); background: #e6f3ea; }
+  .status .pill.is-pending { color: #8a5a00; background: #fbf0d6; }
+  .actions { display: flex; align-items: center; gap: 8px; }
+
+  .notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--accent-wash);
+  }
+
+  .notice.is-ok { background: #e9f4ec; }
+  .notice.is-warn { background: #fbf3dc; }
+  .notice.is-error { background: #f9e7e7; }
+  .notice-body { flex: 1; min-width: 0; }
+  .notice-body p { margin: 0 0 4px; }
+  .notice-body p:last-child { margin-bottom: 0; }
+  .notice-body a { color: var(--accent); }
+
+  /* ---------- Three columns: posts, writing, preview ---------- */
+  .layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 232px minmax(340px, 1fr) minmax(340px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .layout.no-preview { grid-template-columns: 232px minmax(340px, 1fr); }
+  .layout.no-preview .preview { display: none; }
+
+  .posts {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 14px 10px;
+    overflow-y: auto;
+    border-right: 1px solid var(--line);
+  }
+
+  .posts .btn { width: 100%; margin-bottom: 14px; }
+
+  .posts h2 {
+    margin: 8px 8px 4px;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .posts-empty { margin: 2px 8px 10px; font-size: 13px; color: var(--muted); }
+
+  .post-item {
+    display: block;
+    width: 100%;
+    margin-bottom: 2px;
+    padding: 7px 8px 8px;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+  }
+
+  .post-item:hover { background: #eceaef; }
+  .post-item.is-current { background: var(--accent-wash); border-left-color: var(--accent); }
+
+  .post-item-title, .post-item-meta {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .post-item-title { font-weight: 550; }
+  .post-item-meta { font-size: 12px; color: var(--muted); }
+
+  .editor {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 26px 34px 0;
+    background: var(--paper);
+  }
+
+  .editor input, .editor textarea { width: 100%; border: 0; outline: 0; background: none; }
+  .editor ::placeholder { color: #b5b1ba; }
+  #f-title { font: 600 30px/1.2 var(--serif); padding: 2px 0; }
+  #f-subtitle { margin-top: 6px; font: italic 19px/1.35 var(--serif); color: #555; padding: 2px 0; }
+
+  .fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 22px;
+    margin: 14px 0 0;
+    padding: 10px 0;
+    font-size: 13px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .field { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .field.grow { flex: 1 1 260px; }
+  .field label { font-weight: 600; }
+
+  .field input {
+    width: auto;
+    padding: 3px 6px;
+    color: var(--ink);
+    border: 1px solid transparent;
+    border-radius: 5px;
+  }
+
+  .field input:hover { border-color: var(--line); }
+  .field input:focus { border-color: var(--accent); }
+  #f-slug { flex: 1; min-width: 10ch; font-family: var(--mono); font-size: 12.5px; }
+  .field .hint { font-style: italic; }
+
+  #f-body {
+    flex: 1;
+    min-height: 0;
+    margin-top: 16px;
+    padding: 0 0 40px;
+    resize: none;
+    font: 17px/1.65 var(--serif);
+  }
+
+  #f-body.is-dropping { background: var(--accent-wash); }
+
+  .editor-foot {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 -34px;
+    padding: 7px 16px 7px 34px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+
+  .editor-foot .grow { flex: 1; }
+  .editor-foot .btn { padding: 3px 10px; font-size: 12px; }
+  kbd { font: inherit; }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .preview-head {
+    padding: 7px 14px;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .preview iframe { flex: 1; width: 100%; min-height: 0; border: 0; background: #fff; }
+
+  @media (max-width: 1000px) {
+    .layout, .layout.no-preview { grid-template-columns: 190px minmax(0, 1fr); }
+    .preview { display: none; }
+    #btn-preview { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .layout, .layout.no-preview { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .posts { max-height: 30vh; border-right: 0; border-bottom: 1px solid var(--line); }
+    .editor { padding: 18px 18px 0; }
+    .editor-foot { margin: 0 -18px; padding-left: 18px; }
+    .bar { flex-wrap: wrap; }
+    .bar-name, .editor-foot kbd, .editor-foot .keys { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================== Sign-in ============================== -->
+<main class="auth" id="auth" hidden>
+  <h1>Blog editor</h1>
+
+  <form id="form-unlock" hidden autocomplete="on">
+    <p class="lede">Enter the password you chose for this browser.</p>
+    <input type="text" name="username" value="blog editor" autocomplete="username" hidden>
+    <label for="unlock-password">Password</label>
+    <input id="unlock-password" type="password" autocomplete="current-password" required>
+    <div class="auth-row">
+      <button class="btn primary" type="submit">Unlock</button>
+      <button class="linkish" id="link-setup" type="button">Use a different token</button>
+    </div>
+    <p class="auth-error" id="unlock-error" role="alert"></p>
+  </form>
+
+  <form id="form-setup" hidden autocomplete="on">
+    <p class="lede">This browser has not been set up yet. It takes a GitHub access token, once.</p>
+    <ol>
+      <li>
+        <a id="link-new-token" target="_blank" rel="noopener">Create a fine-grained access token on GitHub</a> with:
+        <ul>
+          <li>Repository access: <b>Only select repositories</b>, then <code id="repo-site"></code> and <code id="repo-drafts"></code></li>
+          <li>Permissions, Repository permissions, <b>Contents: Read and write</b></li>
+        </ul>
+      </li>
+      <li>
+        <label for="setup-token">Paste the token here</label>
+        <input id="setup-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+      </li>
+      <li>
+        <input type="text" name="username" value="blog editor" autocomplete="username" hidden>
+        <label for="setup-password">Choose a password for this browser</label>
+        <input id="setup-password" type="password" autocomplete="new-password" minlength="8" required>
+      </li>
+    </ol>
+    <div class="auth-row">
+      <button class="btn primary" type="submit">Save and open the editor</button>
+      <button class="linkish" id="link-unlock" type="button" hidden>Back</button>
+    </div>
+    <p class="auth-error" id="setup-error" role="alert"></p>
+    <p class="fine">The token stays in this browser, encrypted with the password; you will be asked for the
+      password each time you open the editor. It is sent only to GitHub. You can revoke it on GitHub at any time.</p>
+  </form>
+</main>
+
+<!-- ============================== Editor ============================== -->
+<div class="app" id="app" hidden>
+  <header class="bar">
+    <span class="bar-name">Blog editor</span>
+    <span class="status" id="status" aria-live="polite"></span>
+    <div class="actions">
+      <button class="btn quiet" id="btn-discard" type="button" hidden>Delete draft</button>
+      <button class="btn quiet" id="btn-unpublish" type="button" hidden>Unpublish</button>
+      <a class="btn quiet" id="btn-live" target="_blank" rel="noopener" hidden>View live page</a>
+      <button class="btn quiet" id="btn-preview" type="button" aria-pressed="true">Hide preview</button>
+      <button class="btn quiet" id="btn-lock" type="button">Lock</button>
+      <button class="btn" id="btn-save" type="button" title="Cmd/Ctrl+S">Save</button>
+      <button class="btn primary" id="btn-publish" type="button">Publish</button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" role="status" hidden>
+    <div class="notice-body" id="notice-body"></div>
+    <button class="btn quiet" id="notice-close" type="button">Dismiss</button>
+  </div>
+
+  <div class="layout" id="layout">
+    <nav class="posts" aria-label="Posts">
+      <button class="btn" id="btn-new" type="button">New post</button>
+      <h2>Drafts</h2>
+      <div id="list-drafts"></div>
+      <h2>Published</h2>
+      <div id="list-published"></div>
+    </nav>
+
+    <section class="editor" aria-label="Write">
+      <input id="f-title" type="text" placeholder="Title" autocomplete="off" aria-label="Title">
+      <input id="f-subtitle" type="text" placeholder="Subtitle" autocomplete="off" aria-label="Subtitle">
+      <div class="fields">
+        <div class="field">
+          <label for="f-date">Date</label>
+          <input id="f-date" type="date">
+          <span class="hint" id="date-hint">blank: the day you publish</span>
+        </div>
+        <div class="field grow">
+          <label for="f-slug">URL</label>
+          <span>/blog/</span><input id="f-slug" type="text" spellcheck="false" autocomplete="off"><span>.html</span>
+        </div>
+      </div>
+      <textarea id="f-body" placeholder="Write in Markdown. Paste or drop images straight into the text." aria-label="Post body" spellcheck="true"></textarea>
+      <div class="editor-foot">
+        <span id="word-count">0 words</span>
+        <span class="grow"></span>
+        <span class="keys"><kbd>⌘B</kbd> bold · <kbd>⌘I</kbd> italic · <kbd>⌘K</kbd> link</span>
+        <button class="btn" id="btn-image" type="button">Add image</button>
+        <input id="file-image" type="file" accept="image/*" multiple hidden>
+      </div>
+    </section>
+
+    <section class="preview" aria-label="Preview">
+      <div class="preview-head">Preview: the page as it will be published</div>
+      <!-- No scripts run in the preview, so nothing embedded in a post can reach the access token. -->
+      <iframe id="preview" title="Preview of the post" sandbox="allow-same-origin"></iframe>
+    </section>
+  </div>
+</div>
+
+<script src="vendor/pyodide/pyodide.js"></script>
+<script>
+"use strict";
+
+// Which repositories the editor reads and writes. The website is `site`; drafts never go there.
+const CONFIG = /*CONFIG*/{
+  "owner": "alex2awesome",
+  "site": { "repo": "alex2awesome.github.io", "branch": "main" },
+  "drafts": { "repo": "blog-drafts", "branch": "main" }
+}/*CONFIG*/;
+
+const SITE = CONFIG.site.repo;
+const DRAFTS = CONFIG.drafts.repo;
+const RESERVED = new Set(["index", "feed"]);     // blog/index.html and blog/feed.xml
+const IMAGE_TYPES = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"]);
+const KEY_STORE = "blog-editor-key";
+const KDF_ITERATIONS = 600000;
+const MARKDOWN_WHEEL = "vendor/pyodide/Markdown-3.6-py3-none-any.whl";
+
+const $ = (id) => document.getElementById(id);
+const el = {
+  title: $("f-title"), subtitle: $("f-subtitle"), date: $("f-date"), slug: $("f-slug"), body: $("f-body"),
+  status: $("status"), notice: $("notice"), noticeBody: $("notice-body"), preview: $("preview"),
+  save: $("btn-save"), publish: $("btn-publish"), unpublish: $("btn-unpublish"), discard: $("btn-discard"),
+  live: $("btn-live"), dateHint: $("date-hint"), words: $("word-count"),
+};
+
+/** An error whose message is written for the person using the editor. */
+class UserError extends Error {}
+
+// ============================================================ small tools
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+function bytesToB64(bytes) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+function b64ToBytes(b64) {
+  const binary = atob(b64.replace(/\s+/g, ""));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+const textToB64 = (text) => bytesToB64(encoder.encode(text));
+const b64ToText = (b64) => decoder.decode(b64ToBytes(b64));
+const hex = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const encodePath = (path) => path.split("/").map(encodeURIComponent).join("/");
+
+function today() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+/** The id git gives a file with this text. Comparing ids tells whether a page changed without downloading it. */
+async function gitId(text) {
+  const body = encoder.encode(text);
+  const head = encoder.encode(`blob ${body.length}\0`);
+  const all = new Uint8Array(head.length + body.length);
+  all.set(head);
+  all.set(body, head.length);
+  return hex(await crypto.subtle.digest("SHA-1", all));
+}
+
+// Same rule as slugify() in render_templates.py; used for the URL hint while typing.
+function slugify(text) {
+  return text.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80).replace(/-+$/, "");
+}
+
+// ============================================================ the token, locked with a password
+
+let token = "";    // held in memory only while the editor is open
+
+async function passwordKey(password, salt, iterations) {
+  const material = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", hash: "SHA-256", salt, iterations }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+
+async function storeToken(value, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await passwordKey(password, salt, KDF_ITERATIONS);
+  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(value));
+  localStorage.setItem(KEY_STORE, JSON.stringify({
+    v: 1, iterations: KDF_ITERATIONS, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(data)),
+  }));
+}
+
+async function readToken(password) {
+  const box = JSON.parse(localStorage.getItem(KEY_STORE));
+  try {
+    const key = await passwordKey(password, b64ToBytes(box.salt), box.iterations);
+    return decoder.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(box.iv) }, key, b64ToBytes(box.data)));
+  } catch (err) {
+    throw new UserError("That is not the password this browser's token was saved with.");
+  }
+}
+
+// ============================================================ GitHub
+
+async function gh(repo, path, options = {}) {
+  const { method = "GET", body, raw = false, missingOk = false, keepalive = false } = options;
+  const headers = { Authorization: `Bearer ${token}`, Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" };
+  if (body) headers["Content-Type"] = "application/json";
+  let response;
+  try {
+    // no-store: GitHub lets browsers reuse answers for a minute, which would show stale file lists.
+    response = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${repo}${path ? "/" + path : ""}`, {
+      method, headers, keepalive, cache: "no-store", body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (err) {
+    throw new UserError("Could not reach GitHub. Check the connection; nothing was lost, the editor will try again.");
+  }
+  if (response.status === 404 && missingOk) return null;
+  if (!response.ok) throw await explain(response, repo, method);
+  if (raw) return response.blob();
+  return response.status === 204 ? null : response.json();
+}
+
+async function explain(response, repo, method) {
+  const detail = await response.json().catch(() => ({}));
+  const said = detail.message || response.statusText || "";
+  const writing = method !== "GET";
+  let message;
+  if (response.status === 401) {
+    message = "GitHub no longer accepts this token (it expired or was revoked). Press Lock, then “Use a different token”.";
+  } else if ((response.status === 403 || response.status === 429) && /rate limit|abuse|secondary/i.test(said)) {
+    message = "GitHub asked the editor to slow down. Wait a minute and try again.";
+  } else if ((response.status === 403 || response.status === 404) && writing) {
+    message = `The token is not allowed to write to ${repo}. On GitHub it needs “Contents: Read and write” for that repository.`;
+  } else if (response.status === 404 || response.status === 403) {
+    message = `The token cannot see ${CONFIG.owner}/${repo}. Check that this repository is selected for the token.`;
+  } else {
+    message = `GitHub refused the request (${response.status}): ${said}`;
+  }
+  const error = new UserError(message);
+  error.status = response.status;
+  return error;
+}
+
+async function listDir(repo, dir, ref) {
+  const items = await gh(repo, `contents/${encodePath(dir)}?ref=${encodeURIComponent(ref)}`, { missingOk: true });
+  return Array.isArray(items) ? items.filter((item) => item.type === "file") : [];
+}
+
+// File contents never change for a given git id, so the website's files are kept between visits.
+const blobCache = (() => {
+  let opening;
+  const store = (mode) => {
+    opening = opening || new Promise((resolve, reject) => {
+      const request = indexedDB.open("blog-editor", 1);
+      request.onupgradeneeded = () => request.result.createObjectStore("files");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return opening.then((db) => db.transaction("files", mode).objectStore("files"));
+  };
+  const done = (request) => new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  return {
+    get: (id) => store("readonly").then((s) => done(s.get(id))).catch(() => undefined),
+    set: (id, text) => store("readwrite").then((s) => done(s.put(text, id))).catch(() => undefined),
+  };
+})();
+
+async function getText(repo, id) {
+  const reusable = repo === SITE;      // drafts are private: fetched fresh, never stored in the browser
+  if (reusable) {
+    const kept = await blobCache.get(id);
+    if (typeof kept === "string") return kept;
+  }
+  const text = b64ToText((await gh(repo, `git/blobs/${id}`)).content);
+  if (reusable) blobCache.set(id, text);
+  return text;
+}
+
+// ============================================================ Python: the site's own renderer
+
+// The functions the editor calls. They wrap render_templates.py, fetched from the website's
+// repository, so front matter, Markdown and templates behave exactly as in a local render.
+const PYTHON = String.raw`
+import datetime as dt
+import json
+import shutil
+import sys
+
+sys.path.insert(0, "/site")
+import render_templates as site
+
+ENV = site.build_env()
+KNOWN = ("title", "subtitle", "date", "slug", "revises")
+
+
+def api(function):
+    def wrapped(*args):
+        try:
+            return json.dumps({"ok": function(*args)})
+        except site.BlogError as exc:
+            message = str(exc)
+            return json.dumps({"error": message[:1].upper() + message[1:]})
+    return wrapped
+
+
+@api
+def parse(text):
+    meta, body = site.split_front_matter(text)
+    date = site.parse_date(meta.get("date"))
+    return {
+        "title": str(meta.get("title") or ""),
+        "subtitle": str(meta.get("subtitle") or ""),
+        "date": date.isoformat() if date else "",
+        "slug": str(meta.get("slug") or ""),
+        "revises": str(meta.get("revises") or ""),
+        "body": body,
+    }
+
+
+@api
+def compose(fields_json, original):
+    fields = json.loads(fields_json)
+    extra = {}
+    if original:   # keep front matter keys that were added by hand
+        try:
+            extra = {k: v for k, v in site.split_front_matter(original)[0].items() if k not in KNOWN}
+        except site.BlogError:
+            extra = {}
+    meta = {"title": fields["title"].strip()}
+    if fields.get("subtitle", "").strip():
+        meta["subtitle"] = fields["subtitle"].strip()
+    date = site.parse_date(fields.get("date") or "")
+    if date:
+        meta["date"] = date
+    for key in ("slug", "revises"):
+        if fields.get(key):
+            meta[key] = fields[key]
+    meta.update(extra)
+    return site.join_front_matter(meta, fields["body"].replace("\r\n", "\n"))
+
+
+@api
+def preview(fields_json):
+    fields = json.loads(fields_json)
+    meta = {
+        "title": fields["title"],
+        "subtitle": fields["subtitle"],
+        "date": site.parse_date(fields.get("date") or "") or dt.date.fromisoformat(fields["today"]),
+    }
+    post = site.build_post(meta, fields["body"], fields.get("slug") or "preview")
+    post["html"] = site.render_markdown(fields["body"])
+    return site.render_post_page(ENV, post, preview=True)
+
+
+@api
+def render_all(sources_json):
+    """{slug: post file} -> {file name: text} for everything that belongs in blog/."""
+    for directory in (site.BLOG_POSTS_DIR, site.BLOG_OUT_DIR):
+        shutil.rmtree(directory, ignore_errors=True)
+        directory.mkdir(parents=True)
+    for slug, text in json.loads(sources_json).items():
+        (site.BLOG_POSTS_DIR / (slug + ".md")).write_text(text, encoding="utf-8")
+    site.render_blog(ENV)
+    return {path.name: path.read_text(encoding="utf-8") for path in sorted(site.BLOG_OUT_DIR.iterdir())}
+
+
+@api
+def slugify(text):
+    return site.slugify(text)
+`;
+
+// Start downloading Python while the password is being typed.
+const runtime = (async () => {
+  const pyodide = await loadPyodide({ indexURL: new URL("vendor/pyodide/", location.href).href });
+  await pyodide.loadPackage(["jinja2", "pyyaml", "pygments", new URL(MARKDOWN_WHEEL, location.href).href]);
+  return pyodide;
+})();
+runtime.catch(() => {});   // reported when the editor opens
+
+let py = null;   // {parse, compose, preview, renderAll, slugify}
+
+async function startPython(files) {
+  const pyodide = await runtime;
+  for (const [path, text] of files) {
+    const full = "/site/" + path;
+    pyodide.FS.mkdirTree(full.slice(0, full.lastIndexOf("/")));
+    pyodide.FS.writeFile(full, text);
+  }
+  pyodide.runPython(PYTHON);
+  const wrap = (name) => {
+    const fn = pyodide.globals.get(name);
+    return (...args) => {
+      let answer;
+      try {
+        answer = JSON.parse(fn(...args));
+      } catch (err) {
+        throw new UserError("The page renderer failed: " + String(err.message || err).trim().split("\n").pop());
+      }
+      if ("error" in answer) throw new UserError(answer.error);
+      return answer.ok;
+    };
+  };
+  py = { parse: wrap("parse"), compose: wrap("compose"), preview: wrap("preview"), renderAll: wrap("render_all"), slugify: wrap("slugify") };
+}
+
+// ============================================================ what is on GitHub
+
+let liveBase = "";                 // https://<custom domain>, from the site's CNAME
+let site = { posts: new Map(), outputs: new Map(), images: new Set() };   // the website's repository
+const drafts = new Map();          // id -> {sha, text, fields}: drafts/<id>.md in the drafts repository
+const draftImages = new Map();     // name -> git id: images/<name> in the drafts repository
+const imageUrls = new Map();       // name -> object URL, for images that are not on the website yet
+
+function parseOr(text, fallbackTitle) {
+  try {
+    return py.parse(text);
+  } catch (err) {
+    return { title: `${fallbackTitle} (unreadable front matter)`, subtitle: "", date: "", slug: "", revises: "", body: text };
+  }
+}
+
+/** The website's blog files as of one commit (or branch). */
+async function readSite(ref) {
+  const [postFiles, outputFiles, imageFiles] = await Promise.all([
+    listDir(SITE, "_blog/posts", ref), listDir(SITE, "blog", ref), listDir(SITE, "assets/blog", ref),
+  ]);
+  const posts = new Map();
+  await Promise.all(postFiles.filter((file) => file.name.endsWith(".md")).map(async (file) => {
+    posts.set(file.name.slice(0, -3), { sha: file.sha, text: await getText(SITE, file.sha) });
+  }));
+  return {
+    posts: new Map([...posts].sort()),
+    outputs: new Map(outputFiles.map((file) => [file.name, file.sha])),
+    images: new Set(imageFiles.map((file) => file.name)),
+  };
+}
+
+function adoptSite(snapshot) {
+  for (const [slug, post] of snapshot.posts) post.fields = parseOr(post.text, slug);
+  site = snapshot;
+}
+
+/** render_templates.py, CNAME and the templates the blog pages are made from. */
+async function readRenderer(ref) {
+  const [blogTemplates, includes, script, cname] = await Promise.all([
+    listDir(SITE, "templates/blog", ref),
+    listDir(SITE, "templates/includes", ref),
+    gh(SITE, `contents/render_templates.py?ref=${encodeURIComponent(ref)}`, { missingOk: true }),
+    gh(SITE, `contents/CNAME?ref=${encodeURIComponent(ref)}`, { missingOk: true }),
+  ]);
+  if (!script || !blogTemplates.length) {
+    throw new UserError(`${SITE} does not contain the blog's renderer yet (render_templates.py and templates/blog). Push them first.`);
+  }
+  const files = [["render_templates.py", b64ToText(script.content)]];
+  if (cname) {
+    const host = b64ToText(cname.content).trim();
+    files.push(["CNAME", host]);
+    if (host) liveBase = `https://${host}`;
+  }
+  await Promise.all([...blogTemplates, ...includes].map(async (file) => {
+    files.push([file.path, await getText(SITE, file.sha)]);
+  }));
+  return files;
+}
+
+async function readDrafts() {
+  const [files, images] = await Promise.all([
+    listDir(DRAFTS, "drafts", CONFIG.drafts.branch), listDir(DRAFTS, "images", CONFIG.drafts.branch),
+  ]);
+  const loaded = await Promise.all(files.filter((file) => file.name.endsWith(".md")).map(async (file) => (
+    [file.name.slice(0, -3), { sha: file.sha, text: await getText(DRAFTS, file.sha) }]
+  )));
+  return { loaded, images: images.map((file) => [file.name, file.sha]) };
+}
+
+/** The saved, unpublished edit of a published post, if there is one. */
+function revisionOf(slug) {
+  for (const [id, draft] of drafts) if (draft.fields.revises === slug) return id;
+  return null;
+}
+
+// ============================================================ the post in the form
+
+let cur = { draftId: null, liveSlug: null };   // where the open post lives: a draft file, a live post, or both
+let savedSnapshot = "";       // the fields as last saved
+let saveError = "";
+let saving = false;
+let busy = "";                // "Publishing…" etc. while a long action runs
+let ready = false;
+let lastSaveAt = 0;
+let saveTimer = 0;
+let previewTimer = 0;
+let queue = Promise.resolve();   // saves and publishes run strictly one after another
+
+function enqueue(task) {
+  const run = queue.then(() => task());
+  queue = run.catch(() => {});
+  return run;
+}
+
+function fields() {
+  return {
+    title: el.title.value, subtitle: el.subtitle.value, date: el.date.value,
+    slug: slugify(el.slug.value), body: el.body.value,
+  };
+}
+
+const snapshot = () => JSON.stringify(fields());
+const isDirty = () => snapshot() !== savedSnapshot;
+const isBlank = () => { const f = fields(); return !f.title.trim() && !f.subtitle.trim() && !f.body.trim(); };
+const isNew = () => !cur.draftId && !cur.liveSlug;
+const currentKey = () => (cur.liveSlug ? "p:" + cur.liveSlug : cur.draftId ? "d:" + cur.draftId : "");
+
+function fill(values, where) {
+  cur = where;
+  el.title.value = values ? values.title : "";
+  el.subtitle.value = values ? values.subtitle : "";
+  el.date.value = values ? values.date : "";
+  el.slug.value = values ? values.slug : "";
+  el.body.value = values ? values.body : "";
+  savedSnapshot = snapshot();
+  saveError = "";
+  el.notice.hidden = true;   // a notice is about the post that was open
+  history.replaceState(null, "", currentKey() ? "#" + currentKey() : location.pathname);
+  disarm();
+  renderChrome();
+  renderList();
+  refreshPreview();
+}
+
+function openBlank() {
+  fill(null, { draftId: null, liveSlug: null });
+  el.title.focus();
+}
+
+function show(key) {
+  const [kind, name] = [key.slice(0, 1), key.slice(2)];
+  if (kind === "p" && site.posts.has(name)) {
+    const revision = revisionOf(name);
+    const source = revision ? drafts.get(revision).fields : site.posts.get(name).fields;
+    fill({ ...source, slug: source.slug || name }, { draftId: revision, liveSlug: name });
+  } else if (kind === "d" && drafts.has(name)) {
+    const draft = drafts.get(name);
+    const live = draft.fields.revises && site.posts.has(draft.fields.revises) ? draft.fields.revises : null;
+    fill({ ...draft.fields, slug: draft.fields.slug || live || "" }, { draftId: name, liveSlug: live });
+  } else {
+    openBlank();
+  }
+}
+
+async function openEntry(key) {
+  if (busy || !ready) return;
+  if (!(await save())) return;     // the save failed and its message is showing
+  if (key) show(key); else openBlank();
+}
+
+// ============================================================ drawing the page
+
+function renderChrome() {
+  const published = Boolean(cur.liveSlug);
+  const pending = published && Boolean(cur.draftId);
+  const dirty = ready && isDirty();
+
+  let pill = `<span class="pill">Draft</span>`;
+  if (published) {
+    pill = pending || dirty
+      ? `<span class="pill is-pending">Published, with changes that are not live</span>`
+      : `<span class="pill is-published">Published</span>`;
+  }
+  let text = "";
+  if (busy) text = busy;
+  else if (saveError) text = saveError;
+  else if (saving) text = "Saving…";
+  else if (dirty) text = isBlank() && isNew() ? "" : "Unsaved changes";
+  else if (cur.draftId) text = "Saved";
+  el.status.innerHTML = ready ? pill : "";
+  el.status.append(text);
+  el.status.style.color = saveError && !busy ? "var(--danger)" : "";
+  el.status.title = saveError && !busy ? saveError : "";
+
+  const locked = Boolean(busy) || !ready;
+  el.discard.hidden = !cur.draftId;
+  if (!armed) el.discard.textContent = published ? "Discard changes" : "Delete draft";
+  el.unpublish.hidden = !published;
+  el.live.hidden = !published;
+  if (published) el.live.href = `${liveBase}/blog/${cur.liveSlug}.html`;
+  el.dateHint.hidden = published || Boolean(el.date.value);
+  el.slug.placeholder = cur.liveSlug || slugify(el.title.value) || "untitled";
+
+  el.save.disabled = locked || !dirty;
+  if (published) {
+    const upToDate = !pending && !dirty;
+    el.publish.textContent = upToDate ? "Published" : "Publish changes";
+    el.publish.disabled = locked || upToDate;
+  } else {
+    el.publish.textContent = "Publish";
+    el.publish.disabled = locked || isBlank();
+  }
+  for (const button of [el.discard, el.unpublish, $("btn-new"), $("btn-image")]) button.disabled = locked;
+
+  const count = (el.body.value.trim().match(/\S+/g) || []).length;
+  el.words.textContent = `${count.toLocaleString()} ${count === 1 ? "word" : "words"}`;
+  document.title = (el.title.value.trim() || "Untitled") + " · Blog editor";
+}
+
+function renderList() {
+  const groups = { draft: $("list-drafts"), published: $("list-published") };
+  for (const node of Object.values(groups)) node.textContent = "";
+
+  const entries = [];
+  for (const [id, draft] of [...drafts].sort().reverse()) {       // ids start with their creation time
+    if (draft.fields.revises && site.posts.has(draft.fields.revises)) continue;   // shown under its published post
+    entries.push({ key: "d:" + id, group: "draft", title: draft.fields.title, meta: draft.fields.subtitle || "No subtitle yet" });
+  }
+  const published = [...site.posts].sort((a, b) => (b[1].fields.date + b[0]).localeCompare(a[1].fields.date + a[0]));
+  for (const [slug, post] of published) {
+    const revision = revisionOf(slug);
+    const shown = revision ? drafts.get(revision).fields : post.fields;
+    entries.push({ key: "p:" + slug, group: "published", title: shown.title, meta: post.fields.date + (revision ? " · changes not live" : "") });
+  }
+
+  for (const entry of entries) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "post-item" + (entry.key === currentKey() ? " is-current" : "");
+    const title = document.createElement("span");
+    title.className = "post-item-title";
+    title.textContent = entry.title || "Untitled";
+    const meta = document.createElement("span");
+    meta.className = "post-item-meta";
+    meta.textContent = entry.meta;
+    item.append(title, meta);
+    item.addEventListener("click", () => openEntry(entry.key));
+    groups[entry.group].append(item);
+  }
+  for (const [group, node] of Object.entries(groups)) {
+    if (node.children.length) continue;
+    const empty = document.createElement("p");
+    empty.className = "posts-empty";
+    empty.textContent = !ready ? "Loading…" : group === "draft" ? "No drafts." : "Nothing published yet.";
+    node.append(empty);
+  }
+}
+
+function notify(kind, paragraphs) {
+  el.noticeBody.textContent = "";
+  for (const paragraph of paragraphs) {
+    const p = document.createElement("p");
+    if (typeof paragraph === "string") p.textContent = paragraph;
+    else p.append(...paragraph);
+    el.noticeBody.append(p);
+  }
+  el.notice.className = "notice is-" + kind;
+  el.notice.hidden = false;
+}
+
+function link(href) {
+  const a = document.createElement("a");
+  a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = href;
+  return a;
+}
+
+// ============================================================ preview
+
+/** Images added to a draft are not on the website yet; show them from the drafts repository. */
+function imageUrl(name) {
+  if (!imageUrls.has(name) && draftImages.has(name)) {
+    imageUrls.set(name, gh(DRAFTS, `contents/images/${encodePath(name)}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { raw: true })
+      .then((blob) => URL.createObjectURL(name.endsWith(".svg") ? new Blob([blob], { type: "image/svg+xml" }) : blob))
+      .catch(() => null));
+  }
+  return imageUrls.get(name) || null;
+}
+
+function fixImages(doc) {
+  for (const img of doc.querySelectorAll('img[src^="/assets/blog/"]')) {
+    const name = img.getAttribute("src").split("/").pop();
+    const pending = imageUrl(name);
+    if (pending) Promise.resolve(pending).then((url) => { if (url) img.src = url; });
+  }
+}
+
+function refreshPreview() {
+  clearTimeout(previewTimer);
+  if (!py) return;
+  const f = fields();
+  let html;
+  try {
+    html = py.preview(JSON.stringify({ ...f, slug: f.slug || cur.liveSlug || "", today: today() }));
+  } catch (err) {
+    return;   // keep showing the last good preview
+  }
+  // Swap only the article once the page is loaded: no flicker, and the scroll position stays.
+  const doc = el.preview.contentDocument;
+  const root = doc && doc.getElementById("post-root");
+  const next = new DOMParser().parseFromString(html, "text/html");
+  const nextRoot = next.getElementById("post-root");
+  if (root && nextRoot) {
+    root.innerHTML = nextRoot.innerHTML;
+    fixImages(doc);
+  } else {
+    el.preview.addEventListener("load", () => fixImages(el.preview.contentDocument), { once: true });
+    el.preview.srcdoc = html.replace("<head>", '<head><base target="_blank">');   // links do not navigate the preview
+  }
+}
+
+// ============================================================ saving drafts
+
+function newDraftId() {
+  const now = new Date();
+  const stamp = today().replace(/-/g, "") + "-" + [now.getHours(), now.getMinutes(), now.getSeconds()].map((n) => String(n).padStart(2, "0")).join("");
+  return `${stamp}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** Write the form to the open post's file in the drafts repository, creating it if needed. */
+async function writeDraft(values, revises, keepalive) {
+  const previous = cur.draftId ? drafts.get(cur.draftId) : null;
+  const live = cur.liveSlug ? site.posts.get(cur.liveSlug) : null;
+  const record = { ...values, revises };
+  const text = py.compose(JSON.stringify(record), previous ? previous.text : live ? live.text : "");
+  // A new draft keeps the name chosen for it even if the first save's answer is lost on the way
+  // back; otherwise the retry would create a second copy.
+  const id = cur.draftId || (cur.reservedId = cur.reservedId || newDraftId());
+  const path = `contents/drafts/${id}.md`;
+  const body = { message: `Draft: ${values.title.trim() || "Untitled"}`, content: textToB64(text), branch: CONFIG.drafts.branch };
+  if (previous) body.sha = previous.sha;
+  let result;
+  try {
+    // keepalive lets a small save finish even while the tab is closing
+    result = await gh(DRAFTS, path, { method: "PUT", body, keepalive: keepalive && body.content.length < 45000 });
+  } catch (err) {
+    if (keepalive && !err.status) {
+      result = await gh(DRAFTS, path, { method: "PUT", body });   // the browser refused the keepalive form; send it normally
+    } else if (err.status !== 409 && err.status !== 422) {
+      throw err;
+    }
+  }
+  if (!result) {
+    // The draft was also saved from another window or device. This copy wins; the other one
+    // stays in the drafts repository's history.
+    const latest = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { missingOk: true });
+    if (latest) body.sha = latest.sha; else delete body.sha;
+    result = await gh(DRAFTS, path, { method: "PUT", body });
+  }
+  cur.draftId = id;
+  drafts.set(id, { sha: result.content.sha, text, fields: record });
+}
+
+async function removeDraft(id, message) {
+  const draft = drafts.get(id);
+  if (!draft) return;
+  const path = `contents/drafts/${id}.md`;
+  const body = { message, sha: draft.sha, branch: CONFIG.drafts.branch };
+  try {
+    await gh(DRAFTS, path, { method: "DELETE", body });
+  } catch (err) {
+    if (err.status !== 409 && err.status !== 422 && err.status !== 404) throw err;
+    const latest = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { missingOk: true });
+    if (latest) await gh(DRAFTS, path, { method: "DELETE", body: { ...body, sha: latest.sha } });
+  }
+  drafts.delete(id);
+}
+
+/** Save the form if it has changed. Resolves to false when the save failed. */
+function save(options = {}) {
+  clearTimeout(saveTimer);
+  return enqueue(async () => {
+    if (!ready || !isDirty() || (isBlank() && isNew())) return true;
+    const values = fields();
+    saving = true;
+    renderChrome();
+    try {
+      await writeDraft(values, cur.liveSlug || "", Boolean(options.keepalive));
+      savedSnapshot = JSON.stringify(values);
+      saveError = "";
+      history.replaceState(null, "", "#" + currentKey());
+    } catch (err) {
+      saveError = err.message;
+    }
+    saving = false;
+    lastSaveAt = Date.now();
+    renderChrome();
+    renderList();
+    return !saveError;
+  });
+}
+
+function onEdit() {
+  saveError = "";
+  disarm();
+  renderChrome();
+  // Every save is a commit in the drafts repository, so they are spaced out: a few seconds after
+  // the typing stops, and never more often than every twelve seconds.
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, Math.max(3000, lastSaveAt + 12000 - Date.now()));
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, 120);
+}
+
+// ============================================================ publishing
+
+/** The files to add, change or remove so the website's blog matches `sources` ({slug: post file}). */
+async function changesFor(snap, sources) {
+  const outputs = py.renderAll(JSON.stringify(Object.fromEntries(sources)));
+  const entry = (path, rest) => ({ path, mode: "100644", type: "blob", ...rest });
+  const changes = [];
+
+  for (const [slug, text] of sources) {
+    const existing = snap.posts.get(slug);
+    if (!existing || existing.text !== text) changes.push(entry(`_blog/posts/${slug}.md`, { content: text }));
+  }
+  for (const slug of snap.posts.keys()) {
+    if (!sources.has(slug)) changes.push(entry(`_blog/posts/${slug}.md`, { sha: null }));
+  }
+  for (const [name, text] of Object.entries(outputs)) {
+    if (snap.outputs.get(name) !== await gitId(text)) changes.push(entry(`blog/${name}`, { content: text }));
+  }
+  for (const name of snap.outputs.keys()) {
+    // blog/ holds nothing but generated pages: one that was not just rendered belongs to a post that is gone
+    if (!(name in outputs) && /\.(html|xml)$/.test(name)) changes.push(entry(`blog/${name}`, { sha: null }));
+  }
+
+  // Images the published pages use that the website does not have yet: copy them over from the drafts repository.
+  const used = new Set();
+  for (const text of Object.values(outputs)) {
+    for (const match of text.matchAll(/\/assets\/blog\/([A-Za-z0-9._-]+)/g)) used.add(match[1]);
+  }
+  for (const name of used) {
+    if (snap.images.has(name) || !draftImages.has(name)) continue;
+    const image = await gh(DRAFTS, `git/blobs/${draftImages.get(name)}`);
+    const copy = await gh(SITE, "git/blobs", { method: "POST", body: { content: image.content.replace(/\s+/g, ""), encoding: "base64" } });
+    changes.push(entry(`assets/blog/${name}`, { sha: copy.sha }));
+  }
+  return changes;
+}
+
+/**
+ * Make one commit on the website so that its posts are `decide(current posts)`.
+ * The commit holds the posts' Markdown, the re-rendered blog/ pages and any new images.
+ */
+async function commitToSite(message, decide) {
+  const branch = CONFIG.site.branch;
+  for (let attempt = 1; ; attempt++) {
+    const head = (await gh(SITE, `git/ref/heads/${branch}`)).object.sha;
+    const baseTree = (await gh(SITE, `git/commits/${head}`)).tree.sha;
+    const snap = await readSite(head);
+    const sources = new Map([...snap.posts].map(([slug, post]) => [slug, post.text]));
+    decide(sources);
+    const changes = await changesFor(snap, sources);
+    if (!changes.length) {
+      adoptSite(snap);
+      return { changed: false };
+    }
+    const tree = await gh(SITE, "git/trees", { method: "POST", body: { base_tree: baseTree, tree: changes } });
+    const commit = await gh(SITE, "git/commits", { method: "POST", body: { message, tree: tree.sha, parents: [head] } });
+    try {
+      await gh(SITE, `git/refs/heads/${branch}`, { method: "PATCH", body: { sha: commit.sha, force: false } });
+    } catch (err) {
+      // Someone pushed to the website in the meantime (you, from the laptop): build on top of that instead.
+      if (err.status === 422 && attempt < 3) continue;
+      throw err;
+    }
+    adoptSite(await readSite(commit.sha));
+    return { changed: true };
+  }
+}
+
+async function publish() {
+  const values = fields();
+  const title = values.title.trim();
+  if (!title) throw new UserError("Give the post a title before publishing.");
+  if (!values.body.trim()) throw new UserError("There is nothing to publish yet: the post is empty.");
+  const wasLive = cur.liveSlug;
+  const slug = values.slug || wasLive || py.slugify(title);
+  if (!slug) throw new UserError("The URL needs at least one letter or number.");
+  if (RESERVED.has(slug)) throw new UserError(`“${slug}” is taken by the blog's own pages. Pick another URL.`);
+  const date = values.date || today();
+
+  const draft = cur.draftId ? drafts.get(cur.draftId) : null;
+  const original = draft ? draft.text : wasLive ? site.posts.get(wasLive).text : "";
+  const source = py.compose(JSON.stringify({ ...values, title, slug, date, revises: "" }), original);
+
+  const outcome = await commitToSite(`Blog: ${wasLive ? "update" : "publish"} ${title}`, (sources) => {
+    if (slug !== wasLive && sources.has(slug)) throw new UserError(`Another post already uses the URL “${slug}”.`);
+    if (wasLive) sources.delete(wasLive);
+    sources.set(slug, source);
+  });
+
+  // The post is live. Its draft has done its job.
+  const leftover = cur.draftId;
+  cur = { draftId: null, liveSlug: slug };
+  el.date.value = date;
+  el.slug.value = slug;
+  savedSnapshot = snapshot();
+  let warning = "";
+  if (leftover) {
+    try {
+      await removeDraft(leftover, `Published: ${title}`);
+    } catch (err) {
+      warning = "The post is published, but its draft copy could not be removed: " + err.message;
+    }
+  }
+  const url = `${liveBase}/blog/${slug}.html`;
+  const lines = outcome.changed
+    ? [["Published. It should be live in about a minute at ", link(url)]]
+    : [["Nothing had changed since the last publish. The live page is ", link(url)]];
+  if (warning) lines.push(warning);
+  notify(warning ? "warn" : "ok", lines);
+}
+
+async function unpublish() {
+  const slug = cur.liveSlug;
+  const values = fields();
+  const title = values.title.trim() || slug;
+  // First make sure the text is safe as an ordinary draft, then take the page down.
+  await writeDraft({ ...values, slug: values.slug || slug }, "", false);
+  savedSnapshot = snapshot();
+  await commitToSite(`Blog: unpublish ${title}`, (sources) => { sources.delete(slug); });
+  cur = { draftId: cur.draftId, liveSlug: null };
+  notify("ok", ["Unpublished. The post is a draft again and its page will be gone from the website in about a minute."]);
+}
+
+async function discard() {
+  const title = el.title.value.trim() || "Untitled";
+  const back = cur.liveSlug;
+  if (cur.draftId) await removeDraft(cur.draftId, `${back ? "Discard changes to" : "Delete draft"}: ${title}`);
+  if (back) show("p:" + back); else openBlank();
+}
+
+/** Run a long action with the buttons locked, saving first and reporting failures. */
+async function act(label, action, needsSave = true) {
+  if (busy || !ready) return;
+  clearTimeout(saveTimer);
+  if (needsSave && !(await save())) return;
+  busy = label;
+  renderChrome();
+  try {
+    await enqueue(action);
+  } catch (err) {
+    notify("error", [err instanceof UserError ? err.message : `Something went wrong: ${err.message || err}`]);
+  }
+  busy = "";
+  history.replaceState(null, "", currentKey() ? "#" + currentKey() : location.pathname);
+  renderChrome();
+  renderList();
+}
+
+// Unpublish and Delete ask for a second click instead of a dialog.
+let armed = null;
+function disarm() {
+  if (!armed) return;
+  armed.button.textContent = armed.label;
+  armed.button.classList.remove("is-armed");
+  clearTimeout(armed.timer);
+  armed = null;
+}
+
+function twoStep(button, confirmLabel, action) {
+  button.addEventListener("click", () => {
+    if (armed && armed.button === button) { disarm(); action(); return; }
+    disarm();
+    armed = { button, label: button.textContent, timer: setTimeout(disarm, 4000) };
+    button.textContent = confirmLabel;
+    button.classList.add("is-armed");
+  });
+}
+
+twoStep(el.unpublish, "Click again to unpublish", () => act("Unpublishing…", unpublish));
+twoStep(el.discard, "Click again to confirm", () => act("Deleting…", discard, false));
+el.publish.addEventListener("click", () => act("Publishing…", publish));
+el.save.addEventListener("click", () => save());
+$("btn-new").addEventListener("click", () => openEntry(""));
+$("notice-close").addEventListener("click", () => { el.notice.hidden = true; });
+$("btn-preview").addEventListener("click", (event) => {
+  const hidden = $("layout").classList.toggle("no-preview");
+  event.currentTarget.textContent = hidden ? "Show preview" : "Hide preview";
+  event.currentTarget.setAttribute("aria-pressed", String(!hidden));
+  if (!hidden) refreshPreview();
+});
+$("btn-lock").addEventListener("click", async () => {
+  if (ready && !(await save())) return;
+  token = "";
+  location.reload();
+});
+
+// ============================================================ writing aids
+
+function insertText(text) {
+  el.body.focus();
+  // execCommand keeps the insertion in the textarea's undo history.
+  if (!document.execCommand("insertText", false, text)) {
+    el.body.setRangeText(text, el.body.selectionStart, el.body.selectionEnd, "end");
+    el.body.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+}
+
+function wrapSelection(before, after, placeholder) {
+  const start = el.body.selectionStart;
+  const chosen = el.body.value.slice(start, el.body.selectionEnd) || placeholder;
+  insertText(before + chosen + after);
+  el.body.setSelectionRange(start + before.length, start + before.length + chosen.length);
+}
+
+async function addImage(file) {
+  const dot = file.name.lastIndexOf(".");
+  const extension = (dot > 0 ? file.name.slice(dot + 1) : (file.type.split("/")[1] || "")).toLowerCase().replace("svg+xml", "svg");
+  if (!IMAGE_TYPES.has(extension)) throw new UserError("Only images can be added (png, jpg, gif, webp, svg, avif).");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!bytes.length) throw new UserError("That file is empty.");
+  if (bytes.length > 20 * 1024 * 1024) throw new UserError("That image is larger than 20 MB.");
+  // The content hash keeps two different "image.png" pastes apart and makes re-adding a no-op.
+  const digest = hex(await crypto.subtle.digest("SHA-256", bytes)).slice(0, 8);
+  const name = `${slugify(dot > 0 ? file.name.slice(0, dot) : "image") || "image"}-${digest}.${extension}`;
+  if (!site.images.has(name) && !draftImages.has(name)) {
+    const result = await gh(DRAFTS, `contents/images/${name}`, {
+      method: "PUT", body: { message: `Image: ${name}`, content: bytesToB64(bytes), branch: CONFIG.drafts.branch },
+    });
+    draftImages.set(name, result.content.sha);
+  }
+  if (!site.images.has(name)) imageUrls.set(name, URL.createObjectURL(file));
+  return `/assets/blog/${name}`;
+}
+
+async function addImages(files) {
+  if (!ready || busy) return;
+  for (const file of files) {
+    if (!file.type.startsWith("image/")) continue;
+    try {
+      const url = await enqueue(() => addImage(file));
+      const atLineStart = el.body.selectionStart === 0 || el.body.value[el.body.selectionStart - 1] === "\n";
+      insertText(`${atLineStart ? "" : "\n\n"}![](${url})\n\n`);
+    } catch (err) {
+      notify("error", [err.message]);
+    }
+  }
+}
+
+el.body.addEventListener("paste", (event) => {
+  const files = [...event.clipboardData.files];
+  if (files.some((file) => file.type.startsWith("image/"))) { event.preventDefault(); addImages(files); }
+});
+el.body.addEventListener("dragover", (event) => { event.preventDefault(); el.body.classList.add("is-dropping"); });
+el.body.addEventListener("dragleave", () => el.body.classList.remove("is-dropping"));
+el.body.addEventListener("drop", (event) => {
+  el.body.classList.remove("is-dropping");
+  if (event.dataTransfer.files.length) { event.preventDefault(); addImages([...event.dataTransfer.files]); }
+});
+$("btn-image").addEventListener("click", () => $("file-image").click());
+$("file-image").addEventListener("change", (event) => { addImages([...event.target.files]); event.target.value = ""; });
+
+document.addEventListener("keydown", (event) => {
+  if (!(event.metaKey || event.ctrlKey) || event.altKey || $("app").hidden) return;
+  const key = event.key.toLowerCase();
+  if (key === "s") { event.preventDefault(); save(); return; }
+  if (document.activeElement !== el.body) return;
+  if (key === "b") { event.preventDefault(); wrapSelection("**", "**", "bold"); }
+  else if (key === "i") { event.preventDefault(); wrapSelection("*", "*", "italic"); }
+  else if (key === "k") { event.preventDefault(); wrapSelection("[", "](https://)", "link text"); }
+});
+
+for (const input of [el.title, el.subtitle, el.date, el.slug, el.body]) input.addEventListener("input", onEdit);
+el.slug.addEventListener("blur", () => { el.slug.value = slugify(el.slug.value); });
+
+const unsaved = () => ready && isDirty() && !(isBlank() && isNew());
+document.addEventListener("visibilitychange", () => { if (document.hidden && unsaved()) save(); });
+window.addEventListener("beforeunload", (event) => { if (unsaved()) { save({ keepalive: true }); event.preventDefault(); } });
+
+// ============================================================ opening the editor
+
+async function openEditor() {
+  $("auth").hidden = true;
+  $("app").hidden = false;
+  busy = "Loading the editor…";
+  renderChrome();
+  renderList();
+  try {
+    const [rendererFiles, snapshotNow, draftFiles] = await Promise.all([
+      readRenderer(CONFIG.site.branch), readSite(CONFIG.site.branch), readDrafts(), runtime,
+    ]);
+    await startPython(rendererFiles);
+    adoptSite(snapshotNow);
+    for (const [id, draft] of draftFiles.loaded) drafts.set(id, { ...draft, fields: parseOr(draft.text, id) });
+    for (const [name, id] of draftFiles.images) draftImages.set(name, id);
+    ready = true;
+    busy = "";
+    const wanted = decodeURIComponent(location.hash.slice(1));
+    const firstDraft = [...drafts].sort().reverse().find(([, draft]) => !draft.fields.revises || !site.posts.has(draft.fields.revises));
+    show(wanted || (firstDraft ? "d:" + firstDraft[0] : ""));
+  } catch (err) {
+    busy = "";
+    renderChrome();
+    renderList();
+    if (err.status === 401) { showAuth("setup", "GitHub no longer accepts the saved token (it expired or was revoked). Create a new one."); return; }
+    notify("error", [err instanceof UserError ? err.message : `The editor could not start: ${err.message || err}`, "Reload the page to try again."]);
+  }
+}
+
+function showAuth(mode, message = "") {
+  $("app").hidden = true;
+  $("auth").hidden = false;
+  $("form-setup").hidden = mode !== "setup";
+  $("form-unlock").hidden = mode !== "unlock";
+  $("link-unlock").hidden = !localStorage.getItem(KEY_STORE);
+  $("setup-error").textContent = mode === "setup" ? message : "";
+  $("unlock-error").textContent = mode === "unlock" ? message : "";
+  (mode === "setup" ? $("setup-token") : $("unlock-password")).focus();
+}
+
+$("repo-site").textContent = SITE;
+$("repo-drafts").textContent = DRAFTS;
+$("link-new-token").href = "https://github.com/settings/personal-access-tokens/new?name=Blog+editor&contents=write";
+$("link-setup").addEventListener("click", () => showAuth("setup"));
+$("link-unlock").addEventListener("click", () => showAuth("unlock"));
+
+$("form-unlock").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  $("unlock-error").textContent = "";
+  try {
+    token = await readToken($("unlock-password").value);
+  } catch (err) {
+    $("unlock-error").textContent = err.message;
+    return;
+  }
+  $("unlock-password").value = "";
+  openEditor();
+});
+
+$("form-setup").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter || $("form-setup").querySelector("button[type=submit]");
+  $("setup-error").textContent = "";
+  button.disabled = true;
+  token = $("setup-token").value.trim();
+  try {
+    // A token that can see both repositories is scoped correctly; writing is confirmed by the first save.
+    await gh(SITE, "");
+    await gh(DRAFTS, "");
+    await storeToken(token, $("setup-password").value);
+  } catch (err) {
+    token = "";
+    button.disabled = false;
+    $("setup-error").textContent = err.status === 401 ? "GitHub does not recognise that token. Copy it again, in full." : err.message;
+    return;
+  }
+  button.disabled = false;
+  $("setup-token").value = "";
+  $("setup-password").value = "";
+  openEditor();
+});
+
+showAuth(localStorage.getItem(KEY_STORE) ? "unlock" : "setup");
+</script>
+</body>
+</html>

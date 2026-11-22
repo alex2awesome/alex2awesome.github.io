@@ -1,0 +1,26 @@
+{% extends 'blog/base.html.j2' %}
+{# The list of published posts, newest first. Posts are written in the editor at /admin/. #}
+{% block title %}Blog{% endblock %}
+{% block meta %}
+    <meta name="description" content="Blog posts by Alexander Spangher." />
+    <link rel="canonical" href="{{ site_url }}/blog/">
+{% endblock %}
+{% block content %}
+      <h1>Blog</h1>
+      {% if posts %}
+      <ul class="post-list">
+        {% for post in posts %}
+        <li class="post-list-item">
+          <time datetime="{{ post.date_iso }}">{{ post.date_display }}</time>
+          <a class="post-list-title" href="{{ post.url }}">{{ post.title | typo | e }}</a>
+          {% if post.subtitle %}
+          <p class="post-list-subtitle">{{ post.subtitle | typo | e }}</p>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="blog-feed"><a href="/blog/feed.xml">RSS feed</a></p>
+      {% else %}
+      <p class="blog-empty">No posts yet.</p>
+      {% endif %}
+{% endblock %}

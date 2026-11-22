@@ -12,11 +12,27 @@ templates/wishlist_body.html.j2 and encrypted (PBKDF2-SHA256 + AES-256-GCM) with
 derived from the two pledge passwords; the ciphertext is written to data/wishlist.enc.json
 (committed) and embedded in wishlist.html. If the private file is absent (e.g. a fresh
 clone), the committed ciphertext is reused as-is.
+
+The blog is rendered from Markdown files with YAML front matter (title, subtitle, date) in
+_blog/posts/<slug>.md. Each becomes blog/<slug>.html, listed on blog/index.html and in
+blog/feed.xml. Everything in blog/ is generated.
+
+Posts are normally written and published from the editor at /admin/ on the website
+(admin/index.html). It runs this very file in the browser (Pyodide), so the blog functions below
+must keep working without the `cryptography` package and without the wishlist's private file, and
+`render_blog` must depend on nothing but _blog/posts, templates/blog, templates/includes and CNAME.
+Drafts never touch this repository: the editor keeps them in a private one.
+
+The sources sit in an underscore directory because GitHub Pages builds this repository with
+Jekyll, which would otherwise convert each .md into a second, unstyled copy of the post.
 """
 
 import base64
+import datetime as dt
 import hashlib
 import json
+import re
+import unicodedata
 from pathlib import Path
 
 try:
@@ -51,6 +67,16 @@ TEMPLATE_OUTPUTS = {
     "talks.html.j2": BASE_DIR / "talks.html",
     "wishlist.html.j2": BASE_DIR / "wishlist.html",
 }
+
+BLOG_SRC_DIR = BASE_DIR / "_blog"
+BLOG_POSTS_DIR = BLOG_SRC_DIR / "posts"      # committed: published posts
+BLOG_OUT_DIR = BASE_DIR / "blog"             # generated: index.html, <slug>.html, feed.xml
+BLOG_ASSETS_DIR = BASE_DIR / "assets" / "blog"   # images used in posts
+BLOG_INDEX_TEMPLATE = "blog/index.html.j2"
+BLOG_POST_TEMPLATE = "blog/post.html.j2"
+BLOG_FEED_TEMPLATE = "blog/feed.xml.j2"
+BLOG_RESERVED_SLUGS = {"index", "feed"}      # blog/index.html and blog/feed.xml
+SITE_AUTHOR = "Alexander Spangher"
 
 VALID_SECTIONS = {"first-author", "thesis", "middle-author", "in-submission"}
 VALID_TOPICS = {"tacit", "planning", "discourse", "sequence", "other"}
@@ -159,13 +185,179 @@ def load_wishlist(env: Environment) -> dict:
     raise SystemExit(f"Found neither {WISHLIST_PRIVATE.name} nor {WISHLIST_ENC.name} in data/.")
 
 
-def main() -> None:
+class BlogError(ValueError):
+    """A post that cannot be read or rendered. The message is written for the person editing it."""
+
+
+def site_url() -> str:
+    """https://<custom domain>, read from CNAME. Used for absolute links in the feed and share tags."""
+    cname = BASE_DIR / "CNAME"
+    host = cname.read_text(encoding="utf-8").strip() if cname.exists() else ""
+    return f"https://{host}" if host else ""
+
+
+def slugify(text: str) -> str:
+    """'Don't Panic: Naïve Planning' -> 'dont-panic-naive-planning'. Mirrored in admin/index.html."""
+    text = unicodedata.normalize("NFKD", str(text))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
+    text = re.sub(r"['’]", "", text)
+    text = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+    return text[:80].strip("-")
+
+
+_FRONT_MATTER = re.compile(r"\A---[ \t]*\r?\n(.*?)^---[ \t]*$\r?\n?", re.DOTALL | re.MULTILINE)
+
+
+def split_front_matter(text: str) -> tuple:
+    """Split a post file into (front matter dict, Markdown body)."""
+    match = _FRONT_MATTER.match(text)
+    if not match:
+        return {}, text
+    try:
+        meta = yaml.safe_load(match.group(1)) or {}
+    except yaml.YAMLError as exc:
+        raise BlogError(f"the front matter is not valid YAML: {exc}") from exc
+    if not isinstance(meta, dict):
+        raise BlogError("the front matter must be `key: value` lines")
+    return meta, text[match.end():].lstrip("\n")
+
+
+def join_front_matter(meta: dict, body: str) -> str:
+    head = yaml.safe_dump(meta, sort_keys=False, allow_unicode=True, default_flow_style=False, width=1000)
+    return f"---\n{head.strip()}\n---\n\n{body.strip()}\n"
+
+
+def parse_date(value):
+    """A front matter date as datetime.date, or None when it is absent."""
+    if isinstance(value, dt.datetime):
+        return value.date()
+    if isinstance(value, dt.date):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            return dt.date.fromisoformat(value.strip())
+        except ValueError as exc:
+            raise BlogError(f"the date {value!r} should look like 2026-11-22") from exc
+    return None
+
+
+def typographic(text: str) -> str:
+    """Curly quotes and real dashes for titles and subtitles, as `smarty` does for the post body."""
+    text = str(text)
+    text = re.sub(r"(?<=\w)'(?=\w)", "\u2019", text)             # don't
+    text = re.sub(r'"(?=\w)', "\u201c", text).replace('"', "\u201d")
+    text = re.sub(r"(?<!\w)'(?=\w)", "\u2018", text).replace("'", "\u2019")
+    text = re.sub(r"(?<=\s)--(?=\s)", "\u2013", text)
+    return text.replace("...", "\u2026")
+
+
+def render_markdown(text: str) -> str:
+    try:
+        import markdown
+    except ImportError as exc:  # pragma: no cover - graceful CLI failure
+        raise SystemExit(
+            "The `markdown` package is required to render blog posts: "
+            "`python3 -m pip install --user markdown pygments`."
+        ) from exc
+
+    # extra: tables, fenced code, footnotes, attribute lists. smarty: curly quotes and dashes.
+    # toc: ids on headings, so sections can be linked to.
+    extensions = ["extra", "sane_lists", "smarty", "toc"]
+    configs = {}
+    try:
+        import pygments  # noqa: F401  (optional: colours for fenced code blocks)
+    except ImportError:
+        pass
+    else:
+        extensions.append("codehilite")
+        configs["codehilite"] = {"guess_lang": False, "css_class": "codehilite"}
+    return markdown.markdown(text, extensions=extensions, extension_configs=configs, output_format="html")
+
+
+def build_post(meta: dict, body: str, slug: str) -> dict:
+    """The dict the blog templates read. `html` is filled in by whoever needs the rendered body."""
+    date = parse_date(meta.get("date"))
+    return {
+        "slug": slug,
+        "title": str(meta.get("title") or "").strip(),
+        "subtitle": str(meta.get("subtitle") or "").strip(),
+        "date": date,
+        "date_iso": date.isoformat() if date else "",
+        "date_display": f"{date:%B} {date.day}, {date.year}" if date else "",
+        "url": f"/blog/{slug}.html",
+        "meta": meta,
+        "body": body,
+        "html": "",
+    }
+
+
+def read_post(path: Path) -> dict:
+    try:
+        meta, body = split_front_matter(path.read_text(encoding="utf-8"))
+        return build_post(meta, body, path.stem)
+    except BlogError as exc:
+        raise BlogError(f"{path.relative_to(BASE_DIR)}: {exc}") from exc
+
+
+def load_published_posts() -> list:
+    """Every post in _blog/posts, newest first, with its body rendered to HTML."""
+    posts = []
+    for path in sorted(BLOG_POSTS_DIR.glob("*.md")):
+        post = read_post(path)
+        where = path.relative_to(BASE_DIR)
+        for field in ("title", "date"):
+            if not post[field]:
+                raise BlogError(f"{where}: the front matter is missing '{field}'")
+        if slugify(post["slug"]) != post["slug"] or post["slug"] in BLOG_RESERVED_SLUGS:
+            raise BlogError(f"{where}: the file name becomes the post's URL, so it must look like my-post-title.md")
+        post["html"] = render_markdown(post["body"])
+        posts.append(post)
+    posts.sort(key=lambda post: (post["date"], post["slug"]), reverse=True)
+    return posts
+
+
+def render_post_page(env: Environment, post: dict, preview: bool = False) -> str:
+    return env.get_template(BLOG_POST_TEMPLATE).render(post=post, site_url=site_url(), preview=preview)
+
+
+def render_blog(env: Environment) -> list:
+    """Write blog/ from the published posts and remove pages of posts that no longer exist."""
+    posts = load_published_posts()
+    base = site_url()
+    outputs = {"index.html": env.get_template(BLOG_INDEX_TEMPLATE).render(posts=posts, site_url=base)}
+    for post in posts:
+        outputs[f"{post['slug']}.html"] = render_post_page(env, post)
+        # Feed readers show the post away from this site, so its root-relative links need the domain.
+        post["feed_html"] = re.sub(r'(\s(?:src|href)=")/(?!/)', rf"\g<1>{base}/", post["html"])
+    if posts:
+        outputs["feed.xml"] = env.get_template(BLOG_FEED_TEMPLATE).render(
+            posts=posts, site_url=base, author=SITE_AUTHOR
+        )
+
+    BLOG_OUT_DIR.mkdir(exist_ok=True)
+    for name, text in outputs.items():
+        (BLOG_OUT_DIR / name).write_text(text, encoding="utf-8")
+    # blog/ holds nothing but generated pages, so a page that was not just written belongs to a
+    # post that has been unpublished or renamed.
+    for stale in [*BLOG_OUT_DIR.glob("*.html"), *BLOG_OUT_DIR.glob("*.xml")]:
+        if stale.name not in outputs:
+            stale.unlink()
+    return posts
+
+
+def build_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=select_autoescape(["html", "xml"]),
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.filters["typo"] = typographic
+    return env
+
+
+def main() -> None:
+    env = build_env()
     context = load_papers()
     context["wishlist"] = load_wishlist(env)
 
@@ -173,6 +365,11 @@ def main() -> None:
         template = env.get_template(template_name)
         rendered = template.render(**context)
         output_path.write_text(rendered, encoding="utf-8")
+
+    try:
+        render_blog(env)
+    except BlogError as exc:
+        raise SystemExit(str(exc)) from exc
 
 
 if __name__ == "__main__":

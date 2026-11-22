@@ -1,0 +1,292 @@
+/* Blog index (blog/index.html) and post pages (blog/<slug>.html). Loaded after all.css. */
+
+/* ---------- Index ---------- */
+.post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.post-list-item {
+    padding: 1.2rem 0 1.3rem;
+    border-bottom: 1px solid #ececec;
+}
+
+.post-list-item:last-child {
+    border-bottom: 0;
+}
+
+.post-list-item time {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.post-list-title {
+    font-size: 1.55rem;
+    line-height: 1.25;
+}
+
+.main .post-list-subtitle {
+    margin: 0.3rem 0 0;
+    font-size: 1.15rem;
+    line-height: 1.4;
+    color: #555;
+}
+
+.main .blog-empty {
+    color: #666;
+}
+
+.main .blog-feed {
+    margin-top: 2rem;
+    font-size: 1rem;
+}
+
+/* ---------- Post header ---------- */
+.main .post-title {
+    margin: 1rem 0 0.9rem;
+    line-height: 1.2;
+}
+
+.main .post-subtitle {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+    font-style: italic;
+    line-height: 1.35;
+    color: #555;
+}
+
+.main .post-meta {
+    margin: 0 0 2.2rem;
+    font-size: 1rem;
+    color: #666;
+}
+
+/* ---------- Post body ---------- */
+.post-body {
+    font-size: 1.25rem;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+}
+
+/* all.css sizes `.main p` in em; the body already sets the size. */
+.main .post-body p {
+    font-size: 1em;
+    line-height: inherit;
+}
+
+/* Section headings inside a post are lighter than the page-level heading rule in all.css. */
+.main .post-body h1,
+.main .post-body h2 {
+    margin: 2.4rem 0 1rem;
+    padding: 0 0 0.35rem;
+    border-top: 0;
+    border-bottom: 0.5px dashed #333;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.main .post-body h3 {
+    margin: 2rem 0 0.7rem;
+    padding: 0;
+    border: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.post-body h4,
+.post-body h5,
+.post-body h6 {
+    margin: 1.6rem 0 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.post-body a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.post-body ul,
+.post-body ol {
+    margin: 0 0 1em;
+    padding-left: 1.5em;
+}
+
+.post-body li {
+    margin-bottom: 0.3em;
+}
+
+.post-body li > ul,
+.post-body li > ol {
+    margin: 0.3em 0 0;
+}
+
+.post-body blockquote {
+    margin: 1.6em 0;
+    padding: 0.1em 0 0.1em 1.1em;
+    border-left: 3px solid #333;
+    color: #555;
+}
+
+.post-body blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* all.css gives every img a fixed size and padding; post images keep their own proportions. */
+.post-body img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 1.8em auto;
+    padding: 0;
+}
+
+.post-body figure {
+    margin: 1.8em 0;
+}
+
+.post-body figure img {
+    margin: 0 auto;
+}
+
+.post-body figcaption {
+    margin-top: 0.6em;
+    font-size: 0.8em;
+    line-height: 1.4;
+    color: #666;
+    text-align: center;
+}
+
+.post-body iframe,
+.post-body video {
+    display: block;
+    max-width: 100%;
+    margin: 1.8em auto;
+}
+
+.post-body hr {
+    width: 40%;
+    margin: 2.4em auto;
+    padding: 0;
+    border: 0;
+    border-top: 0.5px dashed #333;
+    opacity: 1;
+}
+
+.post-body table {
+    width: 100%;
+    margin: 1.6em 0;
+    border-collapse: collapse;
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+.post-body th,
+.post-body td {
+    padding: 0.45em 0.7em;
+    border-bottom: 1px solid #e2e2e2;
+    text-align: left;
+    vertical-align: top;
+}
+
+.post-body th {
+    border-bottom: 1.5px solid #333;
+    font-weight: 600;
+}
+
+/* ---------- Code ---------- */
+.post-body code {
+    padding: 1px 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    color: #333;
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.post-body pre {
+    margin: 1.6em 0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 0.72em;
+    line-height: 1.5;
+    color: #333;
+    background: #f7f7f7;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+}
+
+.post-body pre code {
+    padding: 0;
+    font-size: 1em;
+    background: none;
+    border-radius: 0;
+}
+
+.post-body .codehilite pre {
+    margin: 0;
+}
+
+.post-body .codehilite {
+    margin: 1.6em 0;
+}
+
+/* Pygments token classes, written by the `codehilite` Markdown extension. */
+.codehilite .c, .codehilite .ch, .codehilite .cm, .codehilite .c1, .codehilite .cs, .codehilite .cpf { color: #7a7a7a; font-style: italic; }
+.codehilite .cp { color: #8a5a00; }
+.codehilite .k, .codehilite .kc, .codehilite .kd, .codehilite .kn, .codehilite .kp, .codehilite .kr, .codehilite .ow { color: #800080; font-weight: 600; }
+.codehilite .kt, .codehilite .nc, .codehilite .nn, .codehilite .ne { color: #1c5d99; }
+.codehilite .nf, .codehilite .fm, .codehilite .nd { color: #1c5d99; }
+.codehilite .nb, .codehilite .bp { color: #1f6f6f; }
+.codehilite .nt { color: #800080; }
+.codehilite .na, .codehilite .nv, .codehilite .vc, .codehilite .vg, .codehilite .vi { color: #1f6f6f; }
+.codehilite .s, .codehilite .sa, .codehilite .sb, .codehilite .sc, .codehilite .dl, .codehilite .sd, .codehilite .s2, .codehilite .sh, .codehilite .s1, .codehilite .sx, .codehilite .sr, .codehilite .ss { color: #2e6f2e; }
+.codehilite .se, .codehilite .si { color: #8a5a00; }
+.codehilite .m, .codehilite .mb, .codehilite .mf, .codehilite .mh, .codehilite .mi, .codehilite .mo, .codehilite .il { color: #a0440e; }
+.codehilite .gd { color: #a02020; }
+.codehilite .gi { color: #2e6f2e; }
+.codehilite .gh, .codehilite .gu { color: #555; font-weight: 600; }
+.codehilite .hll { display: block; background: #fff3c4; }
+
+/* ---------- Footnotes ---------- */
+.post-body .footnote {
+    margin-top: 3rem;
+    font-size: 0.82em;
+    line-height: 1.5;
+    color: #555;
+}
+
+.post-body .footnote hr {
+    width: 100%;
+    margin: 0 0 1.2em;
+}
+
+.post-body sup {
+    font-size: 0.7em;
+    line-height: 0;
+}
+
+.post-body .footnote-ref,
+.post-body .footnote-backref {
+    text-decoration: none;
+}
+
+/* ---------- Post footer ---------- */
+.post-footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 0.5px dashed #333;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .post-body {
+        font-size: 1.15rem;
+    }
+}

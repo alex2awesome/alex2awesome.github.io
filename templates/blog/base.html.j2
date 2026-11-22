@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Alexander Spangher" />
+    <title>{% block title %}Blog{% endblock %}</title>
+{% block meta %}{% endblock %}
+    <link rel="alternate" type="application/atom+xml" title="Alexander Spangher: Blog" href="/blog/feed.xml">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/normalize.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/blog.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body class="blog">
+    {% include 'includes/site-header.html' %}
+
+    {# The editor's live preview swaps the contents of #post-root as you type. #}
+    <div class="main" id="post-root">
+{% block content %}{% endblock %}
+    </div>
+    {% include 'includes/site-footer.html' %}
+  </body>
+</html>
