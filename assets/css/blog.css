@@ -23,9 +23,16 @@
     color: #666;
 }
 
-.post-list-title {
+/* Post titles read as headlines, not as the site's purple links. */
+.post-list-title,
+.post-list-title:visited {
     font-size: 1.55rem;
     line-height: 1.25;
+    color: #222;
+}
+
+.post-list-title:hover {
+    color: #000;
 }
 
 .main .post-list-subtitle {
@@ -42,6 +49,7 @@
 .main .blog-feed {
     margin-top: 2rem;
     font-size: 1rem;
+    color: #999;
 }
 
 /* ---------- Post header ---------- */
@@ -147,12 +155,20 @@
     padding: 0;
 }
 
+/* An image on its own line is a <figure>; the line under it is the caption. A size chosen in
+   the editor arrives as style="width: 60%" and the caption wraps with the image. */
 .post-body figure {
-    margin: 1.8em 0;
+    max-width: 100%;
+    min-width: min(100%, 15rem);      /* a narrow figure does not shrink to a stamp on a phone */
+    margin: 1.8em auto;
 }
 
 .post-body figure img {
     margin: 0 auto;
+}
+
+.post-body figure[style] img {
+    width: 100%;
 }
 
 .post-body figcaption {

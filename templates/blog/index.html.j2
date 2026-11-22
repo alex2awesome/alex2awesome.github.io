@@ -19,8 +19,12 @@
         </li>
         {% endfor %}
       </ul>
-      <p class="blog-feed"><a href="/blog/feed.xml">RSS feed</a></p>
       {% else %}
       <p class="blog-empty">No posts yet.</p>
       {% endif %}
+      <p class="blog-feed">
+        {% if posts %}<a href="/blog/feed.xml">RSS feed</a> <span aria-hidden="true">·</span> {% endif %}
+        {# The editor asks for a password; the link is only a shortcut for the author. #}
+        <a href="/admin/" rel="nofollow">Editor</a>
+      </p>
 {% endblock %}

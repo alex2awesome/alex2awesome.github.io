@@ -251,6 +251,76 @@ def typographic(text: str) -> str:
     return text.replace("...", "\u2026")
 
 
+def figures_extension():
+    """A Markdown extension: a paragraph that starts with an image becomes a <figure>.
+
+        ![Alt text](/assets/blog/chart.png){width=60%}
+        The line under the image is its caption, and may use *Markdown*.
+
+    `{width=...}` (written by the editor when an image is resized) becomes the figure's width,
+    so the caption wraps with the image. An image with text on the same line stays inline.
+    """
+    import xml.etree.ElementTree as etree
+
+    from markdown.extensions import Extension
+    from markdown.treeprocessors import Treeprocessor
+
+    def image_of(node):
+        """The <img> that `node` is, or that a link wraps on its own."""
+        if node.tag == "img":
+            return node
+        alone = node.tag == "a" and len(node) == 1 and not (node.text or "").strip() and not (node[0].tail or "").strip()
+        return node[0] if alone and node[0].tag == "img" else None
+
+    def as_figure(paragraph):
+        if (paragraph.text or "").strip() or not len(paragraph):
+            return None
+        first, rest = paragraph[0], list(paragraph)[1:]
+        image = image_of(first)
+        if image is None:
+            return None
+        tail = first.tail or ""
+        if not tail.strip() and rest and rest[0].tag == "br":      # two spaces at the end of the image's line
+            tail, rest = "\n" + (rest[0].tail or ""), rest[1:]
+        has_caption = bool(tail.strip() or rest)
+        gap = tail[: len(tail) - len(tail.lstrip())]
+        if has_caption and "\n" not in gap:
+            return None                                             # text on the image's own line: an inline image
+        if any(node.tag == "img" for child in rest for node in child.iter()):
+            return None                                             # several images in a row: left as written
+
+        figure = etree.Element("figure", dict(paragraph.attrib))
+        width = re.fullmatch(r"(\d{1,4})(%|px)?", image.get("width", "").strip())
+        if width:
+            del image.attrib["width"]
+            figure.set("style", f"width: {width.group(1)}{width.group(2) or 'px'}")
+        figure.text = "\n"
+        first.tail = "\n"
+        figure.append(first)
+        if has_caption:
+            caption = etree.SubElement(figure, "figcaption")
+            caption.text = tail.lstrip()
+            caption.extend(rest)
+            caption.tail = "\n"
+        return figure
+
+    class Figures(Treeprocessor):
+        def run(self, root):
+            for parent in list(root.iter()):
+                for index, child in enumerate(list(parent)):
+                    figure = as_figure(child) if child.tag == "p" else None
+                    if figure is not None:
+                        figure.tail = child.tail
+                        parent[index] = figure
+
+    class FiguresExtension(Extension):
+        def extendMarkdown(self, md):
+            # After attr_list (8) has moved {width=...} onto the image and smarty (6) has run.
+            md.treeprocessors.register(Figures(md), "figures", 3)
+
+    return FiguresExtension()
+
+
 def render_markdown(text: str) -> str:
     try:
         import markdown
@@ -261,8 +331,8 @@ def render_markdown(text: str) -> str:
         ) from exc
 
     # extra: tables, fenced code, footnotes, attribute lists. smarty: curly quotes and dashes.
-    # toc: ids on headings, so sections can be linked to.
-    extensions = ["extra", "sane_lists", "smarty", "toc"]
+    # toc: ids on headings, so sections can be linked to. figures: images with captions.
+    extensions = ["extra", "sane_lists", "smarty", "toc", figures_extension()]
     configs = {}
     try:
         import pygments  # noqa: F401  (optional: colours for fenced code blocks)

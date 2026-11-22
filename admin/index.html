@@ -11,6 +11,10 @@
     vendor/pyodide/). The preview is therefore exactly the page that gets published.
   - Publish makes one commit in the website's repository: the post's Markdown in _blog/posts/,
     the re-rendered blog/ pages, and any new images in assets/blog/. GitHub Pages then deploys it.
+  - Images are resized and captioned by clicking them in the preview; the result is written
+    back into the Markdown as `![alt](src){width=60%}` with the caption on the next line.
+  - Every save is a commit in the drafts repository and every publish a commit on the website;
+    History lists them for the open post and can bring any of them back.
 
   Everything this page loads comes from this site; the only other host it contacts is
   api.github.com.
@@ -143,7 +147,7 @@
 
   .status .pill.is-published { color: var(--ok); background: #e6f3ea; }
   .status .pill.is-pending { color: #8a5a00; background: #fbf0d6; }
-  .actions { display: flex; align-items: center; gap: 8px; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
 
   .notice {
     display: flex;
@@ -184,6 +188,8 @@
   }
 
   .posts .btn { width: 100%; margin-bottom: 14px; }
+  .posts .btn + .btn { margin-top: -6px; }
+  .post-item.is-published .post-item-title { color: var(--ok); }
 
   .posts h2 {
     margin: 8px 8px 4px;
@@ -310,6 +316,7 @@
     border-bottom: 1px solid var(--line);
   }
 
+  .preview-head span { margin-left: 6px; font-weight: 400; letter-spacing: 0.01em; text-transform: none; }
   .preview iframe { flex: 1; width: 100%; min-height: 0; border: 0; background: #fff; }
 
   @media (max-width: 1000px) {
@@ -385,6 +392,7 @@
       <button class="btn quiet" id="btn-discard" type="button" hidden>Delete draft</button>
       <button class="btn quiet" id="btn-unpublish" type="button" hidden>Unpublish</button>
       <a class="btn quiet" id="btn-live" target="_blank" rel="noopener" hidden>View live page</a>
+      <button class="btn quiet" id="btn-history" type="button" hidden>History</button>
       <button class="btn quiet" id="btn-preview" type="button" aria-pressed="true">Hide preview</button>
       <button class="btn quiet" id="btn-lock" type="button">Lock</button>
       <button class="btn" id="btn-save" type="button" title="Cmd/Ctrl+S">Save</button>
@@ -399,11 +407,23 @@
 
   <div class="layout" id="layout">
     <nav class="posts" aria-label="Posts">
-      <button class="btn" id="btn-new" type="button">New post</button>
-      <h2>Drafts</h2>
-      <div id="list-drafts"></div>
-      <h2>Published</h2>
-      <div id="list-published"></div>
+      <div id="pane-posts">
+        <button class="btn" id="btn-new" type="button">New post</button>
+        <h2>Drafts</h2>
+        <div id="list-drafts"></div>
+        <h2>Published</h2>
+        <div id="list-published"></div>
+      </div>
+      <!-- Shown instead of the posts while History is open. -->
+      <div id="pane-history" hidden>
+        <button class="btn" id="btn-history-back" type="button">Back to writing</button>
+        <button class="btn primary" id="btn-restore" type="button" hidden>Restore this version</button>
+        <h2>Versions of this post</h2>
+        <div id="list-history"></div>
+        <button class="btn quiet" id="btn-history-every" type="button" hidden>Show every save</button>
+        <button class="btn quiet" id="btn-history-more" type="button" hidden>Show older</button>
+        <p class="posts-empty" id="history-empty" hidden>Nothing has been saved yet.</p>
+      </div>
     </nav>
 
     <section class="editor" aria-label="Write">
@@ -420,7 +440,7 @@
           <span>/blog/</span><input id="f-slug" type="text" spellcheck="false" autocomplete="off"><span>.html</span>
         </div>
       </div>
-      <textarea id="f-body" placeholder="Write in Markdown. Paste or drop images straight into the text." aria-label="Post body" spellcheck="true"></textarea>
+      <textarea id="f-body" placeholder="Write in Markdown. Drop or paste images anywhere." aria-label="Post body" spellcheck="true"></textarea>
       <div class="editor-foot">
         <span id="word-count">0 words</span>
         <span class="grow"></span>
@@ -431,7 +451,7 @@
     </section>
 
     <section class="preview" aria-label="Preview">
-      <div class="preview-head">Preview: the page as it will be published</div>
+      <div class="preview-head">Preview: the page as it will be published<span>Click an image to resize it or add a caption.</span></div>
       <!-- No scripts run in the preview, so nothing embedded in a post can reach the access token. -->
       <iframe id="preview" title="Preview of the post" sandbox="allow-same-origin"></iframe>
     </section>
@@ -462,7 +482,7 @@ const el = {
   title: $("f-title"), subtitle: $("f-subtitle"), date: $("f-date"), slug: $("f-slug"), body: $("f-body"),
   status: $("status"), notice: $("notice"), noticeBody: $("notice-body"), preview: $("preview"),
   save: $("btn-save"), publish: $("btn-publish"), unpublish: $("btn-unpublish"), discard: $("btn-discard"),
-  live: $("btn-live"), dateHint: $("date-hint"), words: $("word-count"),
+  live: $("btn-live"), dateHint: $("date-hint"), words: $("word-count"), history: $("btn-history"),
 };
 
 /** An error whose message is written for the person using the editor. */
@@ -636,7 +656,7 @@ sys.path.insert(0, "/site")
 import render_templates as site
 
 ENV = site.build_env()
-KNOWN = ("title", "subtitle", "date", "slug", "revises")
+KNOWN = ("title", "subtitle", "date", "slug", "id", "revises")
 
 
 def api(function):
@@ -658,6 +678,7 @@ def parse(text):
         "subtitle": str(meta.get("subtitle") or ""),
         "date": date.isoformat() if date else "",
         "slug": str(meta.get("slug") or ""),
+        "id": str(meta.get("id") or ""),
         "revises": str(meta.get("revises") or ""),
         "body": body,
     }
@@ -678,7 +699,7 @@ def compose(fields_json, original):
     date = site.parse_date(fields.get("date") or "")
     if date:
         meta["date"] = date
-    for key in ("slug", "revises"):
+    for key in ("slug", "id", "revises"):
         if fields.get(key):
             meta[key] = fields[key]
     meta.update(extra)
@@ -761,7 +782,7 @@ function parseOr(text, fallbackTitle) {
   try {
     return py.parse(text);
   } catch (err) {
-    return { title: `${fallbackTitle} (unreadable front matter)`, subtitle: "", date: "", slug: "", revises: "", body: text };
+    return { title: `${fallbackTitle} (unreadable front matter)`, subtitle: "", date: "", slug: "", id: "", revises: "", body: text };
   }
 }
 
@@ -828,6 +849,8 @@ function revisionOf(slug) {
 // ============================================================ the post in the form
 
 let cur = { draftId: null, liveSlug: null };   // where the open post lives: a draft file, a live post, or both
+let viewing = null;           // while History is open: {current, entries, shown, every, page, more}
+let uploads = 0;              // images on their way to the drafts repository
 let savedSnapshot = "";       // the fields as last saved
 let saveError = "";
 let saving = false;
@@ -857,13 +880,24 @@ const isBlank = () => { const f = fields(); return !f.title.trim() && !f.subtitl
 const isNew = () => !cur.draftId && !cur.liveSlug;
 const currentKey = () => (cur.liveSlug ? "p:" + cur.liveSlug : cur.draftId ? "d:" + cur.draftId : "");
 
-function fill(values, where) {
-  cur = where;
+/**
+ * A post keeps one id for life: the name of its file in drafts/. A published post records it in
+ * its front matter, so later edits go back to the same draft file and its history stays in one place.
+ */
+const liveId = () => (cur.liveSlug && site.posts.has(cur.liveSlug) ? site.posts.get(cur.liveSlug).fields.id || "" : "");
+
+function setForm(values) {
   el.title.value = values ? values.title : "";
   el.subtitle.value = values ? values.subtitle : "";
   el.date.value = values ? values.date : "";
   el.slug.value = values ? values.slug : "";
   el.body.value = values ? values.body : "";
+}
+
+function fill(values, where) {
+  cur = where;
+  picked = null;
+  setForm(values);
   savedSnapshot = snapshot();
   saveError = "";
   el.notice.hidden = true;   // a notice is about the post that was open
@@ -895,7 +929,7 @@ function show(key) {
 }
 
 async function openEntry(key) {
-  if (busy || !ready) return;
+  if (busy || !ready || viewing) return;
   if (!(await save())) return;     // the save failed and its message is showing
   if (key) show(key); else openBlank();
 }
@@ -905,7 +939,7 @@ async function openEntry(key) {
 function renderChrome() {
   const published = Boolean(cur.liveSlug);
   const pending = published && Boolean(cur.draftId);
-  const dirty = ready && isDirty();
+  const dirty = ready && !viewing && isDirty();
 
   let pill = `<span class="pill">Draft</span>`;
   if (published) {
@@ -913,18 +947,26 @@ function renderChrome() {
       ? `<span class="pill is-pending">Published, with changes that are not live</span>`
       : `<span class="pill is-published">Published</span>`;
   }
+  if (viewing) pill = `<span class="pill is-pending">History</span>`;
   let text = "";
   if (busy) text = busy;
+  else if (viewing) text = viewing.shown ? `${versionLabel(viewing.shown)}. This is how the post read then.` : "Choose a version on the left.";
   else if (saveError) text = saveError;
   else if (saving) text = "Saving…";
+  else if (uploads) text = "Uploading the image…";
   else if (dirty) text = isBlank() && isNew() ? "" : "Unsaved changes";
   else if (cur.draftId) text = "Saved";
+  const failed = Boolean(saveError) && !busy && !viewing;
   el.status.innerHTML = ready ? pill : "";
   el.status.append(text);
-  el.status.style.color = saveError && !busy ? "var(--danger)" : "";
-  el.status.title = saveError && !busy ? saveError : "";
+  el.status.style.color = failed ? "var(--danger)" : "";
+  el.status.title = failed ? saveError : "";
 
-  const locked = Boolean(busy) || !ready;
+  const locked = Boolean(busy) || !ready || Boolean(viewing);
+  el.history.hidden = !ready || isNew();
+  el.history.disabled = Boolean(busy);
+  el.history.textContent = viewing ? "Close history" : "History";
+  for (const input of [el.title, el.subtitle, el.date, el.slug, el.body]) input.readOnly = Boolean(viewing);
   el.discard.hidden = !cur.draftId;
   if (!armed) el.discard.textContent = published ? "Discard changes" : "Delete draft";
   el.unpublish.hidden = !published;
@@ -949,6 +991,21 @@ function renderChrome() {
   document.title = (el.title.value.trim() || "Untitled") + " · Blog editor";
 }
 
+function listItem(titleText, metaText, current, onClick) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "post-item" + (current ? " is-current" : "");
+  const title = document.createElement("span");
+  title.className = "post-item-title";
+  title.textContent = titleText;
+  const meta = document.createElement("span");
+  meta.className = "post-item-meta";
+  meta.textContent = metaText;
+  item.append(title, meta);
+  item.addEventListener("click", onClick);
+  return item;
+}
+
 function renderList() {
   const groups = { draft: $("list-drafts"), published: $("list-published") };
   for (const node of Object.values(groups)) node.textContent = "";
@@ -966,18 +1023,7 @@ function renderList() {
   }
 
   for (const entry of entries) {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "post-item" + (entry.key === currentKey() ? " is-current" : "");
-    const title = document.createElement("span");
-    title.className = "post-item-title";
-    title.textContent = entry.title || "Untitled";
-    const meta = document.createElement("span");
-    meta.className = "post-item-meta";
-    meta.textContent = entry.meta;
-    item.append(title, meta);
-    item.addEventListener("click", () => openEntry(entry.key));
-    groups[entry.group].append(item);
+    groups[entry.group].append(listItem(entry.title || "Untitled", entry.meta, entry.key === currentKey(), () => openEntry(entry.key)));
   }
   for (const [group, node] of Object.entries(groups)) {
     if (node.children.length) continue;
@@ -1016,22 +1062,30 @@ function imageUrl(name) {
   if (!imageUrls.has(name) && draftImages.has(name)) {
     imageUrls.set(name, gh(DRAFTS, `contents/images/${encodePath(name)}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { raw: true })
       .then((blob) => URL.createObjectURL(name.endsWith(".svg") ? new Blob([blob], { type: "image/svg+xml" }) : blob))
-      .catch(() => null));
+      .catch(() => null)
+      .then((url) => { imageUrls.set(name, url); return url; }));
   }
   return imageUrls.get(name) || null;
 }
 
-function fixImages(doc) {
-  for (const img of doc.querySelectorAll('img[src^="/assets/blog/"]')) {
-    const name = img.getAttribute("src").split("/").pop();
-    const pending = imageUrl(name);
-    if (pending) Promise.resolve(pending).then((url) => { if (url) img.src = url; });
+/** The address an image has in the Markdown, whatever the preview is showing it from. */
+const shownSrc = (img) => img.dataset.src || img.getAttribute("src") || "";
+
+/** `waiting`: also fill in images that are still being fetched (pointless for a page not on screen). */
+function fixImages(doc, waiting) {
+  for (const img of doc.querySelectorAll("img")) {
+    const src = shownSrc(img);
+    if (!src.startsWith("/assets/blog/")) continue;
+    img.dataset.src = src;
+    const url = imageUrl(src.split("/").pop());
+    if (typeof url === "string") img.setAttribute("src", url);
+    else if (url && waiting) url.then((ready) => { if (ready) img.setAttribute("src", ready); });
   }
 }
 
 function refreshPreview() {
   clearTimeout(previewTimer);
-  if (!py) return;
+  if (!py || captionAt) return;   // a caption being typed in the preview is redrawn when it loses focus
   const f = fields();
   let html;
   try {
@@ -1039,19 +1093,414 @@ function refreshPreview() {
   } catch (err) {
     return;   // keep showing the last good preview
   }
+  const next = new DOMParser().parseFromString(html, "text/html");
+  fixImages(next, false);
   // Swap only the article once the page is loaded: no flicker, and the scroll position stays.
   const doc = el.preview.contentDocument;
   const root = doc && doc.getElementById("post-root");
-  const next = new DOMParser().parseFromString(html, "text/html");
   const nextRoot = next.getElementById("post-root");
   if (root && nextRoot) {
+    const active = doc.activeElement;
+    const focused = Boolean(active && active.matches && active.matches("figure.ed-picked"));
     root.innerHTML = nextRoot.innerHTML;
-    fixImages(doc);
+    wirePreview();
+    decorate(doc);
+    const again = focused && doc.querySelector("figure.ed-picked");
+    if (again) again.focus({ preventScroll: true });
   } else {
-    el.preview.addEventListener("load", () => fixImages(el.preview.contentDocument), { once: true });
-    el.preview.srcdoc = html.replace("<head>", '<head><base target="_blank">');   // links do not navigate the preview
+    const base = next.createElement("base");
+    base.target = "_blank";   // links do not navigate the preview
+    next.head.prepend(base);
+    el.preview.srcdoc = "<!doctype html>" + next.documentElement.outerHTML;   // decorated when it has loaded
   }
 }
+
+// ============================================================ images in the Markdown
+
+// An image on a line of its own: ![alt](src "title"){attributes}
+const IMAGE_LINE = /^(!\[([^\]\n]*)\]\(\s*<?([^)\s>]+)>?(?:\s+(?:"[^"\n]*"|'[^'\n]*'))?\s*\))(?:\{:?[ ]*([^}\n]*?)[ ]*\})?[ \t]*$/;
+const FENCE = /^(`{3,}|~{3,})/;
+
+/**
+ * The images that stand on their own line, with the caption lines under each. This is what
+ * render_templates.py turns into <figure>: `start`..`imageEnd` is the image's line and
+ * `imageEnd`..`end` its caption.
+ */
+function sourceFigures(text) {
+  const lines = text.split("\n");
+  const starts = [];
+  let at = 0;
+  for (const line of lines) { starts.push(at); at += line.length + 1; }
+  const figures = [];
+  let fence = "";
+  for (let i = 0; i < lines.length; i++) {
+    const mark = FENCE.exec(lines[i]);
+    if (fence) { if (mark && mark[1].startsWith(fence)) fence = ""; continue; }
+    if (mark) { fence = mark[1]; continue; }
+    const image = IMAGE_LINE.exec(lines[i]);
+    if (!image) continue;
+    let last = i;
+    while (last + 1 < lines.length && lines[last + 1].trim() && !IMAGE_LINE.test(lines[last + 1]) && !FENCE.test(lines[last + 1])) last++;
+    figures.push({
+      start: starts[i], imageEnd: starts[i] + lines[i].length, end: starts[last] + lines[last].length,
+      markup: image[1], src: image[3], attrs: image[4] || "", caption: lines.slice(i + 1, last + 1).join("\n"),
+    });
+    i = last;
+  }
+  return figures;
+}
+
+/** `{width=60%}` with any other attributes kept; no braces at all when there is nothing to say. */
+function withWidth(attrs, percent) {
+  const rest = attrs.replace(/(^|\s)width=("[^"]*"|'[^']*'|\S+)/g, " ").trim().replace(/\s+/g, " ");
+  const parts = [percent ? `width=${percent}%` : "", rest].filter(Boolean);
+  return parts.length ? `{${parts.join(" ")}}` : "";
+}
+
+/** The end of the paragraph (or code block) around `at`: the nearest place a new block can go. */
+function blockEnd(text, at) {
+  const lines = text.split("\n");
+  let offset = 0;
+  let fence = "";
+  for (let i = 0; i < lines.length; i++) {
+    const end = offset + lines[i].length;
+    const mark = FENCE.exec(lines[i]);
+    if (fence) { if (mark && mark[1].startsWith(fence)) fence = ""; }
+    else if (mark) fence = mark[1];
+    const closes = !lines[i].trim() || i + 1 === lines.length || !lines[i + 1].trim();
+    if (!fence && end >= at && closes) return end;
+    offset = end + 1;
+  }
+  return text.length;
+}
+
+/** Change part of the Markdown from outside the text box (a resize or a caption in the preview). */
+function editSource(start, end, replacement) {
+  el.body.setRangeText(replacement, start, end, "preserve");
+  onEdit();
+}
+
+/** Put a block (an image) into the Markdown at `at`, with a blank line on each side. */
+function insertBlock(markdown, at) {
+  const text = el.body.value;
+  const before = text.slice(0, at);
+  const after = text.slice(at);
+  const lead = !before.trim() ? "" : before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+  const trail = !after.trim() ? "\n" : after.startsWith("\n\n") ? "" : after.startsWith("\n") ? "\n" : "\n\n";
+  el.body.focus();
+  el.body.setSelectionRange(at, at);
+  insertText(lead + markdown + trail);
+}
+
+function removeFigure(source) {
+  const text = el.body.value;
+  let end = source.end;
+  while (text[end] === "\n") end++;
+  editSource(source.start, end, "");
+}
+
+// ============================================================ images in the preview: resize, caption, remove
+
+// The preview frame runs no scripts of its own, but this page may listen to it and draw in it.
+const PREVIEW_STYLE = `
+  figure[data-ed] { position: relative; outline: none; scroll-margin: 24px 0; }
+  figure[data-ed] > img { cursor: pointer; }
+  figure[data-ed]:hover > img { outline: 2px solid rgba(128, 0, 128, 0.3); }
+  figure[data-ed].ed-picked > img { outline: 2px solid #800080; }
+  figure[data-ed] > figcaption { min-height: 1.4em; outline: none; cursor: text; }
+  figure[data-ed] > figcaption:empty::before { content: "Add a caption"; color: #aaa; }
+  .ed-handle { position: absolute; box-sizing: border-box; width: 16px; height: 16px; background: #fff; border: 2px solid #800080; border-radius: 50%; touch-action: none; }
+  .ed-handle.ed-right { cursor: nwse-resize; }
+  .ed-handle.ed-left { cursor: nesw-resize; }
+  figure.ed-resizing::after { content: attr(data-size); position: absolute; top: 8px; left: 8px; padding: 2px 8px; font: 600 12px system-ui, sans-serif; color: #fff; background: rgba(40, 40, 40, 0.8); border-radius: 4px; }
+  .ed-drop { position: absolute; height: 3px; margin-top: -1.5px; background: #800080; border-radius: 2px; pointer-events: none; }
+`;
+
+let picked = null;      // the image selected in the preview: {src, nth}, which survives the preview being redrawn
+let captionAt = null;   // the caption being typed in the preview
+
+/** Each figure in the preview, paired with the image line it came from in the Markdown. */
+function mappedFigures(doc) {
+  const sources = sourceFigures(el.body.value);
+  const taken = new Set();
+  const pairs = [];
+  for (const figure of doc.querySelectorAll(".post-body figure")) {
+    const img = figure.querySelector(":scope > img");
+    if (!img) continue;
+    const index = sources.findIndex((source, i) => !taken.has(i) && source.src === shownSrc(img));
+    if (index < 0) continue;
+    taken.add(index);
+    pairs.push([figure, sources[index]]);
+  }
+  return pairs;
+}
+
+function locate(figure) {
+  const pair = mappedFigures(figure.ownerDocument).find(([candidate]) => candidate === figure);
+  return pair ? pair[1] : null;
+}
+
+const figuresWith = (doc, src) => [...doc.querySelectorAll(".post-body figure[data-ed]")].filter((figure) => shownSrc(figure.querySelector("img")) === src);
+
+function editable(caption) {
+  try { caption.contentEditable = "plaintext-only"; } catch (err) { caption.contentEditable = "true"; }
+  caption.spellcheck = true;
+  return caption;
+}
+
+/** After each redraw: show draft images, and make the images that can be traced to the Markdown editable. */
+function decorate(doc) {
+  if (!doc || !doc.body) return;
+  fixImages(doc, true);
+  if (viewing) return;
+  for (const [figure] of mappedFigures(doc)) {
+    figure.dataset.ed = "";
+    const caption = figure.querySelector(":scope > figcaption");
+    if (caption) editable(caption);
+  }
+  if (picked) {
+    const again = figuresWith(doc, picked.src)[picked.nth];
+    if (again) pick(again); else picked = null;
+  }
+}
+
+function placeHandles(figure) {
+  const img = figure.querySelector("img");
+  for (const handle of figure.querySelectorAll(".ed-handle")) {
+    const x = handle.classList.contains("ed-left") ? img.offsetLeft : img.offsetLeft + img.offsetWidth;
+    handle.style.left = `${x - 8}px`;
+    handle.style.top = `${img.offsetTop + img.offsetHeight - 8}px`;
+  }
+}
+
+// The handles follow the image when it loads, is resized, or the window changes.
+const keepHandles = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const figure = entry.target.closest("figure.ed-picked");
+    if (figure) placeHandles(figure);
+  }
+});
+
+function pick(figure) {
+  const doc = figure.ownerDocument;
+  unpick(doc);
+  figure.classList.add("ed-picked");
+  figure.tabIndex = -1;
+  if (!figure.querySelector(":scope > figcaption")) editable(figure.appendChild(doc.createElement("figcaption")));
+  for (const side of ["left", "right"]) {
+    const handle = doc.createElement("span");
+    handle.className = "ed-handle ed-" + side;
+    handle.title = "Drag to resize. Double-click for the image's own size.";
+    figure.append(handle);
+  }
+  const img = figure.querySelector("img");
+  keepHandles.observe(img);
+  placeHandles(figure);
+  const src = shownSrc(img);
+  picked = { src, nth: figuresWith(doc, src).indexOf(figure) };
+}
+
+function unpick(doc) {
+  picked = null;
+  keepHandles.disconnect();
+  const figure = doc.querySelector("figure.ed-picked");
+  if (!figure) return;
+  figure.classList.remove("ed-picked");
+  for (const handle of figure.querySelectorAll(".ed-handle")) handle.remove();
+  const caption = figure.querySelector(":scope > figcaption");
+  if (caption && !caption.textContent.trim()) caption.remove();
+}
+
+/** Drag a corner: the image is centred, so its width is twice the pointer's distance from the middle. */
+function startResize(event, handle) {
+  event.preventDefault();
+  const figure = handle.parentElement;
+  const column = figure.parentElement.getBoundingClientRect();
+  const box = figure.querySelector("img").getBoundingClientRect();
+  const centre = box.left + box.width / 2;
+  let percent = 0;
+  const move = (moved) => {
+    percent = Math.max(10, Math.min(100, Math.round(Math.abs(moved.clientX - centre) * 2 / column.width * 20) * 5));
+    figure.style.width = `${percent}%`;
+    figure.dataset.size = `${percent}%`;
+    figure.classList.add("ed-resizing");
+    placeHandles(figure);
+  };
+  const done = () => {
+    handle.removeEventListener("pointermove", move);
+    handle.removeEventListener("pointerup", done);
+    handle.removeEventListener("pointercancel", done);
+    figure.classList.remove("ed-resizing");
+    const source = percent && locate(figure);
+    if (source) editSource(source.start, source.imageEnd, source.markup + withWidth(source.attrs, percent));
+  };
+  handle.setPointerCapture(event.pointerId);
+  handle.addEventListener("pointermove", move);
+  handle.addEventListener("pointerup", done);
+  handle.addEventListener("pointercancel", done);
+}
+
+/** The gap between two blocks of the post nearest to height `y`: where a dropped image would go. */
+function dropGap(doc, y) {
+  const body = doc.querySelector(".post-body");
+  if (!body) return null;
+  const blocks = [...body.children];
+  const before = blocks.find((block) => { const box = block.getBoundingClientRect(); return y < box.top + box.height / 2; }) || null;
+  const previous = before ? before.previousElementSibling : blocks[blocks.length - 1] || null;
+  const frame = body.getBoundingClientRect();
+  const top = before ? before.getBoundingClientRect().top : null;
+  const bottom = previous ? previous.getBoundingClientRect().bottom : null;
+  const line = top !== null && bottom !== null ? (top + bottom) / 2 : top !== null ? top - 8 : bottom !== null ? bottom + 8 : frame.top;
+  return { before, previous, line, left: frame.left, width: frame.width };
+}
+
+const WORD_GAP = String.raw`(?:\]\([^)\n]*\)|[^\p{L}\p{N}])*?`;
+const LINE_START = String.raw`(?<=^(?:[^\p{L}\p{N}\n]|\d+[.)\]])*)`;
+
+/** A pattern that finds a block of the preview in the Markdown by its first words. */
+function wordsOf(block) {
+  const words = (block.textContent.match(/[\p{L}\p{N}]+/gu) || []).slice(0, 6);
+  return words.length ? LINE_START + words.join(WORD_GAP) : "";
+}
+
+/** Where a block of the preview starts in the Markdown; -1 when that cannot be told for sure. */
+function sourceStart(doc, block) {
+  if (block.matches("figure")) {
+    const source = locate(block);
+    if (source) return source.start;
+  }
+  const pattern = wordsOf(block);
+  if (!pattern) return -1;
+  const text = el.body.value;
+  const hits = [...text.matchAll(new RegExp(pattern, "gmu"))].map((match) => match.index);
+  const alike = [...doc.querySelectorAll(".post-body > *")].filter((other) => wordsOf(other) === pattern);
+  if (!hits.length || hits.length !== alike.length) return -1;
+  let at = text.lastIndexOf("\n", hits[alike.indexOf(block)] - 1) + 1;     // the start of that line
+  const above = at > 0 ? text.slice(text.lastIndexOf("\n", at - 2) + 1, at - 1) : "";
+  if (FENCE.test(above)) at -= above.length + 1;                           // a code block starts at its fence
+  return at;
+}
+
+/** The place in the Markdown that a gap in the preview stands for. */
+function gapOffset(doc, gap) {
+  const text = el.body.value;
+  if (!gap || !gap.before) return text.length;
+  const start = sourceStart(doc, gap.before);
+  if (start >= 0) return start;
+  if (!gap.previous) return 0;
+  const earlier = sourceStart(doc, gap.previous);
+  return earlier >= 0 ? blockEnd(text, earlier) : text.length;
+}
+
+const carriesFiles = (event) => Boolean(event.dataTransfer) && [...event.dataTransfer.types].includes("Files");
+
+/** Listen to the preview's page. Done once for each page the frame loads. */
+function wirePreview() {
+  const doc = el.preview.contentDocument;
+  if (!doc || !doc.head || !doc.getElementById("post-root") || doc.edWired) return;
+  doc.edWired = true;
+  captionAt = null;
+  const style = doc.createElement("style");
+  style.textContent = PREVIEW_STYLE;
+  doc.head.append(style);
+  const elementOf = (event) => (event.target.nodeType === 1 ? event.target : event.target.parentElement);
+
+  doc.addEventListener("pointerdown", (event) => {
+    const target = elementOf(event);
+    const handle = target.closest(".ed-handle");
+    if (handle) { startResize(event, handle); return; }
+    const figure = target.closest("figure[data-ed]");
+    if (!figure) { unpick(doc); return; }
+    if (!figure.classList.contains("ed-picked")) {
+      pick(figure);
+      // Bring the handles and the caption line into view; at once, so the handles are not a moving target.
+      figure.scrollIntoView({ block: "nearest", behavior: "instant" });
+    }
+    if (target.tagName === "IMG") { event.preventDefault(); figure.focus({ preventScroll: true }); }
+  });
+
+  doc.addEventListener("dblclick", (event) => {
+    const handle = elementOf(event).closest(".ed-handle");
+    const source = handle && locate(handle.parentElement);
+    if (source) editSource(source.start, source.imageEnd, source.markup + withWidth(source.attrs, 0));
+  });
+
+  doc.addEventListener("dragstart", (event) => event.preventDefault());
+
+  doc.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") { event.preventDefault(); save(); return; }
+    if (captionAt && event.target === captionAt) {
+      if (event.key === "Enter" || event.key === "Escape") { event.preventDefault(); captionAt.blur(); }
+      return;
+    }
+    const figure = doc.querySelector("figure.ed-picked");
+    if (!figure) return;
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      const source = locate(figure);
+      unpick(doc);
+      if (source) removeFigure(source);
+    } else if (event.key === "Escape") {
+      unpick(doc);
+    }
+  });
+
+  // Captions: typed under the image, kept in the Markdown as the line under the image.
+  doc.addEventListener("focusin", (event) => {
+    const caption = elementOf(event).closest("figure[data-ed] > figcaption");
+    const source = caption && locate(caption.parentElement);
+    if (!source) return;
+    captionAt = caption;
+    const written = source.caption.replace(/\s*\n\s*/g, " ");
+    if (caption.textContent !== written) {       // show the Markdown as written (links, emphasis), not as rendered
+      caption.textContent = written;
+      doc.getSelection().selectAllChildren(caption);
+      doc.getSelection().collapseToEnd();
+    }
+  });
+
+  doc.addEventListener("input", (event) => {
+    if (!captionAt || event.target !== captionAt) return;
+    const source = locate(captionAt.parentElement);
+    if (!source) return;
+    let text = captionAt.textContent.replace(/\s+/g, " ").trim();
+    if (/^[#>]/.test(text)) text = "\\" + text;   // or Markdown would read the caption as a heading or a quote
+    editSource(source.imageEnd, source.end, text ? "\n" + text : "");
+  });
+
+  doc.addEventListener("focusout", (event) => {
+    if (!captionAt || event.target !== captionAt) return;
+    captionAt = null;
+    setTimeout(refreshPreview, 0);
+  });
+
+  // Dropping a file: a line shows the gap it will land in.
+  const marker = doc.createElement("div");
+  marker.className = "ed-drop";
+  doc.addEventListener("dragover", (event) => {
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    const gap = dropGap(doc, event.clientY);
+    if (!gap || viewing) return;
+    marker.style.top = `${gap.line + doc.defaultView.scrollY}px`;
+    marker.style.left = `${gap.left + doc.defaultView.scrollX}px`;
+    marker.style.width = `${gap.width}px`;
+    doc.body.append(marker);
+  });
+  doc.addEventListener("dragleave", (event) => { if (!event.relatedTarget) marker.remove(); });
+  doc.addEventListener("drop", (event) => {
+    marker.remove();
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    addImages([...event.dataTransfer.files], gapOffset(doc, dropGap(doc, event.clientY)));
+  });
+}
+
+el.preview.addEventListener("load", () => {
+  wirePreview();
+  decorate(el.preview.contentDocument);
+});
 
 // ============================================================ saving drafts
 
@@ -1069,7 +1518,7 @@ async function writeDraft(values, revises, keepalive) {
   const text = py.compose(JSON.stringify(record), previous ? previous.text : live ? live.text : "");
   // A new draft keeps the name chosen for it even if the first save's answer is lost on the way
   // back; otherwise the retry would create a second copy.
-  const id = cur.draftId || (cur.reservedId = cur.reservedId || newDraftId());
+  const id = cur.draftId || liveId() || (cur.reservedId = cur.reservedId || newDraftId());
   const path = `contents/drafts/${id}.md`;
   const body = { message: `Draft: ${values.title.trim() || "Untitled"}`, content: textToB64(text), branch: CONFIG.drafts.branch };
   if (previous) body.sha = previous.sha;
@@ -1114,7 +1563,7 @@ async function removeDraft(id, message) {
 function save(options = {}) {
   clearTimeout(saveTimer);
   return enqueue(async () => {
-    if (!ready || !isDirty() || (isBlank() && isNew())) return true;
+    if (!ready || viewing || !isDirty() || (isBlank() && isNew())) return true;
     const values = fields();
     saving = true;
     renderChrome();
@@ -1268,9 +1717,15 @@ async function publish() {
   if (RESERVED.has(slug)) throw new UserError(`“${slug}” is taken by the blog's own pages. Pick another URL.`);
   const date = values.date || today();
 
+  for (const match of values.body.matchAll(/\/assets\/blog\/([A-Za-z0-9._-]+)/g)) {
+    if (!site.images.has(match[1]) && !draftImages.has(match[1])) {
+      throw new UserError(`The image ${match[1]} was never uploaded. Take it out of the text, or drop the file in again.`);
+    }
+  }
+
   const draft = cur.draftId ? drafts.get(cur.draftId) : null;
   const original = draft ? draft.text : wasLive ? site.posts.get(wasLive).text : "";
-  const source = py.compose(JSON.stringify({ ...values, title, slug, date, revises: "" }), original);
+  const source = py.compose(JSON.stringify({ ...values, title, slug, date, id: cur.draftId || liveId(), revises: "" }), original);
 
   const outcome = await commitToSite(`Blog: ${wasLive ? "update" : "publish"} ${title}`, (sources) => {
     if (slug !== wasLive && sources.has(slug)) throw new UserError(`Another post already uses the URL “${slug}”.`);
@@ -1383,6 +1838,170 @@ $("btn-lock").addEventListener("click", async () => {
   location.reload();
 });
 
+// ============================================================ history
+
+function when(iso, seconds = false) {
+  const date = new Date(iso);
+  const thisYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleString(undefined, {
+    month: "short", day: "numeric", year: thisYear ? undefined : "numeric", hour: "numeric", minute: "2-digit", second: seconds ? "2-digit" : undefined,
+  });
+}
+
+const versionLabel = (entry) => `${entry.kind === "published" ? "Published" : "Saved"} ${when(entry.when)}`;
+
+/**
+ * One page of the open post's versions, newest first: every save of its draft file (a commit in
+ * the drafts repository) and every time it was published (a commit on the website).
+ */
+async function historyPage(page) {
+  const id = cur.draftId || liveId();
+  const commits = (repo, branch, path) => gh(repo, `commits?sha=${encodeURIComponent(branch)}&path=${encodeURIComponent(path)}&per_page=100&page=${page}`);
+  const draftPath = `drafts/${id}.md`;
+  const livePath = `_blog/posts/${cur.liveSlug}.md`;
+  const [saves, publishes] = await Promise.all([
+    id ? commits(DRAFTS, CONFIG.drafts.branch, draftPath) : [],
+    cur.liveSlug ? commits(SITE, CONFIG.site.branch, livePath) : [],
+  ]);
+  const entries = [];
+  for (const item of saves) {
+    // commits that removed the draft file (after a publish, or a discard) hold no version
+    if (/^(Published|Discard changes to|Delete draft): /.test(item.commit.message)) continue;
+    entries.push({ kind: "saved", repo: DRAFTS, path: draftPath, sha: item.sha, when: item.commit.committer.date });
+  }
+  for (const item of publishes) {
+    if (/^Blog: unpublish /.test(item.commit.message)) continue;
+    entries.push({ kind: "published", repo: SITE, path: livePath, sha: item.sha, when: item.commit.committer.date });
+  }
+  return { entries, more: saves.length === 100 || publishes.length === 100 };
+}
+
+const newestFirst = (a, b) => b.when.localeCompare(a.when) || (a.kind === "published" ? -1 : 1);
+
+/**
+ * The versions to list. Typing saves every few seconds, so unless every save is asked for, the
+ * list holds each publish and the last save of every five minutes.
+ */
+function listedVersions() {
+  if (viewing.every) return viewing.entries;
+  const slots = new Set();
+  return viewing.entries.filter((entry) => {
+    if (entry.kind === "published" || entry === viewing.shown) return true;
+    const slot = Math.floor(Date.parse(entry.when) / 300000);
+    if (slots.has(slot)) return false;
+    slots.add(slot);
+    return true;
+  });
+}
+
+function renderHistory() {
+  $("pane-posts").hidden = Boolean(viewing);
+  $("pane-history").hidden = !viewing;
+  if (!viewing) return;
+  const list = $("list-history");
+  list.textContent = "";
+  list.append(listItem("Current version", "what you were editing", !viewing.shown, () => showVersion(null)));
+  const listed = listedVersions();
+  for (const entry of listed) {
+    const item = listItem(entry.kind === "published" ? "Published" : "Saved", when(entry.when, viewing.every), viewing.shown === entry, () => showVersion(entry));
+    if (entry.kind === "published") item.classList.add("is-published");
+    list.append(item);
+  }
+  const unlisted = viewing.entries.length - listed.length;
+  $("btn-history-every").hidden = !viewing.every && !unlisted;
+  $("btn-history-every").textContent = viewing.every ? "Show fewer" : `Show every save (${unlisted} more)`;
+  $("btn-restore").hidden = !viewing.shown;
+  $("btn-history-more").hidden = !viewing.more;
+  $("history-empty").hidden = viewing.entries.length > 0;
+}
+
+async function openHistory() {
+  if (busy || !ready || viewing) return;
+  if (!(await save())) return;      // so the text as it is now becomes a version too
+  busy = "Loading the history…";
+  renderChrome();
+  let first = null;
+  try {
+    first = await historyPage(1);
+  } catch (err) {
+    notify("error", [err instanceof UserError ? err.message : `The history could not be read: ${err.message || err}`]);
+  }
+  busy = "";
+  if (first) {
+    const doc = el.preview.contentDocument;
+    if (doc) unpick(doc);
+    el.notice.hidden = true;
+    const current = { title: el.title.value, subtitle: el.subtitle.value, date: el.date.value, slug: el.slug.value, body: el.body.value };
+    viewing = { current, entries: first.entries.sort(newestFirst), shown: null, every: false, page: 1, more: first.more };
+  }
+  renderChrome();
+  renderHistory();
+  if (viewing) refreshPreview();
+}
+
+let versionTicket = 0;
+
+/** Show one version in the form and the preview, read-only. `null` is the text being edited. */
+async function showVersion(entry) {
+  if (!viewing) return;
+  const ticket = ++versionTicket;
+  if (entry && !entry.fields) {
+    try {
+      const file = await gh(entry.repo, `contents/${encodePath(entry.path)}?ref=${entry.sha}`);
+      entry.fields = parseOr(b64ToText(file.content), "This version");
+    } catch (err) {
+      notify("error", [`That version could not be read. ${err.message}`]);
+      return;
+    }
+  }
+  if (!viewing || ticket !== versionTicket) return;   // History was closed, or another version was clicked meanwhile
+  viewing.shown = entry;
+  setForm(entry ? { ...entry.fields, slug: entry.fields.slug || viewing.current.slug } : viewing.current);
+  renderChrome();
+  renderHistory();
+  refreshPreview();
+}
+
+async function olderHistory() {
+  if (!viewing || busy) return;
+  const open = viewing;
+  try {
+    const next = await historyPage(open.page + 1);
+    if (viewing !== open) return;
+    open.page++;
+    open.more = next.more;
+    open.entries = [...open.entries, ...next.entries].sort(newestFirst);
+  } catch (err) {
+    notify("error", [`Older versions could not be read. ${err.message}`]);
+  }
+  renderHistory();
+}
+
+/** Leave History. With `restore`, the version on screen becomes the text being edited. */
+function closeHistory(restore) {
+  if (!viewing) return;
+  const { current, shown } = viewing;
+  const old = restore && shown ? shown.fields : null;
+  viewing = null;
+  versionTicket++;
+  // The post keeps its date and its URL; a restore brings back the writing.
+  setForm(old ? { ...current, title: old.title, subtitle: old.subtitle, body: old.body } : current);
+  renderHistory();
+  if (old && isDirty()) {
+    onEdit();
+    notify("ok", [`Restored the version ${versionLabel(shown).replace(/^./, (c) => c.toLowerCase())}. The text you had before is still in History.`]);
+  }
+  renderChrome();
+  renderList();
+  refreshPreview();
+}
+
+el.history.addEventListener("click", () => (viewing ? closeHistory(false) : openHistory()));
+$("btn-history-back").addEventListener("click", () => closeHistory(false));
+$("btn-restore").addEventListener("click", () => closeHistory(true));
+$("btn-history-more").addEventListener("click", olderHistory);
+$("btn-history-every").addEventListener("click", () => { if (viewing) { viewing.every = !viewing.every; renderHistory(); } });
+
 // ============================================================ writing aids
 
 function insertText(text) {
@@ -1401,49 +2020,94 @@ function wrapSelection(before, after, placeholder) {
   el.body.setSelectionRange(start + before.length, start + before.length + chosen.length);
 }
 
-async function addImage(file) {
+/** Check a dropped file and name it. The content hash keeps two different "image.png" pastes apart. */
+async function readImage(file) {
   const dot = file.name.lastIndexOf(".");
   const extension = (dot > 0 ? file.name.slice(dot + 1) : (file.type.split("/")[1] || "")).toLowerCase().replace("svg+xml", "svg");
   if (!IMAGE_TYPES.has(extension)) throw new UserError("Only images can be added (png, jpg, gif, webp, svg, avif).");
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (!bytes.length) throw new UserError("That file is empty.");
   if (bytes.length > 20 * 1024 * 1024) throw new UserError("That image is larger than 20 MB.");
-  // The content hash keeps two different "image.png" pastes apart and makes re-adding a no-op.
   const digest = hex(await crypto.subtle.digest("SHA-256", bytes)).slice(0, 8);
-  const name = `${slugify(dot > 0 ? file.name.slice(0, dot) : "image") || "image"}-${digest}.${extension}`;
-  if (!site.images.has(name) && !draftImages.has(name)) {
-    const result = await gh(DRAFTS, `contents/images/${name}`, {
-      method: "PUT", body: { message: `Image: ${name}`, content: bytesToB64(bytes), branch: CONFIG.drafts.branch },
-    });
-    draftImages.set(name, result.content.sha);
-  }
-  if (!site.images.has(name)) imageUrls.set(name, URL.createObjectURL(file));
-  return `/assets/blog/${name}`;
+  return { name: `${slugify(dot > 0 ? file.name.slice(0, dot) : "image") || "image"}-${digest}.${extension}`, bytes };
 }
 
-async function addImages(files) {
-  if (!ready || busy) return;
+async function uploadImage(image) {
+  const path = `contents/images/${image.name}`;
+  let stored;
+  try {
+    stored = (await gh(DRAFTS, path, {
+      method: "PUT", body: { message: `Image: ${image.name}`, content: bytesToB64(image.bytes), branch: CONFIG.drafts.branch },
+    })).content;
+  } catch (err) {
+    if (err.status !== 422 && err.status !== 409) throw err;
+    stored = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`);   // it was already there
+  }
+  draftImages.set(image.name, stored.sha);
+}
+
+const uploading = new Set();
+
+/**
+ * Put images into the post at `at` (a place in the Markdown; by default where the cursor is).
+ * The image shows at once, from the file itself, while it travels to the drafts repository.
+ */
+async function addImages(files, at = null) {
+  if (!ready || busy || viewing) return;
+  if (files.length && !files.some((file) => file.type.startsWith("image/"))) {
+    notify("error", ["Only images can be added to a post (png, jpg, gif, webp, svg, avif)."]);
+    return;
+  }
   for (const file of files) {
     if (!file.type.startsWith("image/")) continue;
     try {
-      const url = await enqueue(() => addImage(file));
-      const atLineStart = el.body.selectionStart === 0 || el.body.value[el.body.selectionStart - 1] === "\n";
-      insertText(`${atLineStart ? "" : "\n\n"}![](${url})\n\n`);
+      const image = await readImage(file);
+      if (!site.images.has(image.name) && !draftImages.has(image.name) && !uploading.has(image.name)) {
+        imageUrls.set(image.name, URL.createObjectURL(file));
+        uploading.add(image.name);
+        uploads++;
+        enqueue(() => uploadImage(image)).catch((err) => {
+          imageUrls.delete(image.name);
+          for (const source of sourceFigures(el.body.value).reverse()) {
+            if (source.src === `/assets/blog/${image.name}`) removeFigure(source);
+          }
+          notify("error", [`${file.name} could not be uploaded, so it was taken out of the text. ${err.message}`]);
+        }).finally(() => {
+          uploading.delete(image.name);
+          uploads--;
+          renderChrome();
+        });
+      }
+      insertBlock(`![](/assets/blog/${image.name})`, at === null ? el.body.selectionStart : at);
+      at = null;   // the next file follows this one
     } catch (err) {
       notify("error", [err.message]);
     }
   }
 }
 
+/** The place in the text box under a point on the screen, where the browser can tell. */
+function offsetAtPoint(x, y) {
+  const spot = document.caretPositionFromPoint ? document.caretPositionFromPoint(x, y) : null;
+  return spot && spot.offsetNode === el.body ? spot.offset : null;
+}
+
 el.body.addEventListener("paste", (event) => {
   const files = [...event.clipboardData.files];
   if (files.some((file) => file.type.startsWith("image/"))) { event.preventDefault(); addImages(files); }
 });
-el.body.addEventListener("dragover", (event) => { event.preventDefault(); el.body.classList.add("is-dropping"); });
+el.body.addEventListener("dragover", (event) => { if (carriesFiles(event)) el.body.classList.add("is-dropping"); });
 el.body.addEventListener("dragleave", () => el.body.classList.remove("is-dropping"));
-el.body.addEventListener("drop", (event) => {
+// A file dropped anywhere on the page is an image for the post, never a page to navigate to.
+window.addEventListener("dragover", (event) => { if (carriesFiles(event)) event.preventDefault(); });
+window.addEventListener("drop", (event) => {
   el.body.classList.remove("is-dropping");
-  if (event.dataTransfer.files.length) { event.preventDefault(); addImages([...event.dataTransfer.files]); }
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  if ($("app").hidden) return;
+  // On the text: after the paragraph it was dropped on. Elsewhere: where the cursor is.
+  const spot = event.target === el.body ? offsetAtPoint(event.clientX, event.clientY) : null;
+  addImages([...event.dataTransfer.files], spot === null ? null : blockEnd(el.body.value, spot));
 });
 $("btn-image").addEventListener("click", () => $("file-image").click());
 $("file-image").addEventListener("change", (event) => { addImages([...event.target.files]); event.target.value = ""; });
@@ -1452,7 +2116,7 @@ document.addEventListener("keydown", (event) => {
   if (!(event.metaKey || event.ctrlKey) || event.altKey || $("app").hidden) return;
   const key = event.key.toLowerCase();
   if (key === "s") { event.preventDefault(); save(); return; }
-  if (document.activeElement !== el.body) return;
+  if (document.activeElement !== el.body || viewing) return;
   if (key === "b") { event.preventDefault(); wrapSelection("**", "**", "bold"); }
   else if (key === "i") { event.preventDefault(); wrapSelection("*", "*", "italic"); }
   else if (key === "k") { event.preventDefault(); wrapSelection("[", "](https://)", "link text"); }
@@ -1461,7 +2125,7 @@ document.addEventListener("keydown", (event) => {
 for (const input of [el.title, el.subtitle, el.date, el.slug, el.body]) input.addEventListener("input", onEdit);
 el.slug.addEventListener("blur", () => { el.slug.value = slugify(el.slug.value); });
 
-const unsaved = () => ready && isDirty() && !(isBlank() && isNew());
+const unsaved = () => ready && !viewing && isDirty() && !(isBlank() && isNew());
 document.addEventListener("visibilitychange", () => { if (document.hidden && unsaved()) save(); });
 window.addEventListener("beforeunload", (event) => { if (unsaved()) { save({ keepalive: true }); event.preventDefault(); } });
 
