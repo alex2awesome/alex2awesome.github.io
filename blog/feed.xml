@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Alexander Spangher: Blog</title>
+  <link href="https://www.alexander-spangher.com/blog/feed.xml" rel="self"/>
+  <link href="https://www.alexander-spangher.com/blog/"/>
+  <id>https://www.alexander-spangher.com/blog/</id>
+  <updated>2026-11-22T00:00:00Z</updated>
+  <author><name>Alexander Spangher</name></author>
+  <entry>
+    <title>Hello, world!</title>
+    <link href="https://www.alexander-spangher.com/blog/test.html"/>
+    <id>https://www.alexander-spangher.com/blog/test.html</id>
+    <published>2026-11-22T00:00:00Z</published>
+    <updated>2026-11-22T00:00:00Z</updated>
+    <content type="html">&lt;p&gt;I would like to start blogging more. I would like to be able to express thoughts that aren&amp;rsquo;t fully experimentalizable and don&amp;rsquo;t rise to paper quality, but also aren&amp;rsquo;t snappy enough for Twitter.&lt;/p&gt;</content>
+  </entry>
+</feed>
