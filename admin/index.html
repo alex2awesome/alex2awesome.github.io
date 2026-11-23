@@ -15,6 +15,13 @@
     back into the Markdown as `![alt](src){width=60%}` with the caption on the next line.
   - Every save is a commit in the drafts repository and every publish a commit on the website;
     History lists them for the open post and can bring any of them back.
+  - Other people get in by invitation. An invitation is a passphrase that unlocks a GitHub token
+    kept, encrypted, in keys.json beside this page. That token opens one repository only
+    (CONFIG.shared), which holds the drafts that have been shared; a shared draft is moved there
+    from the private drafts repository. Invited people can edit and comment, never publish.
+  - Comments are kept beside each draft (comments/<id>.json) and tied to the words they quote.
+    When two people save the same draft, the two versions are merged instead of one replacing
+    the other.
 
   Everything this page loads comes from this site; the only other host it contacts is
   api.github.com.
@@ -147,6 +154,7 @@
 
   .status .pill.is-published { color: var(--ok); background: #e6f3ea; }
   .status .pill.is-pending { color: #8a5a00; background: #fbf0d6; }
+  .status .pill.is-shared { color: var(--accent); background: var(--accent-wash); }
   .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
 
   .notice {
@@ -319,14 +327,171 @@
   .preview-head span { margin-left: 6px; font-weight: 400; letter-spacing: 0.01em; text-transform: none; }
   .preview iframe { flex: 1; width: 100%; min-height: 0; border: 0; background: #fff; }
 
+  /* ---------- Comments: a column beside the preview ---------- */
+  .comments {
+    display: none;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--wash);
+    border-left: 1px solid var(--line);
+  }
+
+  .layout.has-comments { grid-template-columns: 210px minmax(260px, 1fr) minmax(260px, 1fr) 264px; }
+  .layout.has-comments.no-preview { grid-template-columns: 232px minmax(340px, 1fr) 300px; }
+  .layout.has-comments .comments { display: flex; }
+  .comments-head { display: flex; align-items: center; gap: 8px; }
+  .comments-head .grow { flex: 1; }
+  .comments-head .linkish { font-size: 11px; font-weight: 400; letter-spacing: 0.01em; text-transform: none; }
+
+  /* Beside the preview each card sits level with the words it is about; otherwise they are a plain list. */
+  .thread-list { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+  .thread-list.is-flow { padding: 10px; overflow-y: auto; }
+  .comments-empty { margin: 14px 12px; font-size: 13px; color: var(--muted); }
+
+  .thread {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    padding: 9px 11px 10px;
+    font-size: 13px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .thread-list.is-flow .thread { position: static; margin-bottom: 10px; }
+  .thread.is-active { border-color: var(--accent); box-shadow: 0 2px 10px rgba(128, 0, 128, 0.14); z-index: 1; }
+  .thread.is-resolved { opacity: 0.7; }
+
+  .thread-quote {
+    display: -webkit-box;
+    margin: 0 0 7px;
+    padding-left: 8px;
+    overflow: hidden;
+    font: italic 13px/1.4 var(--serif);
+    color: #666;
+    border-left: 3px solid #f0c84b;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .thread-quote.is-lost { color: #999; border-left-color: #ccc; }
+  .thread-quote.is-lost::before { content: "No longer in the text: "; font-style: normal; }
+  .note + .note { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .note-head { display: flex; align-items: baseline; gap: 6px; }
+  .note-author { font-weight: 650; }
+  .note-when { flex: 1; font-size: 11px; color: var(--muted); }
+  .note-text { margin: 2px 0 0; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .thread .linkish { font-size: 12px; color: var(--muted); text-decoration: none; }
+  .thread .linkish:hover { color: var(--accent); text-decoration: underline; }
+
+  .thread textarea {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 6px 8px;
+    resize: none;
+    line-height: 1.4;
+    background: var(--paper);
+    border: 1px solid #c4c0c8;
+    border-radius: 6px;
+  }
+
+  .thread textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  .thread-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .thread-row .grow { flex: 1; }
+  .thread-row .btn { padding: 3px 10px; font-size: 12px; }
+
+  /* ---------- People: a sheet over the editor ---------- */
+  .sheet {
+    width: min(620px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    padding: 0;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid #c4c0c8;
+    border-radius: 10px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .sheet::backdrop { background: rgba(40, 36, 44, 0.35); }
+  .sheet-head { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  .sheet-head h2 { flex: 1; margin: 0; font: 600 20px/1.2 var(--serif); }
+  .sheet-body { padding: 4px 20px 20px; font-size: 14px; line-height: 1.5; }
+  .sheet section { padding: 14px 0 16px; border-bottom: 1px solid var(--line); }
+  .sheet section:last-child { padding-bottom: 0; border-bottom: 0; }
+  .sheet h3 { margin: 0 0 4px; font-size: 14px; font-weight: 650; }
+  .sheet p { margin: 0 0 10px; }
+  .sheet .fine { font-size: 13px; color: var(--muted); }
+  .sheet a { color: var(--accent); }
+  .sheet code { padding: 1px 5px; font: 12.5px var(--mono); background: #ebe9ee; border-radius: 4px; }
+  .sheet ol { margin: 0 0 12px; padding-left: 20px; }
+  .sheet li { margin-bottom: 10px; }
+  .sheet li ul { margin: 4px 0 8px; padding-left: 18px; color: #555; }
+  .sheet li li { margin-bottom: 2px; }
+  .sheet label { display: block; margin: 0 0 3px; font-weight: 600; }
+
+  .sheet input[type="text"], .sheet input[type="password"] {
+    width: 100%;
+    padding: 7px 10px;
+    background: var(--paper);
+    border: 1px solid #c4c0c8;
+    border-radius: 6px;
+  }
+
+  .sheet input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  .sheet-row { display: flex; align-items: center; gap: 10px; }
+  .sheet-row input { flex: 1; min-width: 0; }
+  .sheet-error { padding: 9px 12px; color: var(--danger); background: #f9e7e7; border-radius: 6px; }
+  .sheet-warn { padding: 9px 12px; background: #fbf3dc; border-radius: 6px; }
+  .person { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
+  .person:first-child { border-top: 0; }
+  .person-name { font-weight: 600; }
+  .person-meta { flex: 1; font-size: 13px; color: var(--muted); }
+
+  .invite {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--accent-wash);
+    border-radius: 8px;
+  }
+
+  .invite p:last-child { margin-bottom: 0; }
+
+  .invite-text {
+    display: block;
+    width: 100%;
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    font: 12.5px/1.5 var(--mono);
+    overflow-wrap: anywhere;
+    background: var(--paper);
+    border: 1px solid #d8cfe0;
+    border-radius: 6px;
+    user-select: all;
+  }
+
   @media (max-width: 1000px) {
-    .layout, .layout.no-preview { grid-template-columns: 190px minmax(0, 1fr); }
+    .layout, .layout.no-preview, .layout.has-comments, .layout.has-comments.no-preview { grid-template-columns: 190px minmax(0, 1fr); }
     .preview { display: none; }
     #btn-preview { display: none; }
+
+    /* No room for a column: the comments slide over the page instead. */
+    .layout.has-comments .comments {
+      position: fixed;
+      z-index: 5;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(320px, 92vw);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
+    }
   }
 
   @media (max-width: 640px) {
-    .layout, .layout.no-preview { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .layout, .layout.no-preview, .layout.has-comments, .layout.has-comments.no-preview { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
     .posts { max-height: 30vh; border-right: 0; border-bottom: 1px solid var(--line); }
     .editor { padding: 18px 18px 0; }
     .editor-foot { margin: 0 -18px; padding-left: 18px; }
@@ -341,6 +506,22 @@
 <main class="auth" id="auth" hidden>
   <h1>Blog editor</h1>
 
+  <!-- A passphrase: an invitation, or the one the owner set for their other devices. -->
+  <form id="form-pass" hidden autocomplete="on">
+    <p class="lede">Enter your passphrase to open the editor.</p>
+    <input type="text" name="username" value="blog editor passphrase" autocomplete="username" hidden>
+    <label for="pass-phrase">Passphrase</label>
+    <input id="pass-phrase" type="password" autocomplete="current-password" spellcheck="false" autocapitalize="off" required>
+    <div class="auth-row">
+      <button class="btn primary" id="pass-submit" type="submit">Open the editor</button>
+      <button class="linkish" id="link-pass-unlock" type="button" hidden>Use this browser's password</button>
+      <button class="linkish" id="link-pass-setup" type="button">Sign in with a GitHub token</button>
+    </div>
+    <p class="auth-error" id="pass-error" role="alert"></p>
+    <p class="fine">If you were invited, the passphrase is in your invitation; opening the invitation's link enters it for you.
+      A GitHub token is only for the site's owner.</p>
+  </form>
+
   <form id="form-unlock" hidden autocomplete="on">
     <p class="lede">Enter the password you chose for this browser.</p>
     <input type="text" name="username" value="blog editor" autocomplete="username" hidden>
@@ -348,18 +529,19 @@
     <input id="unlock-password" type="password" autocomplete="current-password" required>
     <div class="auth-row">
       <button class="btn primary" type="submit">Unlock</button>
+      <button class="linkish" id="link-unlock-pass" type="button">Use a passphrase</button>
       <button class="linkish" id="link-setup" type="button">Use a different token</button>
     </div>
     <p class="auth-error" id="unlock-error" role="alert"></p>
   </form>
 
   <form id="form-setup" hidden autocomplete="on">
-    <p class="lede">This browser has not been set up yet. It takes a GitHub access token, once.</p>
+    <p class="lede">For the site's owner: this browser takes a GitHub access token, once.</p>
     <ol>
       <li>
         <a id="link-new-token" target="_blank" rel="noopener">Create a fine-grained access token on GitHub</a> with:
         <ul>
-          <li>Repository access: <b>Only select repositories</b>, then <code id="repo-site"></code> and <code id="repo-drafts"></code></li>
+          <li>Repository access: <b>Only select repositories</b>, then <code id="repo-site"></code>, <code id="repo-drafts"></code> and <code id="repo-shared"></code></li>
           <li>Permissions, Repository permissions, <b>Contents: Read and write</b></li>
         </ul>
       </li>
@@ -375,7 +557,7 @@
     </ol>
     <div class="auth-row">
       <button class="btn primary" type="submit">Save and open the editor</button>
-      <button class="linkish" id="link-unlock" type="button" hidden>Back</button>
+      <button class="linkish" id="link-unlock" type="button">Back</button>
     </div>
     <p class="auth-error" id="setup-error" role="alert"></p>
     <p class="fine">The token stays in this browser, encrypted with the password; you will be asked for the
@@ -393,8 +575,11 @@
       <button class="btn quiet" id="btn-unpublish" type="button" hidden>Unpublish</button>
       <a class="btn quiet" id="btn-live" target="_blank" rel="noopener" hidden>View live page</a>
       <button class="btn quiet" id="btn-history" type="button" hidden>History</button>
+      <button class="btn quiet" id="btn-comments" type="button" aria-pressed="false" hidden>Comments</button>
       <button class="btn quiet" id="btn-preview" type="button" aria-pressed="true">Hide preview</button>
+      <button class="btn quiet" id="btn-people" type="button" hidden>People</button>
       <button class="btn quiet" id="btn-lock" type="button">Lock</button>
+      <button class="btn quiet" id="btn-share" type="button" hidden>Share</button>
       <button class="btn" id="btn-save" type="button" title="Cmd/Ctrl+S">Save</button>
       <button class="btn primary" id="btn-publish" type="button">Publish</button>
     </div>
@@ -409,9 +594,11 @@
     <nav class="posts" aria-label="Posts">
       <div id="pane-posts">
         <button class="btn" id="btn-new" type="button">New post</button>
-        <h2>Drafts</h2>
+        <h2 id="head-drafts">Drafts</h2>
         <div id="list-drafts"></div>
-        <h2>Published</h2>
+        <h2 id="head-shared">Shared drafts</h2>
+        <div id="list-shared"></div>
+        <h2 id="head-published">Published</h2>
         <div id="list-published"></div>
       </div>
       <!-- Shown instead of the posts while History is open. -->
@@ -445,32 +632,140 @@
         <span id="word-count">0 words</span>
         <span class="grow"></span>
         <span class="keys"><kbd>⌘B</kbd> bold · <kbd>⌘I</kbd> italic · <kbd>⌘K</kbd> link</span>
+        <button class="btn" id="btn-comment" type="button" title="Comment on the selected words (Cmd/Ctrl+Alt+M)">Comment</button>
         <button class="btn" id="btn-image" type="button">Add image</button>
         <input id="file-image" type="file" accept="image/*" multiple hidden>
       </div>
     </section>
 
     <section class="preview" aria-label="Preview">
-      <div class="preview-head">Preview: the page as it will be published<span>Click an image to resize it or add a caption.</span></div>
+      <div class="preview-head">Preview: the page as it will be published<span>Click an image to resize it or add a caption. Select words to comment on them.</span></div>
       <!-- No scripts run in the preview, so nothing embedded in a post can reach the access token. -->
       <iframe id="preview" title="Preview of the post" sandbox="allow-same-origin"></iframe>
     </section>
+
+    <aside class="comments" aria-label="Comments">
+      <div class="preview-head comments-head">
+        Comments
+        <span class="grow"></span>
+        <button class="linkish" id="btn-resolved" type="button" hidden></button>
+        <button class="linkish" id="btn-comments-hide" type="button">Hide</button>
+      </div>
+      <div class="thread-list" id="thread-list"></div>
+    </aside>
   </div>
 </div>
+
+<!-- ============================== People (the owner only) ============================== -->
+<dialog class="sheet" id="people" aria-labelledby="people-title">
+  <div class="sheet-head">
+    <h2 id="people-title">People</h2>
+    <button class="btn quiet" id="people-close" type="button">Close</button>
+  </div>
+  <div class="sheet-body">
+    <section id="people-problem" hidden>
+      <p class="sheet-error" id="people-error" role="alert" hidden></p>
+      <p class="sheet-warn" id="people-warn" hidden></p>
+    </section>
+
+    <section>
+      <h3>Invited</h3>
+      <p class="fine">Invited people can open, edit and comment on the drafts you share with the Share button.
+        They cannot publish, and they never see your other drafts.</p>
+      <div id="people-list"></div>
+      <div class="invite" id="invite-result" hidden>
+        <p id="invite-lede"></p>
+        <code class="invite-text" id="invite-link"></code>
+        <p class="sheet-row"><button class="btn" id="invite-copy" type="button">Copy the link</button>
+          <span class="fine" id="invite-copied" hidden>Copied.</span></p>
+        <p class="fine">Or they can go to <span id="invite-page"></span> and type this passphrase:</p>
+        <code class="invite-text" id="invite-code"></code>
+        <p class="fine">Send it privately: whoever has it can open the shared drafts under this name.</p>
+      </div>
+    </section>
+
+    <section>
+      <h3>Invite someone</h3>
+      <form id="form-invite" autocomplete="off">
+        <ol>
+          <li>
+            <label for="invite-name">Their name, as it will appear on comments</label>
+            <input id="invite-name" type="text" maxlength="40" autocomplete="off" required>
+          </li>
+          <li>
+            <a id="link-guest-token" target="_blank" rel="noopener">Create an access token for them on GitHub</a> with:
+            <ul>
+              <li>Repository access: <b>Only select repositories</b>, then <code class="repo-shared-name"></code> and nothing else</li>
+              <li>Permissions, Repository permissions, <b>Contents: Read and write</b></li>
+            </ul>
+            <label for="invite-token">Paste that token here</label>
+            <input id="invite-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+          </li>
+        </ol>
+        <div class="sheet-row">
+          <button class="btn primary" type="submit">Create the invitation</button>
+          <span class="fine" id="invite-busy" hidden>Checking the token…</span>
+        </div>
+        <p class="fine" style="margin-top: 10px">They never see the token or need a GitHub account. GitHub records what they do
+          under your account, in <code class="repo-shared-name"></code> only.</p>
+      </form>
+    </section>
+
+    <section>
+      <h3>Your other devices</h3>
+      <p class="fine" id="own-state"></p>
+      <form id="form-own" autocomplete="off">
+        <label for="own-pass">A passphrase that opens the editor on any device</label>
+        <div class="sheet-row">
+          <input id="own-pass" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" minlength="16" required>
+          <button class="btn" id="own-suggest" type="button">Suggest one</button>
+          <button class="btn primary" type="submit">Set</button>
+        </div>
+        <p class="fine" style="margin-top: 8px">An encrypted copy of your token goes into the website's public repository, and this
+          passphrase is the only thing protecting it. Use at least 16 characters that nobody could guess, or take the
+          suggestion and keep it in a password manager.</p>
+      </form>
+      <button class="btn" id="own-remove" type="button" hidden>Remove the passphrase</button>
+    </section>
+
+    <section>
+      <h3>Your name</h3>
+      <form class="sheet-row" id="form-name" autocomplete="off">
+        <input id="own-name" type="text" maxlength="40" aria-label="Your name, as it appears on comments" required>
+        <button class="btn" type="submit">Save</button>
+      </form>
+    </section>
+  </div>
+</dialog>
 
 <script src="vendor/pyodide/pyodide.js"></script>
 <script>
 "use strict";
 
 // Which repositories the editor reads and writes. The website is `site`; drafts never go there.
+// `drafts` is the owner's alone; `shared` holds the drafts that invited people may open.
 const CONFIG = /*CONFIG*/{
   "owner": "alex2awesome",
   "site": { "repo": "alex2awesome.github.io", "branch": "main" },
-  "drafts": { "repo": "blog-drafts", "branch": "main" }
+  "drafts": { "repo": "blog-drafts", "branch": "main" },
+  "shared": { "repo": "blog-shared", "branch": "main" }
 }/*CONFIG*/;
 
 const SITE = CONFIG.site.repo;
 const DRAFTS = CONFIG.drafts.repo;
+const SHARED = CONFIG.shared.repo;
+// A draft is in one of two places: "private" or "shared".
+const HOMES = {
+  private: { repo: DRAFTS, branch: CONFIG.drafts.branch },
+  shared: { repo: SHARED, branch: CONFIG.shared.branch },
+};
+const SITE_PLACE = { repo: SITE, branch: CONFIG.site.branch };
+const KEYS_PATH = "admin/keys.json";      // on the website, beside this page: the tokens that passphrases unlock
+const ROSTER_PATH = "people.json";        // in the private repository: who is invited
+const PASS_STORE = "blog-editor-pass";    // an invited person's passphrase, kept in their browser until they sign out
+const PASS_ITERATIONS = 1000000;          // for generated passphrases, which are 100 random bits to begin with
+const TYPED_ITERATIONS = 5000000;         // for one the owner made up: each guess costs five times as much
+const POLL_MS = 15000;                    // how often to look for other people's saves and comments
 const RESERVED = new Set(["index", "feed"]);     // blog/index.html and blog/feed.xml
 const IMAGE_TYPES = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"]);
 const KEY_STORE = "blog-editor-key";
@@ -483,7 +778,23 @@ const el = {
   status: $("status"), notice: $("notice"), noticeBody: $("notice-body"), preview: $("preview"),
   save: $("btn-save"), publish: $("btn-publish"), unpublish: $("btn-unpublish"), discard: $("btn-discard"),
   live: $("btn-live"), dateHint: $("date-hint"), words: $("word-count"), history: $("btn-history"),
+  share: $("btn-share"), people: $("btn-people"), lock: $("btn-lock"), comments: $("btn-comments"),
+  comment: $("btn-comment"), threads: $("thread-list"),
 };
+
+function make(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function button(className, text, onClick) {
+  const node = make("button", className, text);
+  node.type = "button";
+  node.addEventListener("click", onClick);
+  return node;
+}
 
 /** An error whose message is written for the person using the editor. */
 class UserError extends Error {}
@@ -534,7 +845,9 @@ function slugify(text) {
 
 // ============================================================ the token, locked with a password
 
-let token = "";    // held in memory only while the editor is open
+let token = "";                           // held in memory only while the editor is open
+let me = { name: "", role: "owner" };     // who is signed in: the owner, or a "guest" (an invited person)
+const isGuest = () => me.role === "guest";
 
 async function passwordKey(password, salt, iterations) {
   const material = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -542,38 +855,114 @@ async function passwordKey(password, salt, iterations) {
     { name: "PBKDF2", hash: "SHA-256", salt, iterations }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
 
-async function storeToken(value, password) {
+/** Encrypt a text so that only the password opens it (PBKDF2, then AES-GCM). */
+async function seal(text, password, iterations) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await passwordKey(password, salt, KDF_ITERATIONS);
-  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(value));
-  localStorage.setItem(KEY_STORE, JSON.stringify({
-    v: 1, iterations: KDF_ITERATIONS, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(data)),
-  }));
+  const key = await passwordKey(password, salt, iterations);
+  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(text));
+  return { v: 1, iterations, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(data)) };
 }
 
-async function readToken(password) {
-  const box = JSON.parse(localStorage.getItem(KEY_STORE));
+/** The text in a sealed box, or null when this is not the password it was sealed with. */
+async function unseal(box, password) {
   try {
     const key = await passwordKey(password, b64ToBytes(box.salt), box.iterations);
     return decoder.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(box.iv) }, key, b64ToBytes(box.data)));
   } catch (err) {
-    throw new UserError("That is not the password this browser's token was saved with.");
+    return null;
   }
+}
+
+// On the owner's own browser, the token is kept in the browser's storage under a password.
+async function storeToken(value, password) {
+  localStorage.setItem(KEY_STORE, JSON.stringify(await seal(value, password, KDF_ITERATIONS)));
+}
+
+async function readToken(password) {
+  const value = await unseal(JSON.parse(localStorage.getItem(KEY_STORE)), password);
+  if (value === null) throw new UserError("That is not the password this browser's token was saved with.");
+  return value;
+}
+
+// ============================================================ passphrases
+
+// Anywhere else, a passphrase opens a token that is kept, sealed, in keys.json on the website:
+// an invited person's token, or the owner's own. The file is public, so everything rests on the
+// passphrases being long. Invitations are generated here: six groups of four letters, the first
+// of which names the entry in keys.json and the other five (100 random bits) are the secret.
+const CODE_LETTERS = "0123456789abcdefghjkmnpqrstvwxyz";   // 32, none easily mistaken for another
+const CODE_SHAPE = /^[0-9a-z]{4}(?:-[0-9a-z]{4}){5}$/;
+
+function randomGroups(count) {
+  const letters = [...crypto.getRandomValues(new Uint8Array(count * 4))].map((byte) => CODE_LETTERS[byte & 31]);
+  return Array.from({ length: count }, (_, i) => letters.slice(i * 4, i * 4 + 4).join("")).join("-");
+}
+
+/** A passphrase as typed or pasted, tidied: a generated one may arrive in capitals or with spaces in it. */
+function tidyPassphrase(text) {
+  const plain = text.normalize("NFKC").trim();
+  const code = plain.toLowerCase().replace(/\s+/g, "");
+  return CODE_SHAPE.test(code) ? code : plain;
+}
+
+// keys.json as the website serves it and, because the website takes a minute to catch up with a
+// change, as it is in the repository (which anyone may read).
+const keySources = [
+  () => fetch(new URL("keys.json", location.href), { cache: "no-store" }),
+  () => fetch(`https://api.github.com/repos/${CONFIG.owner}/${SITE}/contents/${KEYS_PATH}?ref=${encodeURIComponent(CONFIG.site.branch)}`,
+    { cache: "no-store", headers: { Accept: "application/vnd.github.raw+json" } }),
+];
+
+/** Whose passphrase this is: {name, role, token}. */
+async function openWithPassphrase(typed) {
+  const passphrase = tidyPassphrase(typed);
+  const id = CODE_SHAPE.test(passphrase) ? passphrase.slice(0, 4) : "";
+  const tried = new Set();
+  let answered = 0;      // how many of the two copies could be read (a copy that does not exist yet counts: it is empty)
+  for (const source of keySources) {
+    let entries = [];
+    try {
+      const response = await source();
+      if (response.ok) entries = (await response.json()).entries || [];
+      if (response.ok || response.status === 404) answered++;
+    } catch (err) {
+      continue;
+    }
+    // A generated passphrase says which entry it opens. One the owner made up could be any marked "typed".
+    const named = entries.filter((entry) => id && entry.id === id);
+    for (const entry of [...named, ...entries.filter((item) => item.typed && !named.includes(item))]) {
+      if (tried.has(entry.data)) continue;
+      tried.add(entry.data);
+      const opened = await unseal(entry, passphrase);
+      if (opened !== null) return JSON.parse(opened);
+    }
+  }
+  if (!answered) throw new UserError("Could not reach the website to check the passphrase. Check the connection and try again.");
+  const error = new UserError(answered < keySources.length
+    ? "That passphrase was not recognised, but the newest list of invitations could not be read just now. Check it for typos, or try again in a minute."
+    : "That passphrase does not open the editor. Check it for typos; an invitation stops working once it is withdrawn.");
+  error.wrong = answered === keySources.length;     // only then is it certain, and a remembered passphrase forgotten
+  throw error;
 }
 
 // ============================================================ GitHub
 
 async function gh(repo, path, options = {}) {
   const { method = "GET", body, raw = false, missingOk = false, keepalive = false } = options;
-  const headers = { Authorization: `Bearer ${token}`, Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" };
+  const headers = { Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json" };
   if (body) headers["Content-Type"] = "application/json";
+  // no-store: GitHub lets browsers reuse answers for a minute, which would show stale file lists.
+  const send = (signedIn) => fetch(`https://api.github.com/repos/${CONFIG.owner}/${repo}${path ? "/" + path : ""}`, {
+    method, keepalive, cache: "no-store", body: body ? JSON.stringify(body) : undefined,
+    headers: signedIn ? { ...headers, Authorization: `Bearer ${token}` } : headers,
+  });
   let response;
   try {
-    // no-store: GitHub lets browsers reuse answers for a minute, which would show stale file lists.
-    response = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${repo}${path ? "/" + path : ""}`, {
-      method, headers, keepalive, cache: "no-store", body: body ? JSON.stringify(body) : undefined,
-    });
+    response = await send(true);
+    // An invited person's token opens the shared drafts and nothing else. The website's files are
+    // public, so if GitHub will not hand them to that token, they are asked for without it.
+    if (isGuest() && repo === SITE && method === "GET" && [401, 403, 404].includes(response.status)) response = await send(false);
   } catch (err) {
     throw new UserError("Could not reach GitHub. Check the connection; nothing was lost, the editor will try again.");
   }
@@ -589,13 +978,19 @@ async function explain(response, repo, method) {
   const writing = method !== "GET";
   let message;
   if (response.status === 401) {
-    message = "GitHub no longer accepts this token (it expired or was revoked). Press Lock, then “Use a different token”.";
+    message = isGuest()
+      ? "Your invitation no longer works: its access was withdrawn or has run out. Ask for a new one."
+      : "GitHub no longer accepts this token (it expired or was revoked). Press Lock, then “Use a different token”.";
   } else if ((response.status === 403 || response.status === 429) && /rate limit|abuse|secondary/i.test(said)) {
     message = "GitHub asked the editor to slow down. Wait a minute and try again.";
   } else if ((response.status === 403 || response.status === 404) && writing) {
-    message = `The token is not allowed to write to ${repo}. On GitHub it needs “Contents: Read and write” for that repository.`;
+    message = isGuest()
+      ? "Your invitation does not allow that change."
+      : `The token is not allowed to write to ${repo}. On GitHub it needs “Contents: Read and write” for that repository.`;
   } else if (response.status === 404 || response.status === 403) {
-    message = `The token cannot see ${CONFIG.owner}/${repo}. Check that this repository is selected for the token.`;
+    message = isGuest()
+      ? "Your invitation cannot open that. It may have been withdrawn."
+      : `The token cannot see ${CONFIG.owner}/${repo}. Check that this repository is selected for the token.`;
   } else {
     message = `GitHub refused the request (${response.status}): ${said}`;
   }
@@ -607,6 +1002,89 @@ async function explain(response, repo, method) {
 async function listDir(repo, dir, ref) {
   const items = await gh(repo, `contents/${encodePath(dir)}?ref=${encodeURIComponent(ref)}`, { missingOk: true });
   return Array.isArray(items) ? items.filter((item) => item.type === "file") : [];
+}
+
+// Single files, in a `place`: {repo, branch}.
+
+/**
+ * Among the shared drafts, commits carry the name people know each other by in the editor, so
+ * that History and "changes from …" can say who it was. (GitHub records every one of them under
+ * the owner's account all the same: the tokens are all the owner's.)
+ */
+function signed(place, body) {
+  if (place.repo !== SHARED || !me.name) return body;
+  return { ...body, author: { name: me.name, email: `${isGuest() ? "guest" : "owner"}@blog-editor.invalid` } };
+}
+const stale = (err) => err.status === 409 || err.status === 422;   // GitHub's answer when the file is not as we last saw it
+
+const fileAt = (place, path) => gh(place.repo, `contents/${encodePath(path)}?ref=${encodeURIComponent(place.branch)}`, { missingOk: true });
+
+/** Write a file, over whatever is there. Resolves to its git id. */
+async function putFile(place, path, content, message) {
+  const body = signed(place, { message, content, branch: place.branch });
+  for (let attempt = 1; ; attempt++) {
+    const existing = await fileAt(place, path);
+    if (existing) body.sha = existing.sha; else delete body.sha;
+    try {
+      return (await gh(place.repo, `contents/${encodePath(path)}`, { method: "PUT", body })).content.sha;
+    } catch (err) {
+      if (!stale(err) || attempt >= 3) throw err;
+    }
+  }
+}
+
+/** Write a file unless one of that name is already there (images are named after their content). Resolves to its git id. */
+async function ensureFile(place, path, content, message) {
+  try {
+    return (await gh(place.repo, `contents/${encodePath(path)}`, { method: "PUT", body: signed(place, { message, content, branch: place.branch }) })).content.sha;
+  } catch (err) {
+    if (!stale(err)) throw err;
+    return (await gh(place.repo, `contents/${encodePath(path)}?ref=${encodeURIComponent(place.branch)}`)).sha;
+  }
+}
+
+async function removeFile(place, path, message) {
+  for (let attempt = 1; ; attempt++) {
+    const existing = await fileAt(place, path);
+    if (!existing) return;
+    try {
+      await gh(place.repo, `contents/${encodePath(path)}`, { method: "DELETE", body: signed(place, { message, sha: existing.sha, branch: place.branch }) });
+      return;
+    } catch (err) {
+      if (err.status === 404) return;
+      if (!stale(err) || attempt >= 3) throw err;
+    }
+  }
+}
+
+/** A JSON file: {sha, value}, with `fallback` as the value when the file is not there (or is not JSON). */
+async function readJson(place, path, fallback) {
+  const file = await fileAt(place, path);
+  if (!file) return { sha: null, value: fallback };
+  try {
+    return { sha: file.sha, value: JSON.parse(b64ToText(file.content)) };
+  } catch (err) {
+    return { sha: file.sha, value: fallback };
+  }
+}
+
+/**
+ * Read a JSON file, change it and write it back; again from the start if someone else wrote it in
+ * between, so that neither change is lost. Resolves to {sha, value}.
+ */
+async function updateJson(place, path, fallback, message, change) {
+  for (let attempt = 1; ; attempt++) {
+    const file = await readJson(place, path, structuredClone(fallback));
+    change(file.value);
+    const body = signed(place, { message, content: textToB64(JSON.stringify(file.value, null, 2) + "\n"), branch: place.branch });
+    if (file.sha) body.sha = file.sha;
+    try {
+      const result = await gh(place.repo, `contents/${encodePath(path)}`, { method: "PUT", body });
+      return { sha: result.content.sha, value: file.value };
+    } catch (err) {
+      if (!stale(err) || attempt >= 4) throw err;
+    }
+  }
 }
 
 // File contents never change for a given git id, so the website's files are kept between visits.
@@ -774,9 +1252,22 @@ async function startPython(files) {
 
 let liveBase = "";                 // https://<custom domain>, from the site's CNAME
 let site = { posts: new Map(), outputs: new Map(), images: new Set() };   // the website's repository
-const drafts = new Map();          // id -> {sha, text, fields}: drafts/<id>.md in the drafts repository
-const draftImages = new Map();     // name -> git id: images/<name> in the drafts repository
+const drafts = new Map();          // id -> {sha, text, fields, home, at}: drafts/<id>.md, in the private or the shared repository
+const draftImages = new Map();     // name -> {sha, home}: images/<name> beside the drafts
 const imageUrls = new Map();       // name -> object URL, for images that are not on the website yet
+let sharedOk = true;               // false while the owner's token has not been given the shared repository
+const superseded = new Map();      // "<draft id> <git id>" -> when this browser moved on from that version
+const lately = (time) => Boolean(time) && time > Date.now() - 60000;
+
+/** Record a draft as it now is on GitHub. */
+function keepDraft(id, draft) {
+  const old = drafts.get(id);
+  if (old && old.sha !== draft.sha) superseded.set(`${id} ${old.sha}`, Date.now());
+  if (old && old.home !== draft.home) superseded.set(`${id} moved`, Date.now());
+  drafts.set(id, { ...draft, at: Date.now() });
+}
+
+const homeOf = (id) => (id && drafts.has(id) ? drafts.get(id).home : "private");
 
 function parseOr(text, fallbackTitle) {
   try {
@@ -830,14 +1321,19 @@ async function readRenderer(ref) {
   return files;
 }
 
-async function readDrafts() {
-  const [files, images] = await Promise.all([
-    listDir(DRAFTS, "drafts", CONFIG.drafts.branch), listDir(DRAFTS, "images", CONFIG.drafts.branch),
-  ]);
+/** The drafts and images in one of the two places. */
+async function readDrafts(home) {
+  const { repo, branch } = HOMES[home];
+  const [files, images] = await Promise.all([listDir(repo, "drafts", branch), listDir(repo, "images", branch)]);
   const loaded = await Promise.all(files.filter((file) => file.name.endsWith(".md")).map(async (file) => (
-    [file.name.slice(0, -3), { sha: file.sha, text: await getText(DRAFTS, file.sha) }]
+    [file.name.slice(0, -3), { sha: file.sha, text: await getText(repo, file.sha), home }]
   )));
-  return { loaded, images: images.map((file) => [file.name, file.sha]) };
+  return { loaded, images: images.map((file) => [file.name, { sha: file.sha, home }]) };
+}
+
+function adoptDrafts(found) {
+  for (const [id, draft] of found.loaded) keepDraft(id, { ...draft, fields: parseOr(draft.text, id) });
+  for (const [name, image] of found.images) draftImages.set(name, image);
 }
 
 /** The saved, unpublished edit of a published post, if there is one. */
@@ -851,6 +1347,8 @@ function revisionOf(slug) {
 let cur = { draftId: null, liveSlug: null };   // where the open post lives: a draft file, a live post, or both
 let viewing = null;           // while History is open: {current, entries, shown, every, page, more}
 let uploads = 0;              // images on their way to the drafts repository
+let flash = "";               // a passing remark in the status line ("Updated with changes from …")
+let flashTimer = 0;
 let savedSnapshot = "";       // the fields as last saved
 let saveError = "";
 let saving = false;
@@ -879,6 +1377,21 @@ const isDirty = () => snapshot() !== savedSnapshot;
 const isBlank = () => { const f = fields(); return !f.title.trim() && !f.subtitle.trim() && !f.body.trim(); };
 const isNew = () => !cur.draftId && !cur.liveSlug;
 const currentKey = () => (cur.liveSlug ? "p:" + cur.liveSlug : cur.draftId ? "d:" + cur.draftId : "");
+const isShared = () => homeOf(cur.draftId) === "shared";
+/** An invited person writes only in a draft that is shared with them (`cur.gone`: it no longer is). */
+const canWrite = () => !viewing && !cur.gone && (!isGuest() || Boolean(cur.draftId));
+
+/** A draft's fields as the form holds them, in the order of fields(). A post that is live keeps its URL unless the draft names another. */
+const formOf = (source, liveSlug) => ({
+  title: source.title, subtitle: source.subtitle, date: source.date, slug: slugify(source.slug || liveSlug || ""), body: source.body,
+});
+
+function say(text) {
+  flash = text;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { flash = ""; renderChrome(); }, 8000);
+  renderChrome();
+}
 
 /**
  * A post keeps one id for life: the name of its file in drafts/. A published post records it in
@@ -905,12 +1418,19 @@ function fill(values, where) {
   disarm();
   renderChrome();
   renderList();
+  openComments();
   refreshPreview();
 }
 
 function openBlank() {
   fill(null, { draftId: null, liveSlug: null });
-  el.title.focus();
+  if (!isGuest()) el.title.focus();
+}
+
+/** The draft to open when none is asked for: the newest one that is not an edit of a published post. */
+function newestDraft() {
+  const found = [...drafts].sort().reverse().find(([, draft]) => !draft.fields.revises || !site.posts.has(draft.fields.revises));
+  return found ? "d:" + found[0] : "";
 }
 
 function show(key) {
@@ -923,6 +1443,8 @@ function show(key) {
     const draft = drafts.get(name);
     const live = draft.fields.revises && site.posts.has(draft.fields.revises) ? draft.fields.revises : null;
     fill({ ...draft.fields, slug: draft.fields.slug || live || "" }, { draftId: name, liveSlug: live });
+  } else if (isGuest() && newestDraft()) {
+    show(newestDraft());     // an invited person cannot start a post, so there is no blank page to show
   } else {
     openBlank();
   }
@@ -937,9 +1459,12 @@ async function openEntry(key) {
 // ============================================================ drawing the page
 
 function renderChrome() {
+  const guest = isGuest();
+  const idle = guest && !cur.draftId;     // an invited person with no draft open
   const published = Boolean(cur.liveSlug);
   const pending = published && Boolean(cur.draftId);
   const dirty = ready && !viewing && isDirty();
+  const shared = isShared();
 
   let pill = `<span class="pill">Draft</span>`;
   if (published) {
@@ -947,14 +1472,19 @@ function renderChrome() {
       ? `<span class="pill is-pending">Published, with changes that are not live</span>`
       : `<span class="pill is-published">Published</span>`;
   }
+  if (shared) pill += `<span class="pill is-shared">${guest ? "Shared with you" : "Shared"}</span>`;
   if (viewing) pill = `<span class="pill is-pending">History</span>`;
+  if (idle) pill = "";
   let text = "";
   if (busy) text = busy;
   else if (viewing) text = viewing.shown ? `${versionLabel(viewing.shown)}. This is how the post read then.` : "Choose a version on the left.";
+  else if (cur.gone) text = "No longer shared with you";
+  else if (idle) text = drafts.size ? "Choose a draft on the left." : "Nothing is shared with you at the moment.";
   else if (saveError) text = saveError;
   else if (saving) text = "Saving…";
   else if (uploads) text = "Uploading the image…";
   else if (dirty) text = isBlank() && isNew() ? "" : "Unsaved changes";
+  else if (flash) text = flash;
   else if (cur.draftId) text = "Saved";
   const failed = Boolean(saveError) && !busy && !viewing;
   el.status.innerHTML = ready ? pill : "";
@@ -963,19 +1493,27 @@ function renderChrome() {
   el.status.title = failed ? saveError : "";
 
   const locked = Boolean(busy) || !ready || Boolean(viewing);
+  const writable = !locked && canWrite();
   el.history.hidden = !ready || isNew();
   el.history.disabled = Boolean(busy);
   el.history.textContent = viewing ? "Close history" : "History";
-  for (const input of [el.title, el.subtitle, el.date, el.slug, el.body]) input.readOnly = Boolean(viewing);
-  el.discard.hidden = !cur.draftId;
+  for (const input of [el.title, el.subtitle, el.body]) input.readOnly = !canWrite();
+  for (const input of [el.date, el.slug]) input.readOnly = !canWrite() || guest;   // when and where it is published is the owner's to say
+  el.discard.hidden = guest || !cur.draftId;
   if (!armed) el.discard.textContent = published ? "Discard changes" : "Delete draft";
-  el.unpublish.hidden = !published;
+  el.unpublish.hidden = guest || !published;
   el.live.hidden = !published;
   if (published) el.live.href = `${liveBase}/blog/${cur.liveSlug}.html`;
-  el.dateHint.hidden = published || Boolean(el.date.value);
+  el.dateHint.hidden = guest || published || Boolean(el.date.value);
   el.slug.placeholder = cur.liveSlug || slugify(el.title.value) || "untitled";
+  el.publish.hidden = guest;
+  $("btn-new").hidden = guest;
+  el.people.hidden = guest || !ready;
+  el.share.hidden = guest || !ready || (isNew() && isBlank());
+  if (!armed) el.share.textContent = shared ? "Stop sharing" : "Share";
+  el.lock.textContent = guest ? "Sign out" : "Lock";
 
-  el.save.disabled = locked || !dirty;
+  el.save.disabled = !writable || !dirty;
   if (published) {
     const upToDate = !pending && !dirty;
     el.publish.textContent = upToDate ? "Published" : "Publish changes";
@@ -984,7 +1522,13 @@ function renderChrome() {
     el.publish.textContent = "Publish";
     el.publish.disabled = locked || isBlank();
   }
-  for (const button of [el.discard, el.unpublish, $("btn-new"), $("btn-image")]) button.disabled = locked;
+  for (const button of [el.discard, el.unpublish, el.share, el.people, $("btn-new")]) button.disabled = locked;
+  for (const button of [$("btn-image"), el.comment]) button.disabled = !writable;
+  el.comment.hidden = !commentsUsable();
+  el.comments.hidden = !commentsUsable();
+  const waiting = openThreads().length;
+  el.comments.textContent = waiting ? `Comments (${waiting})` : "Comments";
+  el.comments.setAttribute("aria-pressed", String(commentsShown()));
 
   const count = (el.body.value.trim().match(/\S+/g) || []).length;
   el.words.textContent = `${count.toLocaleString()} ${count === 1 ? "word" : "words"}`;
@@ -1007,31 +1551,36 @@ function listItem(titleText, metaText, current, onClick) {
 }
 
 function renderList() {
-  const groups = { draft: $("list-drafts"), published: $("list-published") };
+  const guest = isGuest();
+  const groups = { draft: $("list-drafts"), shared: $("list-shared"), published: $("list-published") };
   for (const node of Object.values(groups)) node.textContent = "";
 
   const entries = [];
   for (const [id, draft] of [...drafts].sort().reverse()) {       // ids start with their creation time
     if (draft.fields.revises && site.posts.has(draft.fields.revises)) continue;   // shown under its published post
-    entries.push({ key: "d:" + id, group: "draft", title: draft.fields.title, meta: draft.fields.subtitle || "No subtitle yet" });
+    entries.push({ key: "d:" + id, group: draft.home === "shared" ? "shared" : "draft", title: draft.fields.title, meta: draft.fields.subtitle || "No subtitle yet" });
   }
   const published = [...site.posts].sort((a, b) => (b[1].fields.date + b[0]).localeCompare(a[1].fields.date + a[0]));
   for (const [slug, post] of published) {
     const revision = revisionOf(slug);
     const shown = revision ? drafts.get(revision).fields : post.fields;
-    entries.push({ key: "p:" + slug, group: "published", title: shown.title, meta: post.fields.date + (revision ? " · changes not live" : "") });
+    const tags = (revision ? " · changes not live" : "") + (homeOf(revision) === "shared" ? " · shared" : "");
+    entries.push({ key: "p:" + slug, group: "published", title: shown.title, meta: post.fields.date + tags });
   }
 
   for (const entry of entries) {
     groups[entry.group].append(listItem(entry.title || "Untitled", entry.meta, entry.key === currentKey(), () => openEntry(entry.key)));
   }
+  const nothing = { draft: "No drafts.", shared: "Nothing is shared with you at the moment.", published: "Nothing published yet." };
   for (const [group, node] of Object.entries(groups)) {
-    if (node.children.length) continue;
-    const empty = document.createElement("p");
-    empty.className = "posts-empty";
-    empty.textContent = !ready ? "Loading…" : group === "draft" ? "No drafts." : "Nothing published yet.";
-    node.append(empty);
+    if (!node.children.length) node.append(make("p", "posts-empty", ready ? nothing[group] : "Loading…"));
   }
+  // An invited person sees the shared drafts and nothing else; the owner sees that heading only when something is shared.
+  for (const part of ["drafts", "published"]) for (const node of [$("head-" + part), $("list-" + part)]) node.hidden = guest;
+  const noneShared = !guest && !entries.some((entry) => entry.group === "shared");
+  $("head-shared").hidden = noneShared;
+  $("list-shared").hidden = noneShared;
+  $("head-shared").textContent = guest ? "Shared with you" : "Shared drafts";
 }
 
 let noticeId = 0;
@@ -1060,7 +1609,8 @@ function link(href) {
 /** Images added to a draft are not on the website yet; show them from the drafts repository. */
 function imageUrl(name) {
   if (!imageUrls.has(name) && draftImages.has(name)) {
-    imageUrls.set(name, gh(DRAFTS, `contents/images/${encodePath(name)}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { raw: true })
+    const { repo, branch } = HOMES[draftImages.get(name).home];
+    imageUrls.set(name, gh(repo, `contents/images/${encodePath(name)}?ref=${encodeURIComponent(branch)}`, { raw: true })
       .then((blob) => URL.createObjectURL(name.endsWith(".svg") ? new Blob([blob], { type: "image/svg+xml" }) : blob))
       .catch(() => null)
       .then((url) => { imageUrls.set(name, url); return url; }));
@@ -1214,6 +1764,9 @@ const PREVIEW_STYLE = `
   .ed-handle.ed-left { cursor: nesw-resize; }
   figure.ed-resizing::after { content: attr(data-size); position: absolute; top: 8px; left: 8px; padding: 2px 8px; font: 600 12px system-ui, sans-serif; color: #fff; background: rgba(40, 40, 40, 0.8); border-radius: 4px; }
   .ed-drop { position: absolute; height: 3px; margin-top: -1.5px; background: #800080; border-radius: 2px; pointer-events: none; }
+  mark.ed-comment { padding: 0; color: inherit; background: rgba(255, 213, 79, 0.42); cursor: pointer; }
+  mark.ed-comment.is-active { background: rgba(255, 179, 0, 0.72); }
+  .ed-comment-btn { position: absolute; z-index: 5; padding: 4px 11px; font: 600 12px system-ui, sans-serif; color: #fff; background: #800080; border: 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); cursor: pointer; }
 `;
 
 let picked = null;      // the image selected in the preview: {src, nth}, which survives the preview being redrawn
@@ -1262,6 +1815,7 @@ function decorate(doc) {
     const again = figuresWith(doc, picked.src)[picked.nth];
     if (again) pick(again); else picked = null;
   }
+  markComments(doc);
 }
 
 function placeHandles(figure) {
@@ -1407,6 +1961,9 @@ function wirePreview() {
 
   doc.addEventListener("pointerdown", (event) => {
     const target = elementOf(event);
+    if (target.closest(".ed-comment-btn")) { event.preventDefault(); commentFromPreview(doc); return; }
+    const mark = target.closest("mark.ed-comment");
+    activate(mark ? mark.dataset.threads.split(" ")[0] : "", false);
     const handle = target.closest(".ed-handle");
     if (handle) { startResize(event, handle); return; }
     const figure = target.closest("figure[data-ed]");
@@ -1429,6 +1986,7 @@ function wirePreview() {
 
   doc.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") { event.preventDefault(); save(); return; }
+    if ((event.metaKey || event.ctrlKey) && event.altKey && event.code === "KeyM") { event.preventDefault(); commentFromPreview(doc); return; }
     if (captionAt && event.target === captionAt) {
       if (event.key === "Enter" || event.key === "Escape") { event.preventDefault(); captionAt.blur(); }
       return;
@@ -1474,6 +2032,33 @@ function wirePreview() {
     setTimeout(refreshPreview, 0);
   });
 
+  // Selecting words offers to comment on them.
+  const offer = doc.createElement("button");
+  offer.type = "button";
+  offer.className = "ed-comment-btn";
+  offer.textContent = "Comment";
+  const offerComment = () => {
+    const selection = doc.getSelection();
+    const body = doc.querySelector(".post-body");
+    const usable = !viewing && !captionAt && !busy && canWrite() && body && selection && !selection.isCollapsed
+      && body.contains(selection.anchorNode) && body.contains(selection.focusNode) && /[\p{L}\p{N}]/u.test(selection.toString());
+    if (!usable) { offer.remove(); return; }
+    const boxes = selection.getRangeAt(0).getClientRects();
+    const last = boxes[boxes.length - 1];
+    if (!last) { offer.remove(); return; }
+    const view = doc.defaultView;
+    offer.style.top = `${last.bottom + view.scrollY + 6}px`;
+    offer.style.left = `${Math.max(8, Math.min(last.right, view.innerWidth - 96)) + view.scrollX}px`;
+    doc.body.append(offer);
+  };
+  doc.addEventListener("pointerup", () => setTimeout(offerComment, 0));
+  doc.addEventListener("keyup", (event) => { if (event.shiftKey || event.key === "Shift") offerComment(); });
+  doc.addEventListener("selectionchange", () => { if (doc.getSelection().isCollapsed) offer.remove(); });
+
+  // The comment cards stand beside the words they are about, so they move when the page does.
+  doc.defaultView.addEventListener("scroll", placeSoon, { passive: true });
+  doc.defaultView.addEventListener("resize", placeSoon);
+
   // Dropping a file: a line shows the gap it will land in.
   const marker = doc.createElement("div");
   marker.className = "ed-drop";
@@ -1510,66 +2095,84 @@ function newDraftId() {
   return `${stamp}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** Write the form to the open post's file in the drafts repository, creating it if needed. */
-async function writeDraft(values, revises, keepalive) {
-  const previous = cur.draftId ? drafts.get(cur.draftId) : null;
-  const live = cur.liveSlug ? site.posts.get(cur.liveSlug) : null;
-  const record = { ...values, revises };
-  const text = py.compose(JSON.stringify(record), previous ? previous.text : live ? live.text : "");
+/**
+ * Write a record to the open post's file among the drafts, creating it if needed. Resolves to
+ * null once it is written. If GitHub holds a version this browser has not seen (someone else
+ * saved the draft), nothing is written and the answer is that version's fields; or "gone" if
+ * the file has been removed.
+ */
+async function writeDraft(record, keepalive) {
   // A new draft keeps the name chosen for it even if the first save's answer is lost on the way
   // back; otherwise the retry would create a second copy.
   const id = cur.draftId || liveId() || (cur.reservedId = cur.reservedId || newDraftId());
+  const known = drafts.get(id) || null;
+  const lost = "This draft is no longer shared with you, so the change could not be saved.";
+  if (isGuest() && !known) throw new UserError(lost);
+  const home = known ? known.home : "private";
+  const place = HOMES[home];
+  const live = cur.liveSlug ? site.posts.get(cur.liveSlug) : null;
+  const text = py.compose(JSON.stringify(record), known ? known.text : live ? live.text : "");
   const path = `contents/drafts/${id}.md`;
-  const body = { message: `Draft: ${values.title.trim() || "Untitled"}`, content: textToB64(text), branch: CONFIG.drafts.branch };
-  if (previous) body.sha = previous.sha;
-  let result;
+  const body = signed(place, { message: `Draft: ${record.title.trim() || "Untitled"}`, content: textToB64(text), branch: place.branch });
+  if (known) body.sha = known.sha;
+  let result = null;
   try {
     // keepalive lets a small save finish even while the tab is closing
-    result = await gh(DRAFTS, path, { method: "PUT", body, keepalive: keepalive && body.content.length < 45000 });
+    result = await gh(place.repo, path, { method: "PUT", body, keepalive: keepalive && body.content.length < 45000 });
   } catch (err) {
-    if (keepalive && !err.status) {
-      result = await gh(DRAFTS, path, { method: "PUT", body });   // the browser refused the keepalive form; send it normally
-    } else if (err.status !== 409 && err.status !== 422) {
-      throw err;
-    }
+    if (keepalive && !err.status) result = await gh(place.repo, path, { method: "PUT", body });   // the browser refused the keepalive form; send it normally
+    else if (!stale(err)) throw err;
   }
-  if (!result) {
-    // The draft was also saved from another window or device. This copy wins; the other one
-    // stays in the drafts repository's history.
-    const latest = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { missingOk: true });
-    if (latest) body.sha = latest.sha; else delete body.sha;
-    result = await gh(DRAFTS, path, { method: "PUT", body });
+  if (result) {
+    cur.draftId = id;
+    keepDraft(id, { sha: result.content.sha, text, fields: record, home });
+    return null;
   }
+  const latest = await fileAt(place, `drafts/${id}.md`);
+  if (!latest) {
+    drafts.delete(id);     // published, deleted or moved from another window
+    if (!isGuest()) return "gone";
+    letGo(record.title.trim() || "Untitled");
+    throw new UserError(lost);
+  }
+  const theirs = b64ToText(latest.content);
   cur.draftId = id;
-  drafts.set(id, { sha: result.content.sha, text, fields: record });
+  keepDraft(id, { sha: latest.sha, text: theirs, fields: parseOr(theirs, id), home });
+  return drafts.get(id).fields;
 }
 
+/** An invited person leaves a draft's link to its published post as they found it; for the owner it follows the open post. */
+const revisesNow = () => (isGuest() ? (drafts.has(cur.draftId) ? drafts.get(cur.draftId).fields.revises : "") : cur.liveSlug || "");
+
+/** Save the form as the open post's draft, first working in whatever someone else saved in the meantime. */
+async function storeForm(adjust = (record) => record, keepalive = false) {
+  for (let attempt = 1; ; attempt++) {
+    const values = fields();
+    const newer = await writeDraft(adjust({ ...values, revises: revisesNow() }), keepalive);
+    if (!newer) { savedSnapshot = JSON.stringify(values); return; }
+    if (attempt >= 4) throw new UserError("This draft keeps changing on GitHub while it is being saved. Try again in a moment.");
+    if (newer !== "gone") absorb(newer);
+  }
+}
+
+/** Delete a draft's file, and the comments kept beside it. */
 async function removeDraft(id, message) {
   const draft = drafts.get(id);
   if (!draft) return;
-  const path = `contents/drafts/${id}.md`;
-  const body = { message, sha: draft.sha, branch: CONFIG.drafts.branch };
-  try {
-    await gh(DRAFTS, path, { method: "DELETE", body });
-  } catch (err) {
-    if (err.status !== 409 && err.status !== 422 && err.status !== 404) throw err;
-    const latest = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`, { missingOk: true });
-    if (latest) await gh(DRAFTS, path, { method: "DELETE", body: { ...body, sha: latest.sha } });
-  }
+  await removeFile(HOMES[draft.home], `drafts/${id}.md`, message);
   drafts.delete(id);
+  await removeFile(HOMES[draft.home], `comments/${id}.json`, message);
 }
 
 /** Save the form if it has changed. Resolves to false when the save failed. */
 function save(options = {}) {
   clearTimeout(saveTimer);
   return enqueue(async () => {
-    if (!ready || viewing || !isDirty() || (isBlank() && isNew())) return true;
-    const values = fields();
+    if (!ready || !canWrite() || !isDirty() || (isBlank() && isNew())) return true;
     saving = true;
     renderChrome();
     try {
-      await writeDraft(values, cur.liveSlug || "", Boolean(options.keepalive));
-      savedSnapshot = JSON.stringify(values);
+      await storeForm(undefined, Boolean(options.keepalive));
       saveError = "";
       history.replaceState(null, "", "#" + currentKey());
     } catch (err) {
@@ -1581,6 +2184,129 @@ function save(options = {}) {
     renderList();
     return !saveError;
   });
+}
+
+// ============================================================ two people, one draft
+
+/** For each item of `a`, the place in `b` of the item it lines up with (a longest common subsequence), or -1. */
+function lineUp(a, b) {
+  const map = new Int32Array(a.length).fill(-1);
+  let start = 0;
+  while (start < a.length && start < b.length && a[start] === b[start]) { map[start] = start; start++; }
+  let endA = a.length;
+  let endB = b.length;
+  while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) { endA--; endB--; map[endA] = endB; }
+  const n = endA - start;
+  const m = endB - start;
+  if (!n || !m || n * m > 4000000) return map;   // a middle too large to compare closely counts as rewritten
+  const width = m + 1;
+  const table = new Uint16Array((n + 1) * width);
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      table[i * width + j] = a[start + i] === b[start + j]
+        ? table[(i + 1) * width + j + 1] + 1
+        : Math.max(table[(i + 1) * width + j], table[i * width + j + 1]);
+    }
+  }
+  for (let i = 0, j = 0; i < n && j < m;) {
+    if (a[start + i] === b[start + j]) { map[start + i] = start + j; i++; j++; }
+    else if (table[(i + 1) * width + j] >= table[i * width + j + 1]) i++;
+    else j++;
+  }
+  return map;
+}
+
+/**
+ * Combine two edits of the same original, item by item (lines, or words). A stretch that only
+ * one side changed takes that side's version. Where both changed the same stretch differently,
+ * `settle(original, mine, theirs)` decides; without it the answer is null.
+ */
+function merge3(base, mine, theirs, settle) {
+  const toMine = lineUp(base, mine);
+  const toTheirs = lineUp(base, theirs);
+  const same = (x, y) => x.length === y.length && x.every((item, i) => item === y[i]);
+  const out = [];
+  const add = (items) => { for (const item of items) out.push(item); };
+  let b = 0;
+  let m = 0;
+  let t = 0;
+  while (b < base.length || m < mine.length || t < theirs.length) {
+    if (b < base.length && toMine[b] === m && toTheirs[b] === t) { out.push(base[b]); b++; m++; t++; continue; }
+    // A stretch that is not the same in all three: it runs to the next item both sides kept.
+    let next = b;
+    while (next < base.length && (toMine[next] < 0 || toTheirs[next] < 0)) next++;
+    const mEnd = next < base.length ? toMine[next] : mine.length;
+    const tEnd = next < base.length ? toTheirs[next] : theirs.length;
+    const was = base.slice(b, next);
+    const ours = mine.slice(m, mEnd);
+    const other = theirs.slice(t, tEnd);
+    if (same(ours, was)) add(other);
+    else if (same(other, was) || same(ours, other)) add(ours);
+    else if (settle) add(settle(was, ours, other));
+    else return null;
+    b = next; m = mEnd; t = tEnd;
+  }
+  return out;
+}
+
+const PIECES = /\s+|[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/gu;   // words, the gaps between them, single marks of punctuation
+
+/**
+ * Merge two edits of a text: line by line, then word by word inside the lines both touched.
+ * Where both changed the same words, both versions are kept, mine first, as separate paragraphs;
+ * `clashes` counts those places.
+ */
+function mergeText(base, mine, theirs) {
+  if (theirs === base || theirs === mine) return { text: mine, clashes: 0 };
+  if (mine === base) return { text: theirs, clashes: 0 };
+  let clashes = 0;
+  const lines = merge3(base.split("\n"), mine.split("\n"), theirs.split("\n"), (was, ours, other) => {
+    const pieces = (part) => part.join("\n").match(PIECES) || [];
+    const words = merge3(pieces(was), pieces(ours), pieces(other), null);
+    if (words) return words.join("").split("\n");
+    if (was.length) clashes++;      // two additions at the same spot are not a clash: both simply stay
+    const apart = ours.length && other.length && ours[ours.length - 1].trim() && other[0].trim();
+    return [...ours, ...(apart ? [""] : []), ...other];
+  });
+  return { text: lines.join("\n"), clashes };
+}
+
+/** The same for a whole post. A title, date or URL that both changed keeps mine. Keys in the order of fields(). */
+function mergeFields(base, mine, theirs) {
+  const values = {};
+  for (const key of ["title", "subtitle", "date", "slug"]) values[key] = mine[key] === base[key] ? theirs[key] : mine[key];
+  const body = mergeText(base.body, mine.body, theirs.body);
+  values.body = body.text;
+  return { values, clashes: body.clashes };
+}
+
+/**
+ * Work a newer version of the open draft, saved by someone else, into the form. What was typed
+ * here since the last save stays, so the form may then hold more than GitHub does.
+ */
+function absorb(remote) {
+  const theirs = formOf(remote, cur.liveSlug);
+  const merged = mergeFields(JSON.parse(savedSnapshot), fields(), theirs);
+  for (const key of ["title", "subtitle", "date"]) if (el[key].value !== merged.values[key]) el[key].value = merged.values[key];
+  if (slugify(el.slug.value) !== merged.values.slug) el.slug.value = merged.values.slug;
+  const old = el.body.value;
+  const next = merged.values.body;
+  if (old !== next) {
+    // Replace only the stretch that differs, so the cursor and the scrolling stay where they are.
+    const limit = Math.min(old.length, next.length);
+    let head = 0;
+    while (head < limit && old[head] === next[head]) head++;
+    let tail = 0;
+    while (tail < limit - head && old[old.length - 1 - tail] === next[next.length - 1 - tail]) tail++;
+    el.body.setRangeText(next.slice(head, next.length - tail), head, old.length - tail, "preserve");
+  }
+  savedSnapshot = JSON.stringify(theirs);
+  if (merged.clashes) {
+    notify("warn", ["You and someone else changed the same passage at the same time. Both versions are in the text now, yours first: keep what you want and delete the rest."]);
+  }
+  renderChrome();
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, 120);
 }
 
 function onEdit() {
@@ -1618,14 +2344,15 @@ async function changesFor(snap, sources) {
     if (!(name in outputs) && /\.(html|xml)$/.test(name)) changes.push(entry(`blog/${name}`, { sha: null }));
   }
 
-  // Images the published pages use that the website does not have yet: copy them over from the drafts repository.
+  // Images the published pages use that the website does not have yet: copy them over from where the drafts keep them.
   const used = new Set();
   for (const text of Object.values(outputs)) {
     for (const match of text.matchAll(/\/assets\/blog\/([A-Za-z0-9._-]+)/g)) used.add(match[1]);
   }
   for (const name of used) {
     if (snap.images.has(name) || !draftImages.has(name)) continue;
-    const image = await gh(DRAFTS, `git/blobs/${draftImages.get(name)}`);
+    const kept = draftImages.get(name);
+    const image = await gh(HOMES[kept.home].repo, `git/blobs/${kept.sha}`);
     const copy = await gh(SITE, "git/blobs", { method: "POST", body: { content: image.content.replace(/\s+/g, ""), encoding: "base64" } });
     changes.push(entry(`assets/blog/${name}`, { sha: copy.sha }));
   }
@@ -1747,6 +2474,7 @@ async function publish() {
       warning = "The post is published, but its draft copy could not be removed: " + err.message;
     }
   }
+  openComments();      // the comments went with the draft
   const url = `${liveBase}/blog/${slug}.html`;
   const paths = [`/blog/${slug}.html`, "/blog/feed.xml"];
   if (wasLive && wasLive !== slug) paths.push(`/blog/${wasLive}.html`);
@@ -1764,8 +2492,7 @@ async function unpublish() {
   const values = fields();
   const title = values.title.trim() || slug;
   // First make sure the text is safe as an ordinary draft, then take the page down.
-  await writeDraft({ ...values, slug: values.slug || slug }, "", false);
-  savedSnapshot = snapshot();
+  await storeForm((record) => ({ ...record, slug: record.slug || slug, revises: "" }));
   const outcome = await commitToSite(`Blog: unpublish ${title}`, (sources) => { sources.delete(slug); });
   cur = { draftId: cur.draftId, liveSlug: null };
   announce("ok", outcome, [`/blog/${slug}.html`, "/blog/feed.xml"], {
@@ -1815,11 +2542,57 @@ function twoStep(button, confirmLabel, action) {
     if (armed && armed.button === button) { disarm(); action(); return; }
     disarm();
     armed = { button, label: button.textContent, timer: setTimeout(disarm, 4000) };
-    button.textContent = confirmLabel;
+    button.textContent = typeof confirmLabel === "function" ? confirmLabel() : confirmLabel;
     button.classList.add("is-armed");
   });
 }
 
+// ============================================================ sharing a draft
+
+/**
+ * Move the open draft between the private repository and the shared one, with its comments
+ * and, on the way out, the images it uses. The copy is written before the original is removed.
+ */
+async function moveDraft(to) {
+  if (!cur.draftId) await storeForm();     // a published post has no draft file until it is edited
+  const id = cur.draftId;
+  const draft = drafts.get(id);
+  if (draft.home === to) return;
+  const title = draft.fields.title.trim() || "Untitled";
+  const from = HOMES[draft.home];
+  const target = HOMES[to];
+  if (to === "shared") {
+    for (const match of draft.fields.body.matchAll(/\/assets\/blog\/([A-Za-z0-9._-]+)/g)) {
+      const image = draftImages.get(match[1]);
+      if (!image || image.home === "shared") continue;
+      const blob = await gh(from.repo, `git/blobs/${image.sha}`);
+      const sha = await ensureFile(target, `images/${match[1]}`, blob.content.replace(/\s+/g, ""), `Image: ${match[1]}`);
+      draftImages.set(match[1], { sha, home: "shared" });
+    }
+  }
+  const comments = await fileAt(from, `comments/${id}.json`);
+  if (comments) await putFile(target, `comments/${id}.json`, comments.content.replace(/\s+/g, ""), `Comments: ${title}`);
+  const sha = await putFile(target, `drafts/${id}.md`, textToB64(draft.text), `Draft: ${title}`);
+  keepDraft(id, { ...draft, sha, home: to });
+  const leaving = `${to === "shared" ? "Shared" : "Made private"}: ${title}`;
+  await removeFile(from, `drafts/${id}.md`, leaving);
+  if (comments) await removeFile(from, `comments/${id}.json`, leaving);
+}
+
+async function toggleShare() {
+  if (!sharedOk) throw new UserError(`Your access token cannot open ${SHARED} yet. On GitHub, add that repository to the token, then reload this page.`);
+  const sharing = !isShared();
+  await moveDraft(sharing ? "shared" : "private");
+  const title = el.title.value.trim() || "Untitled";
+  openComments();
+  if (!sharing) notify("ok", [`“${title}” is private again. The people you invited no longer see it.`]);
+  else if (roster.people.length) notify("ok", [`“${title}” is shared: ${listNames(roster.people.map((person) => person.name))} can now open it, edit it and comment on it.`]);
+  else notify("ok", [`“${title}” is shared, but nobody is invited yet. Open People to invite someone.`]);
+}
+
+const listNames = (names) => (names.length < 3 ? names.join(" and ") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
+
+twoStep(el.share, () => (isShared() ? "Click again to stop sharing" : "Click again to share"), () => act(isShared() ? "Making it private…" : "Sharing…", toggleShare));
 twoStep(el.unpublish, "Click again to unpublish", () => act("Unpublishing…", unpublish));
 twoStep(el.discard, "Click again to confirm", () => act("Deleting…", discard, false));
 el.publish.addEventListener("click", () => act("Publishing…", publish));
@@ -1835,6 +2608,7 @@ $("btn-preview").addEventListener("click", (event) => {
 $("btn-lock").addEventListener("click", async () => {
   if (ready && !(await save())) return;
   token = "";
+  if (isGuest()) localStorage.removeItem(PASS_STORE);     // signing out: this browser forgets the invitation
   location.reload();
 });
 
@@ -1856,24 +2630,31 @@ const versionLabel = (entry) => `${entry.kind === "published" ? "Published" : "S
  */
 async function historyPage(page) {
   const id = cur.draftId || liveId();
-  const commits = (repo, branch, path) => gh(repo, `commits?sha=${encodeURIComponent(branch)}&path=${encodeURIComponent(path)}&per_page=100&page=${page}`);
+  const commits = (place, path) => gh(place.repo, `commits?sha=${encodeURIComponent(place.branch)}&path=${encodeURIComponent(path)}&per_page=100&page=${page}`);
   const draftPath = `drafts/${id}.md`;
   const livePath = `_blog/posts/${cur.liveSlug}.md`;
-  const [saves, publishes] = await Promise.all([
-    id ? commits(DRAFTS, CONFIG.drafts.branch, draftPath) : [],
-    cur.liveSlug ? commits(SITE, CONFIG.site.branch, livePath) : [],
+  // A draft's saves are in the private repository, the shared one, or both if it has been moved.
+  const [mine, shared, publishes] = await Promise.all([
+    id && !isGuest() ? commits(HOMES.private, draftPath) : [],
+    id && sharedOk ? commits(HOMES.shared, draftPath) : [],
+    cur.liveSlug ? commits(SITE_PLACE, livePath) : [],
   ]);
   const entries = [];
-  for (const item of saves) {
-    // commits that removed the draft file (after a publish, or a discard) hold no version
-    if (/^(Published|Discard changes to|Delete draft): /.test(item.commit.message)) continue;
-    entries.push({ kind: "saved", repo: DRAFTS, path: draftPath, sha: item.sha, when: item.commit.committer.date });
+  for (const [items, home] of [[mine, "private"], [shared, "shared"]]) {
+    for (const item of items) {
+      // commits that removed the draft file (a publish, a discard, a move to the other repository) hold no version
+      if (/^(Published|Discard changes to|Delete draft|Shared|Made private): /.test(item.commit.message)) continue;
+      entries.push({
+        kind: "saved", repo: HOMES[home].repo, path: draftPath, sha: item.sha, when: item.commit.committer.date,
+        by: home === "shared" ? item.commit.author.name : "",
+      });
+    }
   }
   for (const item of publishes) {
     if (/^Blog: unpublish /.test(item.commit.message)) continue;
-    entries.push({ kind: "published", repo: SITE, path: livePath, sha: item.sha, when: item.commit.committer.date });
+    entries.push({ kind: "published", repo: SITE, path: livePath, sha: item.sha, when: item.commit.committer.date, by: "" });
   }
-  return { entries, more: saves.length === 100 || publishes.length === 100 };
+  return { entries, more: [mine, shared, publishes].some((items) => items.length === 100) };
 }
 
 const newestFirst = (a, b) => b.when.localeCompare(a.when) || (a.kind === "published" ? -1 : 1);
@@ -1903,7 +2684,8 @@ function renderHistory() {
   list.append(listItem("Current version", "what you were editing", !viewing.shown, () => showVersion(null)));
   const listed = listedVersions();
   for (const entry of listed) {
-    const item = listItem(entry.kind === "published" ? "Published" : "Saved", when(entry.when, viewing.every), viewing.shown === entry, () => showVersion(entry));
+    const title = entry.kind === "published" ? "Published" : entry.by ? `Saved by ${entry.by}` : "Saved";
+    const item = listItem(title, when(entry.when, viewing.every), viewing.shown === entry, () => showVersion(entry));
     if (entry.kind === "published") item.classList.add("is-published");
     list.append(item);
   }
@@ -1913,6 +2695,12 @@ function renderHistory() {
   $("btn-restore").hidden = !viewing.shown;
   $("btn-history-more").hidden = !viewing.more;
   $("history-empty").hidden = viewing.entries.length > 0;
+}
+
+/** History takes the place of the comments and the list of posts; both come back when it closes. */
+function drawPanes() {
+  renderHistory();
+  renderComments();
 }
 
 async function openHistory() {
@@ -1935,7 +2723,7 @@ async function openHistory() {
     viewing = { current, entries: first.entries.sort(newestFirst), shown: null, every: false, page: 1, more: first.more };
   }
   renderChrome();
-  renderHistory();
+  drawPanes();
   if (viewing) refreshPreview();
 }
 
@@ -1986,7 +2774,7 @@ function closeHistory(restore) {
   versionTicket++;
   // The post keeps its date and its URL; a restore brings back the writing.
   setForm(old ? { ...current, title: old.title, subtitle: old.subtitle, body: old.body } : current);
-  renderHistory();
+  drawPanes();
   if (old && isDirty()) {
     onEdit();
     notify("ok", [`Restored the version ${versionLabel(shown).replace(/^./, (c) => c.toLowerCase())}. The text you had before is still in History.`]);
@@ -2001,6 +2789,801 @@ $("btn-history-back").addEventListener("click", () => closeHistory(false));
 $("btn-restore").addEventListener("click", () => closeHistory(true));
 $("btn-history-more").addEventListener("click", olderHistory);
 $("btn-history-every").addEventListener("click", () => { if (viewing) { viewing.every = !viewing.every; renderHistory(); } });
+
+// ============================================================ comments
+
+// A draft's comments are kept beside it, in comments/<id>.json: a list of threads. A thread has
+// the words it quotes from the Markdown (with a little of what stands before and after them, to
+// tell two places with the same words apart), its first comment, the replies, and whether it is
+// resolved.
+const NO_NOTES = { key: "", sha: null, threads: [] };
+let notes = NO_NOTES;          // the open draft's comments, as last read
+let composing = null;          // the comment being written: {id: "new", quote, before, after}
+let activeThread = "";         // the thread whose card is in front
+let commentsWanted = null;     // set by the Comments button; null: the column shows when there is something in it
+let showResolved = false;
+let anchors = new Map();       // thread id -> {start, end}: where its words are in the Markdown now, if they still are
+let notesTicket = 0;
+
+const notesPlace = () => {
+  const draft = drafts.get(cur.draftId);
+  return draft ? { ...HOMES[draft.home], path: `comments/${cur.draftId}.json`, key: `${draft.home}/${cur.draftId}` } : null;
+};
+const openThreads = () => notes.threads.filter((thread) => !thread.resolved);
+const commentsUsable = () => ready && !viewing && !cur.gone && Boolean(cur.draftId || (!isGuest() && !(isNew() && isBlank())));
+const commentsShown = () => commentsUsable() && (Boolean(composing) || (commentsWanted === null ? openThreads().length > 0 : commentsWanted));
+const shownThreads = () => (commentsShown() ? [...(composing ? [composing] : []), ...notes.threads.filter((thread) => showResolved || !thread.resolved)] : []);
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function redrawComments() {
+  renderChrome();
+  renderList();
+  renderComments();
+}
+
+/**
+ * The threads of a comments file, in the shape the cards expect. Anyone with an invitation can
+ * write that file, so nothing in it is taken on trust: ids are used to find cards on the page.
+ */
+function tidyThreads(list) {
+  const text = (value) => (typeof value === "string" ? value : "");
+  const note = (item) => ({ id: item.id, author: text(item.author), at: text(item.at), text: text(item.text) });
+  const usable = (item) => Boolean(item) && typeof item === "object" && /^[A-Za-z0-9]{1,40}$/.test(text(item.id));
+  return (Array.isArray(list) ? list : []).filter(usable).map((item) => ({
+    ...note(item), quote: text(item.quote), before: text(item.before), after: text(item.after),
+    replies: (Array.isArray(item.replies) ? item.replies : []).filter(usable).map(note),
+    resolved: item.resolved && typeof item.resolved === "object" ? { by: text(item.resolved.by), at: text(item.resolved.at) } : null,
+  }));
+}
+
+/** Forget the comments on screen and read the open draft's. */
+function openComments() {
+  notes = NO_NOTES;
+  composing = null;
+  activeThread = "";
+  renderChrome();
+  renderComments();
+  return loadComments();
+}
+
+async function loadComments() {
+  const ticket = ++notesTicket;
+  const place = notesPlace();
+  if (!place) return;
+  let file;
+  try {
+    file = await readJson(place, place.path, { threads: [] });
+  } catch (err) {
+    return;     // read again at the next look
+  }
+  const now = notesPlace();
+  if (ticket !== notesTicket || !now || now.key !== place.key) return;    // another post was opened meanwhile
+  notes = { key: place.key, sha: file.sha, threads: tidyThreads(file.value.threads) };
+  if (activeThread !== "new" && !notes.threads.some((thread) => thread.id === activeThread)) activeThread = "";
+  renderChrome();
+  renderComments();
+}
+
+/**
+ * Change the open draft's comments. The change is applied to the newest copy on GitHub, so two
+ * people commenting at the same moment both keep theirs. Resolves to whether it worked.
+ */
+function changeComments(change) {
+  return enqueue(async () => {
+    if (!cur.draftId && canWrite() && !(isNew() && isBlank())) await storeForm();    // comments are kept beside a draft file
+    const place = notesPlace();
+    if (!place) throw new UserError("There is no draft to comment on.");
+    const file = await updateJson(place, place.path, { v: 1, threads: [] }, `Comments: ${el.title.value.trim() || "Untitled"}`, (value) => {
+      value.threads = tidyThreads(value.threads);
+      change(value.threads);
+    });
+    notes = { key: place.key, sha: file.sha, threads: file.value.threads };
+    return true;
+  }).catch((err) => {
+    notify("error", [err instanceof UserError ? err.message : `The comment could not be saved: ${err.message || err}`]);
+    return false;
+  });
+}
+
+// ---- where a comment's words are
+
+/** In the Markdown: the words themselves or, if they were edited, whatever now stands between the text that was around them. */
+function locateQuote(text, anchor) {
+  const { quote = "", before = "", after = "" } = anchor;
+  if (!quote) return null;
+  let best = null;
+  for (let at = text.indexOf(quote); at >= 0; at = text.indexOf(quote, at + 1)) {
+    // The same words in several places: take the place whose surroundings fit best.
+    const lead = text.slice(Math.max(0, at - before.length), at);
+    let score = 0;
+    while (score < lead.length && lead[lead.length - 1 - score] === before[before.length - 1 - score]) score++;
+    for (let i = 0; i < after.length && text[at + quote.length + i] === after[i]; i++) score++;
+    if (!best || score > best.score) best = { start: at, end: at + quote.length, score };
+  }
+  if (best) return { start: best.start, end: best.end };
+  const lead = before.length >= 12 && after.length >= 12 ? text.indexOf(before) : -1;
+  if (lead < 0) return null;
+  const start = lead + before.length;
+  const end = text.indexOf(after, start);
+  return end > start && end - start <= quote.length * 3 + 60 ? { start, end } : null;
+}
+
+function locateThreads(threads) {
+  const found = new Map();
+  for (const thread of threads) {
+    const range = locateQuote(el.body.value, thread);
+    if (range) found.set(thread.id, range);
+  }
+  return found;
+}
+
+// Comments quote the Markdown but are read, and mostly made, in the preview. The two are matched
+// word by word: the letters and digits are the same on both sides, whatever markup is around them.
+// Images, link addresses and {attributes} are skipped, since they never show as text.
+const ATTRIBUTE = String.raw`(?:[#.][\w-]+|[\w-]+=[^}\s]+)`;
+const SOURCE_WORD = new RegExp(String.raw`!\[[^\]\n]*\]\([^)\n]*\)|\]\([^)\n]*\)|\{:?[ ]*${ATTRIBUTE}(?:[ ]+${ATTRIBUTE})*[ ]*\}|[\p{L}\p{N}]+`, "gu");
+
+function sourceWords(text) {
+  const words = [];
+  for (const match of text.matchAll(SOURCE_WORD)) {
+    if (/^[\p{L}\p{N}]/u.test(match[0])) words.push({ w: match[0], start: match.index, end: match.index + match[0].length });
+  }
+  return words;
+}
+
+/** The words of the preview, each with the text node it is in (`at` is that node's place in `nodes`). */
+function previewWords(body) {
+  const nodes = [];
+  const words = [];
+  const walker = body.ownerDocument.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    for (const match of node.data.matchAll(/[\p{L}\p{N}]+/gu)) {
+      words.push({ w: match[0], node, at: nodes.length, start: match.index, end: match.index + match[0].length });
+    }
+    nodes.push(node);
+  }
+  return { nodes, words };
+}
+
+/** Every place in `words` where the run of words `run` starts. */
+function runsOf(words, run) {
+  const starts = [];
+  for (let i = 0; i + run.length <= words.length; i++) {
+    let j = 0;
+    while (j < run.length && words[i + j].w === run[j]) j++;
+    if (j === run.length) starts.push(i);
+  }
+  return starts;
+}
+
+/** The run of words `from`..`to` of `here`, found in `there`: the one that is as many-th there as it is here. */
+function sameRun(here, from, to, there) {
+  const run = here.slice(from, to + 1).map((word) => word.w);
+  const earlier = runsOf(here, run).filter((start) => start < from).length;
+  const starts = runsOf(there, run);
+  const start = starts.length === 1 ? starts[0] : starts[earlier];
+  return start === undefined ? null : { from: start, to: start + run.length - 1 };
+}
+
+/** The words of the preview that a stretch of the Markdown shows as: {from, to} among `shown`. */
+function toPreview(written, shown, range) {
+  const from = written.findIndex((word) => word.end > range.start);
+  let to = written.length - 1;
+  while (to >= 0 && written[to].start >= range.end) to--;
+  return from >= 0 && to >= from ? sameRun(written, from, to, shown) : null;
+}
+
+/** Highlight in the preview the words each comment on screen is about, then stand the cards beside them. */
+function markComments(doc) {
+  const body = doc.querySelector(".post-body");
+  if (!body) { placeThreads(); return; }
+  const old = [...body.querySelectorAll("mark.ed-comment")];
+  for (const mark of old) mark.replaceWith(...mark.childNodes);
+  if (old.length) body.normalize();
+  const threads = shownThreads();
+  anchors = locateThreads(threads);
+  if (threads.length) {
+    const written = sourceWords(el.body.value);
+    const shown = previewWords(body);
+    const cuts = new Map();     // text node -> the parts of it that comments are about: [{start, end, id}]
+    for (const thread of threads) {
+      const range = anchors.get(thread.id);
+      const span = range && toPreview(written, shown.words, range);
+      if (!span) continue;
+      const first = shown.words[span.from];
+      const last = shown.words[span.to];
+      for (let at = first.at; at <= last.at; at++) {
+        const node = shown.nodes[at];
+        const start = at === first.at ? first.start : 0;
+        const end = at === last.at ? last.end : node.data.length;
+        if (node.data.slice(start, end).trim()) cuts.set(node, [...(cuts.get(node) || []), { start, end, id: thread.id }]);
+      }
+    }
+    for (const [node, parts] of cuts) {
+      // Cut the text where a comment starts or ends, from the right, so that places further left stay true.
+      const edges = [...new Set(parts.flatMap((part) => [part.start, part.end]))].filter((edge) => edge > 0 && edge < node.data.length).sort((a, b) => b - a);
+      const pieces = [];
+      for (const edge of edges) pieces.unshift({ node: node.splitText(edge), start: edge });
+      pieces.unshift({ node, start: 0 });
+      for (const piece of pieces) {
+        const ids = parts.filter((part) => part.start <= piece.start && part.end >= piece.start + piece.node.data.length).map((part) => part.id);
+        if (!ids.length) continue;
+        const mark = doc.createElement("mark");
+        mark.className = "ed-comment" + (ids.includes(activeThread) ? " is-active" : "");
+        mark.dataset.threads = ids.join(" ");
+        piece.node.replaceWith(mark);
+        mark.append(piece.node);
+      }
+    }
+  }
+  for (const card of el.threads.querySelectorAll(".thread")) {
+    const quote = card.querySelector(".thread-quote");
+    if (quote) quote.classList.toggle("is-lost", !anchors.has(card.dataset.id));
+  }
+  placeThreads();
+}
+
+/**
+ * Stand each card level with its words in the preview. Cards that would overlap make room for
+ * each other, the one in front keeping its place. Without a preview beside it, they are a list.
+ */
+function placeThreads() {
+  const list = el.threads;
+  const cards = [...list.querySelectorAll(".thread")];
+  const doc = el.preview.contentDocument;
+  const beside = Boolean(doc && doc.defaultView) && el.preview.getClientRects().length > 0 && list.getClientRects().length > 0
+    && getComputedStyle(list.parentElement).position !== "fixed";
+  list.classList.toggle("is-flow", !beside);
+  if (!beside) { for (const card of cards) card.style.top = ""; return; }
+  const offset = el.preview.getBoundingClientRect().top - list.getBoundingClientRect().top;
+  const spots = cards.map((card) => {
+    const mark = doc.querySelector(`mark.ed-comment[data-threads~="${card.dataset.id}"]`);
+    // A comment on the whole post, or on words that are gone, belongs at the top of the page.
+    const want = (mark ? mark.getBoundingClientRect().top - 8 : 8 - doc.defaultView.scrollY) + offset;
+    return { card, want, height: card.offsetHeight, top: 0 };
+  }).sort((a, b) => a.want - b.want);
+  const front = Math.max(0, spots.findIndex((spot) => spot.card.dataset.id === activeThread));
+  let floor = -Infinity;
+  for (let i = front; i < spots.length; i++) {
+    spots[i].top = Math.max(spots[i].want, floor);
+    floor = spots[i].top + spots[i].height + 8;
+  }
+  for (let i = front - 1; i >= 0; i--) spots[i].top = Math.min(spots[i].want, spots[i + 1].top - spots[i].height - 8);
+  for (const spot of spots) spot.card.style.top = `${Math.round(spot.top)}px`;
+}
+
+let placing = 0;
+function placeSoon() {
+  if (!placing) placing = requestAnimationFrame(() => { placing = 0; placeThreads(); });
+}
+
+/** Bring a thread to the front ("" for none): its card, and its words in the preview. */
+function activate(id, reveal) {
+  if (id === activeThread && !reveal) return;
+  activeThread = id;
+  for (const card of el.threads.querySelectorAll(".thread")) card.classList.toggle("is-active", card.dataset.id === id);
+  const doc = el.preview.contentDocument;
+  let first = null;
+  for (const mark of doc ? doc.querySelectorAll("mark.ed-comment") : []) {
+    const mine = Boolean(id) && mark.dataset.threads.split(" ").includes(id);
+    mark.classList.toggle("is-active", mine);
+    if (mine && !first) first = mark;
+  }
+  if (first && reveal) {
+    const box = first.getBoundingClientRect();
+    if (box.top < 0 || box.bottom > doc.defaultView.innerHeight) first.scrollIntoView({ block: "center", behavior: "instant" });
+  }
+  placeThreads();
+}
+
+// ---- the cards
+
+/** A box in a card: it grows with what is typed, and Cmd/Ctrl+Enter sends it. */
+function wireBox(box, send, cancel) {
+  const fit = () => {
+    box.style.height = "auto";
+    box.style.height = `${box.scrollHeight + 2}px`;
+    send.disabled = !box.value.trim();
+    placeThreads();
+  };
+  box.addEventListener("input", fit);
+  box.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); send.click(); }
+    else if (event.key === "Escape" && cancel) { event.preventDefault(); cancel(); }
+  });
+  send.disabled = true;
+}
+
+/** One comment in a thread; `note` is the thread itself for its first comment. */
+function noteNode(thread, note) {
+  const node = make("div", "note");
+  const head = make("div", "note-head");
+  head.append(make("span", "note-author", note.author || "Someone"), make("span", "note-when", when(note.at)));
+  if (!isGuest() || note.author === me.name) {
+    const remove = button("linkish", "Delete", async () => {
+      if (!remove.dataset.sure) {
+        remove.dataset.sure = "1";
+        remove.textContent = note === thread && (thread.replies || []).length ? "Delete with its replies?" : "Really delete?";
+        setTimeout(() => { delete remove.dataset.sure; remove.textContent = "Delete"; }, 4000);
+        return;
+      }
+      await changeComments((threads) => {
+        const at = threads.findIndex((item) => item.id === thread.id);
+        if (at < 0) return;
+        if (note.id === thread.id) threads.splice(at, 1);
+        else threads[at].replies = (threads[at].replies || []).filter((reply) => reply.id !== note.id);
+      });
+      redrawComments();
+    });
+    head.append(remove);
+  }
+  node.append(head, make("p", "note-text", note.text));
+  return node;
+}
+
+function threadCard(thread) {
+  const card = make("article", "thread" + (thread.id === activeThread ? " is-active" : "") + (thread.resolved ? " is-resolved" : ""));
+  card.dataset.id = thread.id;
+  if (thread.quote) card.append(make("div", "thread-quote" + (anchors.has(thread.id) ? "" : " is-lost"), thread.quote));
+  card.append(noteNode(thread, thread));
+  for (const reply of thread.replies || []) card.append(noteNode(thread, reply));
+  const amend = (change) => async () => {
+    await changeComments((threads) => {
+      const item = threads.find((other) => other.id === thread.id);
+      if (item) change(item);
+    });
+    redrawComments();
+  };
+  const row = make("div", "thread-row");
+  if (thread.resolved) {
+    row.append(make("span", "note-when", `Resolved by ${thread.resolved.by}`), button("btn", "Reopen", amend((item) => { item.resolved = null; })));
+    card.append(row);
+  } else {
+    const box = make("textarea");
+    box.rows = 1;
+    box.placeholder = "Reply…";
+    const send = button("btn", "Reply", async () => {
+      const text = box.value.trim();
+      if (!text) return;
+      send.disabled = true;
+      const sent = await changeComments((threads) => {
+        const item = threads.find((other) => other.id === thread.id);
+        if (item) (item.replies = item.replies || []).push({ id: newId(), author: me.name, at: new Date().toISOString(), text });
+      });
+      if (sent) box.value = "";
+      redrawComments();
+    });
+    wireBox(box, send);
+    row.append(send, make("span", "grow"), button("btn quiet", "Resolve", amend((item) => { item.resolved = { by: me.name, at: new Date().toISOString() }; })));
+    card.append(box, row);
+  }
+  // On the click, not the press: the card may move when it comes to the front, and a button in it must still be hit.
+  card.addEventListener("click", () => activate(thread.id, true));
+  return card;
+}
+
+function composerCard() {
+  const card = make("article", "thread is-active");
+  card.dataset.id = "new";
+  if (composing.quote) card.append(make("div", "thread-quote", composing.quote));
+  const box = make("textarea");
+  box.rows = 3;
+  box.placeholder = composing.quote ? "Comment…" : "A comment on the whole post…";
+  const cancel = () => { composing = null; activeThread = ""; redrawComments(); };
+  const send = button("btn primary", "Comment", async () => {
+    const text = box.value.trim();
+    const about = composing;
+    if (!text || !about) return;
+    send.disabled = true;
+    const id = newId();
+    const sent = await changeComments((threads) => {
+      threads.push({ id, quote: about.quote, before: about.before, after: about.after, author: me.name, at: new Date().toISOString(), text, replies: [], resolved: null });
+    });
+    if (sent && composing === about) { composing = null; activeThread = id; box.value = ""; }
+    redrawComments();
+  });
+  wireBox(box, send, cancel);
+  const row = make("div", "thread-row");
+  row.append(send, button("btn quiet", "Cancel", cancel));
+  card.append(box, row);
+  return card;
+}
+
+function renderComments() {
+  const list = el.threads;
+  $("layout").classList.toggle("has-comments", commentsShown());
+  const resolved = notes.threads.length - openThreads().length;
+  $("btn-resolved").hidden = !resolved;
+  $("btn-resolved").textContent = showResolved ? "Hide resolved" : `Show resolved (${resolved})`;
+
+  // The cards are rebuilt; what is being typed in one of them is carried over.
+  const typed = new Map([...list.querySelectorAll("textarea")].map((box) => [box.closest(".thread").dataset.id, box]));
+  const focused = list.contains(document.activeElement) ? document.activeElement : null;
+  const threads = shownThreads();
+  anchors = locateThreads(threads);
+  const place = (thread) => (anchors.has(thread.id) ? anchors.get(thread.id).start : -1);
+  list.textContent = "";
+  for (const thread of [...threads].sort((a, b) => place(a) - place(b))) list.append(thread === composing ? composerCard() : threadCard(thread));
+  if (!threads.length) list.append(make("p", "comments-empty", "No comments. Select some words in the preview or in the text, then press Comment."));
+  for (const box of list.querySelectorAll("textarea")) {
+    const was = typed.get(box.closest(".thread").dataset.id);
+    if (!was) continue;
+    box.value = was.value;
+    box.dispatchEvent(new Event("input"));
+    if (was === focused) { box.focus(); box.setSelectionRange(was.selectionStart, was.selectionEnd); }
+  }
+  const doc = el.preview.contentDocument;
+  if (doc && doc.body && !captionAt) markComments(doc); else placeThreads();
+}
+
+// ---- starting a comment
+
+/** Open a card for a new comment on a stretch of the Markdown; an empty stretch means the whole post. */
+function startComment(start, end) {
+  if (!ready || busy || !canWrite() || !commentsUsable()) return;
+  const text = el.body.value;
+  while (start < end && /\s/.test(text[start])) start++;
+  while (end > start && /\s/.test(text[end - 1])) end--;
+  composing = { id: "new", quote: text.slice(start, end), before: text.slice(Math.max(0, start - 32), start), after: text.slice(end, end + 32) };
+  activeThread = "new";
+  redrawComments();
+  const box = el.threads.querySelector('.thread[data-id="new"] textarea');
+  if (box) box.focus();
+}
+
+/** Comment on the words selected in the preview: they are looked up in the Markdown, which is what a comment quotes. */
+function commentFromPreview(doc) {
+  const selection = doc.getSelection();
+  const body = doc.querySelector(".post-body");
+  if (!body || !selection.rangeCount || selection.isCollapsed) { startComment(0, 0); return; }
+  const range = selection.getRangeAt(0);
+  const shown = previewWords(body).words;
+  const hit = [];
+  shown.forEach((word, i) => {
+    const startsBeforeEnd = range.comparePoint(word.node, word.start) <= 0 && !(word.node === range.endContainer && word.start >= range.endOffset);
+    const endsAfterStart = range.comparePoint(word.node, word.end) >= 0 && !(word.node === range.startContainer && word.end <= range.startOffset);
+    if (startsBeforeEnd && endsAfterStart) hit.push(i);
+  });
+  const written = sourceWords(el.body.value);
+  const run = hit.length ? sameRun(shown, hit[0], hit[hit.length - 1], written) : null;
+  if (!run) {
+    notify("warn", ["Those words could not be found in the text as written. Select a few words inside one paragraph, or select them in the writing box and press Comment there."]);
+    return;
+  }
+  selection.removeAllRanges();
+  startComment(written[run.from].start, written[run.to].end);
+}
+
+el.comment.addEventListener("click", () => startComment(el.body.selectionStart, el.body.selectionEnd));
+el.comments.addEventListener("click", () => {
+  commentsWanted = !commentsShown();
+  if (!commentsWanted) composing = null;
+  redrawComments();
+});
+$("btn-comments-hide").addEventListener("click", () => { commentsWanted = false; composing = null; redrawComments(); });
+$("btn-resolved").addEventListener("click", () => { showResolved = !showResolved; renderComments(); });
+// Beside the preview the cards cannot scroll by themselves: turning the wheel over them scrolls the page they belong to.
+el.threads.addEventListener("wheel", (event) => {
+  if (!el.threads.classList.contains("is-flow") && el.preview.contentWindow) el.preview.contentWindow.scrollBy(0, event.deltaY);
+}, { passive: true });
+window.addEventListener("resize", placeSoon);
+
+// ============================================================ keeping up with other people
+
+/** The open draft has left the shared drafts while it was open here: stop writing to it. */
+function letGo(title) {
+  const unsaved = isDirty();
+  cur.gone = true;
+  composing = null;
+  notes = NO_NOTES;
+  if (!isGuest()) notify("warn", [`“${title}” was published or deleted from another window. Reload the editor to see how things stand.`]);
+  else if (unsaved) notify("warn", [`“${title}” is no longer shared with you, so your last changes could not be saved. The text is still here if you want to copy it.`]);
+  else notify("warn", [`“${title}” is no longer shared with you.`]);
+  redrawComments();
+}
+
+/** Say in the status line whose changes just arrived. */
+async function whoSaved(place, id) {
+  try {
+    const last = await gh(place.repo, `commits?sha=${encodeURIComponent(place.branch)}&path=${encodeURIComponent(`drafts/${id}.md`)}&per_page=1`);
+    const name = last.length ? last[0].commit.author.name : "";
+    say(name && name !== me.name ? `Updated with changes from ${name}` : "Updated with changes made elsewhere");
+  } catch (err) {
+    // only a courtesy
+  }
+}
+
+/**
+ * See what has changed among the shared drafts since the last look: someone else's save of the
+ * open draft is worked into the form, new comments appear, the list follows what is shared.
+ */
+async function lookAtShared() {
+  if (!ready || busy || viewing) return;
+  const place = HOMES.shared;
+  const tree = await gh(place.repo, `git/trees/${encodeURIComponent(place.branch)}?recursive=1`);
+  const files = new Map(tree.tree.filter((item) => item.type === "blob").map((item) => [item.path, item.sha]));
+  for (const [path, sha] of files) {
+    const image = /^images\/([^/]+)$/.exec(path);
+    if (image && (draftImages.get(image[1]) || {}).home !== "shared") draftImages.set(image[1], { sha, home: "shared" });
+  }
+
+  let listChanged = false;
+  const here = new Set();
+  for (const [path, sha] of files) {
+    const match = /^drafts\/([^/]+)\.md$/.exec(path);
+    if (!match) continue;
+    const id = match[1];
+    here.add(id);
+    const known = drafts.get(id);
+    if (known && known.home === "shared" && known.sha === sha) continue;
+    // Just after this browser saved a draft, or took it out of the shared ones, GitHub may still describe it as it was before.
+    if (lately(superseded.get(`${id} ${sha}`))) continue;
+    if (known && known.home === "private" && lately(superseded.get(`${id} moved`))) continue;
+    const text = await getText(place.repo, sha);
+    keepDraft(id, { sha, text, fields: parseOr(text, id), home: "shared" });
+    listChanged = true;
+    if (id !== cur.draftId || cur.gone) continue;
+    absorb(drafts.get(id).fields);
+    if (isDirty()) { clearTimeout(saveTimer); saveTimer = setTimeout(save, 3000); }
+    whoSaved(place, id);
+  }
+  for (const [id, draft] of [...drafts]) {
+    if (draft.home !== "shared" || here.has(id) || lately(draft.at)) continue;
+    // No longer among the shared drafts. The owner may have made it private again from another window.
+    const moved = isGuest() ? null : await fileAt(HOMES.private, `drafts/${id}.md`);
+    if (moved) {
+      const text = b64ToText(moved.content);
+      keepDraft(id, { sha: moved.sha, text, fields: parseOr(text, id), home: "private" });
+    } else {
+      drafts.delete(id);
+      if (id === cur.draftId && !cur.gone) letGo(draft.fields.title.trim() || "Untitled");
+    }
+    listChanged = true;
+  }
+
+  const beside = notesPlace();
+  if (beside && isShared() && (files.get(beside.path) || null) !== notes.sha) await loadComments();
+  if (listChanged) { renderChrome(); renderList(); }
+}
+
+let lookQueued = false;
+
+/** Look once, after whatever is being saved; skipped while the tab is in the background. */
+function lookSoon() {
+  if (lookQueued || !ready || document.hidden || !sharedOk) return;
+  lookQueued = true;
+  enqueue(async () => {
+    lookQueued = false;
+    try {
+      await lookAtShared();
+    } catch (err) {
+      // offline, or GitHub is busy: the next look will do
+    }
+  });
+}
+
+document.addEventListener("visibilitychange", lookSoon);
+
+// ============================================================ people (the owner's)
+
+// people.json, in the private repository, lists who is invited. keys.json, on the website, holds
+// the sealed token that each invitation's passphrase opens. The two are matched by `id`.
+const TOKENS_URL = "https://github.com/settings/personal-access-tokens";
+const NO_ROSTER = { v: 1, owner: {}, people: [] };
+const tidyRoster = (value) => ({ v: 1, owner: value.owner || {}, people: Array.isArray(value.people) ? value.people : [] });
+let roster = tidyRoster({});
+
+const changeKeys = (message, change) => updateJson(SITE_PLACE, KEYS_PATH, { v: 1, entries: [] }, message, (file) => {
+  if (!Array.isArray(file.entries)) file.entries = [];
+  change(file.entries);
+});
+
+async function changeRoster(message, change) {
+  const file = await updateJson(HOMES.private, ROSTER_PATH, NO_ROSTER, message, (value) => {
+    Object.assign(value, tidyRoster(value));
+    change(value);
+  });
+  roster = tidyRoster(file.value);
+}
+
+const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const dropTyped = (entries) => { for (let i = entries.length - 1; i >= 0; i--) if (entries[i].typed) entries.splice(i, 1); };
+
+/** Invite someone: seal the token made for them under a new passphrase. Resolves to their entry in the roster. */
+async function invite(name, theirToken) {
+  if ([me.name, ...roster.people.map((person) => person.name)].some((other) => sameName(other, name))) {
+    throw new UserError(`There is already someone called ${name}. Names tell people apart on comments, so pick another.`);
+  }
+  // The token must open the shared drafts, and must not open the private ones.
+  const sees = async (repo) => (await fetch(`https://api.github.com/repos/${CONFIG.owner}/${repo}`, {
+    cache: "no-store", headers: { Authorization: `Bearer ${theirToken}`, Accept: "application/vnd.github+json" },
+  })).status;
+  let shared;
+  let privately;
+  try {
+    [shared, privately] = await Promise.all([sees(SHARED), sees(DRAFTS)]);
+  } catch (err) {
+    throw new UserError("Could not reach GitHub to check the token. Check the connection and try again.");
+  }
+  if (shared === 401) throw new UserError("GitHub does not recognise that token. Copy it again, in full.");
+  if (shared !== 200) throw new UserError(`That token cannot open ${SHARED}. Create it again and select that repository.`);
+  if (privately === 200) throw new UserError(`That token also opens ${DRAFTS}, where your private drafts are. Create one that is limited to ${SHARED}.`);
+
+  const code = randomGroups(6);
+  const id = code.slice(0, 4);
+  const entry = { id, ...(await seal(JSON.stringify({ name, role: "guest", token: theirToken }), code, PASS_ITERATIONS)) };
+  await changeKeys("Blog editor: add an invitation", (entries) => {
+    if (entries.some((other) => other.id === id)) throw new UserError("That did not work this time. Press the button again.");
+    entries.push(entry);
+  });
+  // The passphrase is kept with the roster so that the invitation can be shown again. That file is
+  // in the private repository, which already holds more than the invitation opens.
+  const person = { id, name, added: new Date().toISOString(), code };
+  await changeRoster(`People: invite ${name}`, (value) => { value.people.push(person); });
+  return person;
+}
+
+async function uninvite(person) {
+  await changeKeys("Blog editor: withdraw an invitation", (entries) => {
+    const at = entries.findIndex((entry) => entry.id === person.id);
+    if (at >= 0) entries.splice(at, 1);
+  });
+  await changeRoster(`People: remove ${person.name}`, (value) => { value.people = value.people.filter((other) => other.id !== person.id); });
+}
+
+/** Seal the owner's own token under a passphrase, for signing in on another device. */
+async function setOwnPassphrase(typed) {
+  const passphrase = tidyPassphrase(typed);
+  if (passphrase.length < 16) throw new UserError("That is too short to be safe in a public file. Use at least 16 characters, or take the suggestion.");
+  const generated = CODE_SHAPE.test(passphrase);
+  const id = generated ? passphrase.slice(0, 4) : randomGroups(1);
+  const sealed = await seal(JSON.stringify({ name: me.name, role: "owner", token }), passphrase, generated ? PASS_ITERATIONS : TYPED_ITERATIONS);
+  const entry = { id, typed: true, ...sealed };
+  await changeKeys("Blog editor: set the owner's passphrase", (entries) => { dropTyped(entries); entries.push(entry); });
+  await changeRoster("People: set the owner's passphrase", (value) => { value.owner.passphrase = { id, set: new Date().toISOString() }; });
+}
+
+async function removeOwnPassphrase() {
+  await changeKeys("Blog editor: remove the owner's passphrase", dropTyped);
+  await changeRoster("People: remove the owner's passphrase", (value) => { delete value.owner.passphrase; });
+}
+
+/** Show a message at the top of People: "error", "warn", or "" to clear it. */
+function peopleSay(kind, parts = []) {
+  $("people-problem").hidden = !kind;
+  $("people-error").hidden = kind !== "error";
+  $("people-warn").hidden = kind !== "warn";
+  if (!kind) return;
+  const node = $("people-" + kind);
+  node.textContent = "";
+  node.append(...parts);
+  node.scrollIntoView({ block: "nearest" });
+}
+
+/** Run something from People: one thing at a time, after any save, with failures shown in the sheet. */
+async function peopleAction(action) {
+  const body = $("people").querySelector(".sheet-body");
+  peopleSay("");
+  body.inert = true;
+  try {
+    await enqueue(action);
+  } catch (err) {
+    peopleSay("error", [err instanceof UserError ? err.message : `That did not work: ${err.message || err}`]);
+  }
+  body.inert = false;
+  renderPeople();
+}
+
+function showInvite(person) {
+  const page = location.origin + location.pathname;
+  $("invite-lede").textContent = `Send this link to ${person.name}. Opening it signs them in; they need nothing else.`;
+  $("invite-link").textContent = `${page}#invite=${person.code}`;
+  $("invite-page").textContent = page;
+  $("invite-code").textContent = person.code;
+  $("invite-copied").hidden = true;
+  $("invite-result").hidden = false;
+  $("invite-result").scrollIntoView({ block: "nearest" });
+}
+
+function renderPeople() {
+  const list = $("people-list");
+  list.textContent = "";
+  for (const person of roster.people) {
+    const remove = button("btn quiet", "Remove", () => {
+      if (!remove.classList.contains("is-armed")) {
+        remove.classList.add("is-armed");
+        remove.textContent = "Click again to remove";
+        return;
+      }
+      peopleAction(async () => {
+        await uninvite(person);
+        $("invite-result").hidden = true;
+        peopleSay("warn", [
+          `${person.name}'s invitation is withdrawn: its passphrase no longer opens the editor. The access token behind it still exists, though, and someone who kept the invitation could recover it. To end the access for good, delete that token on GitHub: `,
+          link(TOKENS_URL),
+        ]);
+      });
+    });
+    const row = make("div", "person");
+    row.append(make("span", "person-name", person.name), make("span", "person-meta", `invited ${when(person.added)}`),
+      button("btn quiet", "Show invitation", () => showInvite(person)), remove);
+    list.append(row);
+  }
+  if (!roster.people.length) list.append(make("p", "fine", "Nobody yet."));
+  const own = roster.owner.passphrase;
+  $("own-state").textContent = own
+    ? `A passphrase is set (since ${when(own.set)}). On another device, open this page and type it. Setting a new one replaces it.`
+    : "No passphrase is set: on a new device the editor asks for a GitHub token.";
+  $("own-remove").hidden = !own;
+  if (document.activeElement !== $("own-name")) $("own-name").value = me.name;
+}
+
+el.people.addEventListener("click", () => {
+  peopleSay(sharedOk ? "" : "warn", [`Your own access token cannot open ${SHARED} yet, so drafts cannot be shared. On GitHub, add that repository to the token, then reload this page: `, link(TOKENS_URL)]);
+  $("invite-result").hidden = true;
+  renderPeople();
+  $("people").showModal();
+});
+$("people-close").addEventListener("click", () => $("people").close());
+
+const guestTokenLink = () => {
+  const name = `Blog guest ${$("invite-name").value.trim()}`.trim();
+  $("link-guest-token").href = `${TOKENS_URL}/new?name=${encodeURIComponent(name)}&contents=write`;
+};
+$("invite-name").addEventListener("input", guestTokenLink);
+guestTokenLink();
+for (const node of document.querySelectorAll(".repo-shared-name")) node.textContent = SHARED;
+
+$("form-invite").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = $("invite-name").value.trim().replace(/\s+/g, " ");
+  const theirToken = $("invite-token").value.trim();
+  if (!name || !theirToken) return;
+  $("invite-busy").hidden = false;
+  peopleAction(async () => {
+    const person = await invite(name, theirToken);
+    $("form-invite").reset();
+    guestTokenLink();
+    showInvite(person);
+  }).then(() => { $("invite-busy").hidden = true; });
+});
+
+$("invite-copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("invite-link").textContent);
+    $("invite-copied").hidden = false;
+  } catch (err) {
+    getSelection().selectAllChildren($("invite-link"));     // no access to the clipboard: selected, to copy by hand
+  }
+});
+
+$("own-suggest").addEventListener("click", () => { $("own-pass").value = randomGroups(6); $("own-pass").select(); });
+$("form-own").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const typed = $("own-pass").value;
+  peopleAction(async () => {
+    await setOwnPassphrase(typed);
+    $("own-pass").value = "";
+    peopleSay("warn", ["The passphrase is set. Keep it somewhere safe: it is not stored anywhere you could look it up, and it opens everything this editor can do."]);
+  });
+});
+$("own-remove").addEventListener("click", () => peopleAction(async () => {
+  await removeOwnPassphrase();
+  peopleSay("warn", ["The passphrase is removed. Older copies of the sealed token remain in the website's history, so if the passphrase may have leaked, also replace your token on GitHub: ", link(TOKENS_URL)]);
+}));
+
+$("form-name").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = $("own-name").value.trim().replace(/\s+/g, " ");
+  if (!name) return;
+  peopleAction(async () => {
+    if (roster.people.some((person) => sameName(person.name, name))) throw new UserError(`${name} is the name of someone you invited. Pick another.`);
+    await changeRoster("People: change the owner's name", (value) => { value.owner.name = name; });
+    me.name = name;
+    $("own-name").blur();
+    redrawComments();
+  });
+});
 
 // ============================================================ writing aids
 
@@ -2032,18 +3615,10 @@ async function readImage(file) {
   return { name: `${slugify(dot > 0 ? file.name.slice(0, dot) : "image") || "image"}-${digest}.${extension}`, bytes };
 }
 
-async function uploadImage(image) {
-  const path = `contents/images/${image.name}`;
-  let stored;
-  try {
-    stored = (await gh(DRAFTS, path, {
-      method: "PUT", body: { message: `Image: ${image.name}`, content: bytesToB64(image.bytes), branch: CONFIG.drafts.branch },
-    })).content;
-  } catch (err) {
-    if (err.status !== 422 && err.status !== 409) throw err;
-    stored = await gh(DRAFTS, `${path}?ref=${encodeURIComponent(CONFIG.drafts.branch)}`);   // it was already there
-  }
-  draftImages.set(image.name, stored.sha);
+/** Put an image beside the drafts: in the shared repository for a shared draft, so that everyone working on it sees it. */
+async function uploadImage(image, home) {
+  const sha = await ensureFile(HOMES[home], `images/${image.name}`, bytesToB64(image.bytes), `Image: ${image.name}`);
+  draftImages.set(image.name, { sha, home });
 }
 
 const uploading = new Set();
@@ -2053,7 +3628,7 @@ const uploading = new Set();
  * The image shows at once, from the file itself, while it travels to the drafts repository.
  */
 async function addImages(files, at = null) {
-  if (!ready || busy || viewing) return;
+  if (!ready || busy || !canWrite()) return;
   if (files.length && !files.some((file) => file.type.startsWith("image/"))) {
     notify("error", ["Only images can be added to a post (png, jpg, gif, webp, svg, avif)."]);
     return;
@@ -2062,11 +3637,14 @@ async function addImages(files, at = null) {
     if (!file.type.startsWith("image/")) continue;
     try {
       const image = await readImage(file);
-      if (!site.images.has(image.name) && !draftImages.has(image.name) && !uploading.has(image.name)) {
-        imageUrls.set(image.name, URL.createObjectURL(file));
+      const home = homeOf(cur.draftId);
+      const kept = draftImages.get(image.name);
+      const there = site.images.has(image.name) || (kept && (home === "private" || kept.home === "shared"));
+      if (!there && !uploading.has(image.name)) {
+        if (!imageUrls.has(image.name)) imageUrls.set(image.name, URL.createObjectURL(file));
         uploading.add(image.name);
         uploads++;
-        enqueue(() => uploadImage(image)).catch((err) => {
+        enqueue(() => uploadImage(image, home)).catch((err) => {
           imageUrls.delete(image.name);
           for (const source of sourceFigures(el.body.value).reverse()) {
             if (source.src === `/assets/blog/${image.name}`) removeFigure(source);
@@ -2113,7 +3691,11 @@ $("btn-image").addEventListener("click", () => $("file-image").click());
 $("file-image").addEventListener("change", (event) => { addImages([...event.target.files]); event.target.value = ""; });
 
 document.addEventListener("keydown", (event) => {
-  if (!(event.metaKey || event.ctrlKey) || event.altKey || $("app").hidden) return;
+  if (!(event.metaKey || event.ctrlKey) || $("app").hidden) return;
+  if (event.altKey) {
+    if (event.code === "KeyM") { event.preventDefault(); startComment(el.body.selectionStart, el.body.selectionEnd); }
+    return;
+  }
   const key = event.key.toLowerCase();
   if (key === "s") { event.preventDefault(); save(); return; }
   if (document.activeElement !== el.body || viewing) return;
@@ -2125,11 +3707,22 @@ document.addEventListener("keydown", (event) => {
 for (const input of [el.title, el.subtitle, el.date, el.slug, el.body]) input.addEventListener("input", onEdit);
 el.slug.addEventListener("blur", () => { el.slug.value = slugify(el.slug.value); });
 
-const unsaved = () => ready && !viewing && isDirty() && !(isBlank() && isNew());
+const unsaved = () => ready && canWrite() && isDirty() && !(isBlank() && isNew());
 document.addEventListener("visibilitychange", () => { if (document.hidden && unsaved()) save(); });
 window.addEventListener("beforeunload", (event) => { if (unsaved()) { save({ keepalive: true }); event.preventDefault(); } });
 
 // ============================================================ opening the editor
+
+/** The owner's name as GitHub has it, for comments, until one is set in People. */
+async function githubName() {
+  try {
+    const response = await fetch("https://api.github.com/user", { cache: "no-store", headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } });
+    const user = response.ok ? await response.json() : {};
+    return user.name || user.login || "";
+  } catch (err) {
+    return "";
+  }
+}
 
 async function openEditor() {
   $("auth").hidden = true;
@@ -2138,43 +3731,100 @@ async function openEditor() {
   renderChrome();
   renderList();
   try {
-    const [rendererFiles, snapshotNow, draftFiles] = await Promise.all([
-      readRenderer(CONFIG.site.branch), readSite(CONFIG.site.branch), readDrafts(), runtime,
-    ]);
-    await startPython(rendererFiles);
-    adoptSite(snapshotNow);
-    for (const [id, draft] of draftFiles.loaded) drafts.set(id, { ...draft, fields: parseOr(draft.text, id) });
-    for (const [name, id] of draftFiles.images) draftImages.set(name, id);
+    if (isGuest()) {
+      // An invited person gets the shared drafts, and the website's renderer for the preview.
+      const [rendererFiles, shared] = await Promise.all([readRenderer(CONFIG.site.branch), readDrafts("shared"), gh(SHARED, ""), runtime]);
+      await startPython(rendererFiles);
+      adoptDrafts(shared);
+    } else {
+      const [rendererFiles, snapshotNow, mine, sharedRepo, people] = await Promise.all([
+        readRenderer(CONFIG.site.branch), readSite(CONFIG.site.branch), readDrafts("private"),
+        gh(SHARED, "", { missingOk: true }).catch((err) => { if (err.status === 401) throw err; return null; }),
+        readJson(HOMES.private, ROSTER_PATH, {}), runtime,
+      ]);
+      sharedOk = Boolean(sharedRepo);
+      const shared = sharedOk ? await readDrafts("shared") : { loaded: [], images: [] };
+      await startPython(rendererFiles);
+      adoptSite(snapshotNow);
+      adoptDrafts(mine);
+      adoptDrafts(shared);      // a draft found in both places (a move that was cut short) counts as shared
+      roster = tidyRoster(people.value);
+      me.name = roster.owner.name || me.name || await githubName() || CONFIG.owner;
+    }
     ready = true;
     busy = "";
-    const wanted = decodeURIComponent(location.hash.slice(1));
-    const firstDraft = [...drafts].sort().reverse().find(([, draft]) => !draft.fields.revises || !site.posts.has(draft.fields.revises));
-    show(wanted || (firstDraft ? "d:" + firstDraft[0] : ""));
+    show(decodeURIComponent(location.hash.slice(1)) || newestDraft());
+    if (!sharedOk) {
+      notify("warn", [
+        [`Drafts can now be shared with people you invite, but your access token cannot open ${SHARED} yet. On GitHub, add that repository to the token, then reload this page: `, link(TOKENS_URL)],
+        "Everything else works as before.",
+      ]);
+    }
+    setInterval(lookSoon, POLL_MS);
   } catch (err) {
     busy = "";
     renderChrome();
     renderList();
+    if (err.status === 401 && isGuest()) {
+      localStorage.removeItem(PASS_STORE);
+      showAuth("pass", "Your invitation no longer works: its access was withdrawn or has run out. Ask for a new one.");
+      return;
+    }
     if (err.status === 401) { showAuth("setup", "GitHub no longer accepts the saved token (it expired or was revoked). Create a new one."); return; }
     notify("error", [err instanceof UserError ? err.message : `The editor could not start: ${err.message || err}`, "Reload the page to try again."]);
   }
 }
 
+// Three ways in: a passphrase ("pass"), this browser's password for the token it keeps ("unlock"),
+// or a token pasted for the first time ("setup"). The last two are the owner's.
 function showAuth(mode, message = "") {
   $("app").hidden = true;
   $("auth").hidden = false;
-  $("form-setup").hidden = mode !== "setup";
-  $("form-unlock").hidden = mode !== "unlock";
-  $("link-unlock").hidden = !localStorage.getItem(KEY_STORE);
-  $("setup-error").textContent = mode === "setup" ? message : "";
-  $("unlock-error").textContent = mode === "unlock" ? message : "";
-  (mode === "setup" ? $("setup-token") : $("unlock-password")).focus();
+  for (const name of ["pass", "unlock", "setup"]) {
+    $("form-" + name).hidden = mode !== name;
+    $(name + "-error").textContent = mode === name ? message : "";
+  }
+  $("link-pass-unlock").hidden = !localStorage.getItem(KEY_STORE);
+  ({ pass: $("pass-phrase"), unlock: $("unlock-password"), setup: $("setup-token") })[mode].focus();
+}
+
+/** Sign in with a passphrase. An invited person stays signed in on this browser until they sign out. */
+async function signIn(typed) {
+  const submit = $("pass-submit");
+  submit.disabled = true;
+  submit.textContent = "Opening…";
+  try {
+    const who = await openWithPassphrase(typed);
+    token = who.token;
+    me = { name: who.name || "", role: who.role === "owner" ? "owner" : "guest" };
+    // The owner's passphrase is never kept. Nor is an invitation tried out in the owner's own browser.
+    if (isGuest() && !localStorage.getItem(KEY_STORE)) localStorage.setItem(PASS_STORE, tidyPassphrase(typed));
+  } catch (err) {
+    if (err.wrong) localStorage.removeItem(PASS_STORE);
+    showAuth("pass", err instanceof UserError ? err.message : `Signing in failed: ${err.message || err}`);
+    return;
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Open the editor";
+  }
+  $("pass-phrase").value = "";
+  openEditor();
 }
 
 $("repo-site").textContent = SITE;
 $("repo-drafts").textContent = DRAFTS;
-$("link-new-token").href = "https://github.com/settings/personal-access-tokens/new?name=Blog+editor&contents=write";
+$("repo-shared").textContent = SHARED;
+$("link-new-token").href = `${TOKENS_URL}/new?name=Blog+editor&contents=write`;
 $("link-setup").addEventListener("click", () => showAuth("setup"));
-$("link-unlock").addEventListener("click", () => showAuth("unlock"));
+$("link-pass-setup").addEventListener("click", () => showAuth("setup"));
+$("link-pass-unlock").addEventListener("click", () => showAuth("unlock"));
+$("link-unlock-pass").addEventListener("click", () => showAuth("pass"));
+$("link-unlock").addEventListener("click", () => showAuth(localStorage.getItem(KEY_STORE) ? "unlock" : "pass"));
+
+$("form-pass").addEventListener("submit", (event) => {
+  event.preventDefault();
+  signIn($("pass-phrase").value);
+});
 
 $("form-unlock").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -2185,6 +3835,7 @@ $("form-unlock").addEventListener("submit", async (event) => {
     $("unlock-error").textContent = err.message;
     return;
   }
+  me = { name: "", role: "owner" };
   $("unlock-password").value = "";
   openEditor();
 });
@@ -2195,8 +3846,10 @@ $("form-setup").addEventListener("submit", async (event) => {
   $("setup-error").textContent = "";
   button.disabled = true;
   token = $("setup-token").value.trim();
+  me = { name: "", role: "owner" };
   try {
-    // A token that can see both repositories is scoped correctly; writing is confirmed by the first save.
+    // A token that can see both repositories is the owner's; writing is confirmed by the first save.
+    // (The shared repository is checked when the editor opens, which says what to do if it is missing.)
     await gh(SITE, "");
     await gh(DRAFTS, "");
     await storeToken(token, $("setup-password").value);
@@ -2212,7 +3865,20 @@ $("form-setup").addEventListener("submit", async (event) => {
   openEditor();
 });
 
-showAuth(localStorage.getItem(KEY_STORE) ? "unlock" : "setup");
+// An invitation's link carries its passphrase after the #, which browsers do not send to any server.
+const invited = /^#invite=(.+)$/.exec(location.hash);
+if (invited) {
+  history.replaceState(null, "", location.pathname);      // out of the address bar
+  showAuth("pass");
+  signIn(decodeURIComponent(invited[1]));
+} else if (localStorage.getItem(KEY_STORE)) {
+  showAuth("unlock");
+} else if (localStorage.getItem(PASS_STORE)) {
+  showAuth("pass");
+  signIn(localStorage.getItem(PASS_STORE));
+} else {
+  showAuth("pass");
+}
 </script>
 </body>
 </html>
