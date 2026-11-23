@@ -175,6 +175,9 @@
   .notice-body p { margin: 0 0 4px; }
   .notice-body p:last-child { margin-bottom: 0; }
   .notice-body a { color: var(--accent); }
+  .notice-body ol { margin: 2px 0 6px; padding-left: 22px; }
+  .notice-body li { margin-bottom: 2px; }
+  .notice-body code { padding: 1px 5px; font: 12.5px var(--mono); background: rgba(0, 0, 0, 0.06); border-radius: 4px; }
 
   /* ---------- Three columns: posts, writing, preview ----------
      The widths come from dragging the dividers (--w-posts, --w-comments in px; --fr-write and
@@ -484,8 +487,12 @@
   .sheet input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
   .sheet-row { display: flex; align-items: center; gap: 10px; }
   .sheet-row input { flex: 1; min-width: 0; }
-  .sheet-error { padding: 9px 12px; color: var(--danger); background: #f9e7e7; border-radius: 6px; }
-  .sheet-warn { padding: 9px 12px; background: #fbf3dc; border-radius: 6px; }
+  .sheet-error { margin-bottom: 10px; padding: 9px 12px; color: var(--danger); background: #f9e7e7; border-radius: 6px; }
+  .sheet-warn { margin-bottom: 10px; padding: 9px 12px; background: #fbf3dc; border-radius: 6px; }
+  .sheet-warn p { margin-bottom: 6px; }
+  .sheet-warn ol { margin-bottom: 6px; }
+  .sheet-warn li { margin-bottom: 3px; }
+  .sheet-warn > :last-child { margin-bottom: 0; }
   .person { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
   .person:first-child { border-top: 0; }
   .person-name { font-weight: 600; }
@@ -708,8 +715,8 @@
   </div>
   <div class="sheet-body">
     <section id="people-problem" hidden>
-      <p class="sheet-error" id="people-error" role="alert" hidden></p>
-      <p class="sheet-warn" id="people-warn" hidden></p>
+      <div class="sheet-error" id="people-error" role="alert" hidden></div>
+      <div class="sheet-warn" id="people-warn" hidden></div>
     </section>
 
     <section>
@@ -1035,7 +1042,7 @@ async function explain(response, repo, method) {
   } else if (response.status === 404 || response.status === 403) {
     message = isGuest()
       ? "Your invitation cannot open that. It may have been withdrawn."
-      : `The token cannot see ${CONFIG.owner}/${repo}. Check that this repository is selected for the token.`;
+      : `GitHub will not let this editor into the repository ${repo}: the access token does not include it. On GitHub, open the token and add ${repo} under “Repository access”.`;
   } else {
     message = `GitHub refused the request (${response.status}): ${said}`;
   }
@@ -1630,9 +1637,11 @@ function renderList() {
 
 let noticeId = 0;
 
+/** Show the notice under the bar. A paragraph is text, a list of text and links, or something built already (a list of steps). */
 function notify(kind, paragraphs) {
   el.noticeBody.textContent = "";
   for (const paragraph of paragraphs) {
+    if (paragraph instanceof Node) { el.noticeBody.append(paragraph); continue; }
     const p = document.createElement("p");
     if (typeof paragraph === "string") p.textContent = paragraph;
     else p.append(...paragraph);
@@ -1643,9 +1652,9 @@ function notify(kind, paragraphs) {
   return ++noticeId;
 }
 
-function link(href) {
+function link(href, text = href) {
   const a = document.createElement("a");
-  a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = href;
+  a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = text;
   return a;
 }
 
@@ -2626,8 +2635,26 @@ async function moveDraft(to) {
   if (comments) await removeFile(from, `comments/${id}.json`, leaving);
 }
 
+/**
+ * For the owner whose access token was made before there was a repository for shared drafts:
+ * what is missing, and the steps on GitHub that add it. `lead` says what brought it up.
+ */
+function sharedHelp(lead) {
+  const steps = make("ol");
+  const step = (...parts) => { const item = make("li"); item.append(...parts); steps.append(item); };
+  step(link(TOKENS_URL, "Open your access tokens on GitHub"), " and click the one you made for this editor (it is named “Blog editor” unless you chose another name).");
+  step("Under “Repository access”, add ", make("code", "", SHARED), " to the repositories that are selected. Leave everything else as it is.");
+  step("Press Update at the bottom of that page.");
+  step("Come back here and reload this page.");
+  return [
+    make("p", "", `${lead} Shared drafts are kept in their own private repository on GitHub, called ${SHARED}. The access token you gave this editor does not include that repository (the token is older than it), so GitHub will not let the editor read or save anything there. To add it:`),
+    steps,
+    make("p", "", "If GitHub will not let you change the token, make a new one instead: press Lock, then “Use a different token”."),
+  ];
+}
+
 async function toggleShare() {
-  if (!sharedOk) throw new UserError(`Your access token cannot open ${SHARED} yet. On GitHub, add that repository to the token, then reload this page.`);
+  if (!sharedOk) { notify("warn", sharedHelp("This draft cannot be shared yet.")); return; }
   const sharing = !isShared();
   await moveDraft(sharing ? "shared" : "private");
   const title = el.title.value.trim() || "Untitled";
@@ -3453,8 +3480,8 @@ async function invite(name, theirToken) {
     throw new UserError("Could not reach GitHub to check the token. Check the connection and try again.");
   }
   if (shared === 401) throw new UserError("GitHub does not recognise that token. Copy it again, in full.");
-  if (shared !== 200) throw new UserError(`That token cannot open ${SHARED}. Create it again and select that repository.`);
-  if (privately === 200) throw new UserError(`That token also opens ${DRAFTS}, where your private drafts are. Create one that is limited to ${SHARED}.`);
+  if (shared !== 200) throw new UserError(`That token does not include the repository ${SHARED}, where shared drafts are kept. Create it again, and under “Repository access” select ${SHARED}.`);
+  if (privately === 200) throw new UserError(`That token also includes ${DRAFTS}, where your private drafts are. Create one with only ${SHARED} selected under “Repository access”.`);
 
   const code = randomGroups(6);
   const id = code.slice(0, 4);
@@ -3566,7 +3593,7 @@ function renderPeople() {
 }
 
 el.people.addEventListener("click", () => {
-  peopleSay(sharedOk ? "" : "warn", [`Your own access token cannot open ${SHARED} yet, so drafts cannot be shared. On GitHub, add that repository to the token, then reload this page: `, link(TOKENS_URL)]);
+  peopleSay(sharedOk ? "" : "warn", sharedOk ? [] : sharedHelp("You can invite people, but you cannot share a draft with them yet."));
   $("invite-result").hidden = true;
   renderPeople();
   $("people").showModal();
@@ -3897,10 +3924,7 @@ async function openEditor() {
     busy = "";
     show(decodeURIComponent(location.hash.slice(1)) || newestDraft());
     if (!sharedOk) {
-      notify("warn", [
-        [`Drafts can now be shared with people you invite, but your access token cannot open ${SHARED} yet. On GitHub, add that repository to the token, then reload this page: `, link(TOKENS_URL)],
-        "Everything else works as before.",
-      ]);
+      notify("warn", sharedHelp("One step is left before you can share drafts with other people; everything else works as before."));
     }
     setInterval(lookSoon, POLL_MS);
   } catch (err) {

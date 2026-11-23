@@ -69,6 +69,8 @@ The page is static, so there is no server to check a password. The key is always
    Repository access: only `alex2awesome.github.io`, `blog-drafts` and `blog-shared`. Repository permissions: Contents, Read and write.
 2. Open `/admin/`, choose "Sign in with a GitHub token", paste the token, choose a password.
 
+A token made before `blog-shared` existed does not include it, and the editor says so when it opens. To add it: on GitHub, open the token (Settings, Developer settings, Personal access tokens, Fine-grained tokens), add `blog-shared` under "Repository access", press Update, and reload the editor.
+
 The token is stored only in that browser, encrypted with the password, and is sent only to api.github.com. After that the editor asks for the password. To cut off a lost device, revoke the token on GitHub. When the token expires, press Lock, then "Use a different token".
 
 **Any other device, with a passphrase.** In People, under "Your other devices", set a passphrase. The editor then puts a copy of your token, encrypted under that passphrase, into `admin/keys.json`, and on any device you open `/admin/` and type the passphrase. Nothing is kept on that device.
