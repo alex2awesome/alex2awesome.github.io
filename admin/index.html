@@ -22,6 +22,8 @@
   - Comments are kept beside each draft (comments/<id>.json) and tied to the words they quote.
     When two people save the same draft, the two versions are merged instead of one replacing
     the other.
+  - The lines between the columns can be dragged to make a column wider or narrower. The widths
+    are remembered in this browser.
 
   Everything this page loads comes from this site; the only other host it contacts is
   api.github.com.
@@ -174,17 +176,55 @@
   .notice-body p:last-child { margin-bottom: 0; }
   .notice-body a { color: var(--accent); }
 
-  /* ---------- Three columns: posts, writing, preview ---------- */
+  /* ---------- Three columns: posts, writing, preview ----------
+     The widths come from dragging the dividers (--w-posts, --w-comments in px; --fr-write and
+     --fr-preview for how the writing and the preview share the rest), or are the usual ones.
+     The limits here hold whatever the script asks for: the posts and the comments keep a least
+     width and can never squeeze the writing or the preview below 260px. */
   .layout {
     flex: 1;
     display: grid;
-    grid-template-columns: 232px minmax(340px, 1fr) minmax(340px, 1fr);
+    grid-template-columns: clamp(150px, var(--w-posts, 232px), 24%) minmax(260px, var(--fr-write, 1fr)) minmax(260px, var(--fr-preview, 1fr));
     grid-template-rows: minmax(0, 1fr);
     min-height: 0;
   }
 
-  .layout.no-preview { grid-template-columns: 232px minmax(340px, 1fr); }
+  .layout.no-preview { grid-template-columns: clamp(150px, var(--w-posts, 232px), 34%) minmax(260px, 1fr); }
   .layout.no-preview .preview { display: none; }
+
+  /* A divider lies over the left edge of the column it is in. */
+  .editor, .preview, .comments { position: relative; }
+
+  .divider {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    bottom: 0;
+    left: -4px;
+    width: 9px;
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+  }
+
+  .divider::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 2px;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  .divider:hover::after, .divider:focus-visible::after, .divider.is-dragging::after { opacity: 0.5; }
+  @media (pointer: coarse) { .divider { left: -11px; width: 23px; } .divider::after { left: 9px; } }
+
+  /* While a divider is dragged, the pointer must not select text or be swallowed by the preview. */
+  .layout.is-resizing { user-select: none; -webkit-user-select: none; }
+  .layout.is-resizing iframe { pointer-events: none; }
 
   .posts {
     display: flex;
@@ -337,8 +377,8 @@
     border-left: 1px solid var(--line);
   }
 
-  .layout.has-comments { grid-template-columns: 210px minmax(260px, 1fr) minmax(260px, 1fr) 264px; }
-  .layout.has-comments.no-preview { grid-template-columns: 232px minmax(340px, 1fr) 300px; }
+  .layout.has-comments { grid-template-columns: clamp(150px, var(--w-posts, 210px), 24%) minmax(260px, var(--fr-write, 1fr)) minmax(260px, var(--fr-preview, 1fr)) clamp(200px, var(--w-comments, 264px), 24%); }
+  .layout.has-comments.no-preview { grid-template-columns: clamp(150px, var(--w-posts, 232px), 34%) minmax(260px, 1fr) clamp(200px, var(--w-comments, 300px), 34%); }
   .layout.has-comments .comments { display: flex; }
   .comments-head { display: flex; align-items: center; gap: 8px; }
   .comments-head .grow { flex: 1; }
@@ -477,6 +517,7 @@
     .layout, .layout.no-preview, .layout.has-comments, .layout.has-comments.no-preview { grid-template-columns: 190px minmax(0, 1fr); }
     .preview { display: none; }
     #btn-preview { display: none; }
+    .divider { display: none; }      /* the widths are fixed on a narrow screen */
 
     /* No room for a column: the comments slide over the page instead. */
     .layout.has-comments .comments {
@@ -614,6 +655,7 @@
     </nav>
 
     <section class="editor" aria-label="Write">
+      <div class="divider" id="divide-posts" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Width of the list of posts" title="Drag to resize. Double-click for the usual width."></div>
       <input id="f-title" type="text" placeholder="Title" autocomplete="off" aria-label="Title">
       <input id="f-subtitle" type="text" placeholder="Subtitle" autocomplete="off" aria-label="Subtitle">
       <div class="fields">
@@ -639,12 +681,14 @@
     </section>
 
     <section class="preview" aria-label="Preview">
+      <div class="divider" id="divide-preview" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Width of the writing column and the preview" title="Drag to resize. Double-click for equal widths."></div>
       <div class="preview-head">Preview: the page as it will be published<span>Click an image to resize it or add a caption. Select words to comment on them.</span></div>
       <!-- No scripts run in the preview, so nothing embedded in a post can reach the access token. -->
       <iframe id="preview" title="Preview of the post" sandbox="allow-same-origin"></iframe>
     </section>
 
     <aside class="comments" aria-label="Comments">
+      <div class="divider" id="divide-comments" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Width of the comments" title="Drag to resize. Double-click for the usual width."></div>
       <div class="preview-head comments-head">
         Comments
         <span class="grow"></span>
@@ -769,6 +813,7 @@ const POLL_MS = 15000;                    // how often to look for other people'
 const RESERVED = new Set(["index", "feed"]);     // blog/index.html and blog/feed.xml
 const IMAGE_TYPES = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"]);
 const KEY_STORE = "blog-editor-key";
+const COLUMNS_STORE = "blog-editor-columns";     // how wide the columns were left in this browser
 const KDF_ITERATIONS = 600000;
 const MARKDOWN_WHEEL = "vendor/pyodide/Markdown-3.6-py3-none-any.whl";
 
@@ -1827,7 +1872,8 @@ function placeHandles(figure) {
   }
 }
 
-// The handles follow the image when it loads, is resized, or the window changes.
+// The handles follow the image when it loads, is resized, or the window or the preview's column
+// changes. The figure is watched too: in a wider column the image can move without changing size.
 const keepHandles = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const figure = entry.target.closest("figure.ed-picked");
@@ -1849,6 +1895,7 @@ function pick(figure) {
   }
   const img = figure.querySelector("img");
   keepHandles.observe(img);
+  keepHandles.observe(figure);
   placeHandles(figure);
   const src = shownSrc(img);
   picked = { src, nth: figuresWith(doc, src).indexOf(figure) };
@@ -3584,6 +3631,101 @@ $("form-name").addEventListener("submit", (event) => {
     redrawComments();
   });
 });
+
+// ============================================================ column widths
+
+/**
+ * What the dividers were dragged to: the posts list and the comments in px, and the share (0 to 1)
+ * of the room left over that the writing column takes from the preview. null is the usual width.
+ */
+const columns = { posts: null, comments: null, split: null };
+try {
+  const kept = JSON.parse(localStorage.getItem(COLUMNS_STORE)) || {};
+  for (const key of Object.keys(columns)) if (Number.isFinite(kept[key]) && kept[key] > 0) columns[key] = kept[key];
+} catch (err) { /* nothing usable was kept */ }
+
+const widthOf = (selector) => document.querySelector(selector).getBoundingClientRect().width;
+const textsWidth = () => widthOf(".editor") + widthOf(".preview");
+
+// For each divider: the width it changes, how to read that width off the page, and what the width
+// becomes when the divider has been moved `by` px to the right of where the width was `from`.
+const DIVIDERS = [
+  { bar: $("divide-posts"), key: "posts", read: () => Math.round(widthOf(".posts")), moved: (from, by) => Math.max(1, from + by) },
+  { bar: $("divide-comments"), key: "comments", read: () => Math.round(widthOf(".comments")), moved: (from, by) => Math.max(1, from - by) },
+  {
+    bar: $("divide-preview"), key: "split",
+    read: () => widthOf(".editor") / textsWidth(),
+    moved: (from, by) => Math.min(0.95, Math.max(0.05, from + by / textsWidth())),
+  },
+];
+
+function showColumns() {
+  const style = $("layout").style;
+  const set = (name, value) => (value === null ? style.removeProperty(name) : style.setProperty(name, value));
+  // Kept between 5% and 95% whatever was stored: a share outside 0 to 1 would make the whole rule invalid.
+  const share = columns.split === null ? null : Math.min(950, Math.max(50, Math.round(columns.split * 1000)));
+  set("--w-posts", columns.posts === null ? null : `${columns.posts}px`);
+  set("--w-comments", columns.comments === null ? null : `${columns.comments}px`);
+  set("--fr-write", share === null ? null : `${share}fr`);
+  set("--fr-preview", share === null ? null : `${1000 - share}fr`);
+}
+
+/** Give a column a width (null: the usual one). The stylesheet has the last word, so what is kept is what came of it. */
+function setColumn(divider, value) {
+  columns[divider.key] = value;
+  showColumns();
+  if (value !== null) {
+    columns[divider.key] = divider.read();
+    showColumns();
+  }
+  placeSoon();      // the comment cards may have changed height
+}
+
+const keepColumns = () => localStorage.setItem(COLUMNS_STORE, JSON.stringify(columns));
+
+for (const divider of DIVIDERS) {
+  const { bar } = divider;
+  let drag = null;      // while the divider is held: where the pointer was, and the width then
+  const drop = () => {
+    if (!drag) return;
+    drag = null;
+    bar.classList.remove("is-dragging");
+    $("layout").classList.remove("is-resizing");
+    keepColumns();
+  };
+  bar.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    drag = { x: event.clientX, from: divider.read() };
+    bar.setPointerCapture(event.pointerId);     // the divider keeps getting the pointer, also over the preview
+    bar.classList.add("is-dragging");
+    $("layout").classList.add("is-resizing");
+  });
+  bar.addEventListener("pointermove", (event) => {
+    if (drag) setColumn(divider, divider.moved(drag.from, event.clientX - drag.x));
+  });
+  bar.addEventListener("pointerup", drop);
+  bar.addEventListener("pointercancel", drop);
+  bar.addEventListener("dblclick", () => { setColumn(divider, null); keepColumns(); });
+  bar.addEventListener("keydown", (event) => {
+    const by = { ArrowLeft: -24, ArrowRight: 24 }[event.key];
+    if (!by) return;
+    event.preventDefault();
+    setColumn(divider, divider.moved(divider.read(), by));
+    keepColumns();
+  });
+}
+
+// For screen readers: where each divider stands, as a share of the page's width. Whatever moves
+// a divider (dragging, the window, a column shown or hidden) changes the writing column's width.
+new ResizeObserver(() => {
+  const page = $("layout").getBoundingClientRect();
+  for (const { bar } of DIVIDERS) {
+    const at = bar.getBoundingClientRect();
+    if (at.width && page.width) bar.setAttribute("aria-valuenow", String(Math.round((100 * (at.left + at.width / 2 - page.left)) / page.width)));
+  }
+}).observe(document.querySelector(".editor"));
+
+showColumns();
 
 // ============================================================ writing aids
 

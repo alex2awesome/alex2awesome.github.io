@@ -26,6 +26,8 @@ It has a title, subtitle, date and URL field, a Markdown body, and a live previe
 
 A published post is edited like a draft: open it, change it (the changes save as a draft and are not live), then **Publish changes**.
 
+Drag the line between two columns to make one wider and the other narrower (the list of posts, the writing, the preview, the comments). Double-click a line to put it back. The widths are remembered in that browser. On a narrow screen the widths are fixed.
+
 ### Images
 
 - Drop an image file on the text (it goes after the paragraph you drop it on) or on the preview (a line shows the gap it will land in), paste one, or use **Add image**. It shows at once and uploads in the background.
